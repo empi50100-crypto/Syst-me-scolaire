@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+{% load permissions_tags %}
+
+{% block title %}Élèves{% endblock %}
+
+{% block content %}
+{% can_add request.user 'eleve_list' as can_add_eleve %}
+{% can_change request.user 'eleve_list' as can_edit_eleve %}
+{% can_delete request.user 'eleve_list' as can_delete_eleve %}
+
+<div class="page-header">
+    <h1><i class="bi bi-people"></i> Liste des élèves</h1>
+    {% if can_add_eleve %}
+    <a href="{% url 'eleves:eleve_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Nouvel élève
+    </a>
+    {% endif %}
+</div>
+
+<div class="content-container">
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label">Recherche</label>
+                    <input type="text" name="search" class="form-control" placeholder="Nom, prénom, matricule..." value="{{ search }}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Niveau</label>
+                    <select name="niveau" class="form-select">
+                        <option value="">Tous les niveaux</option>
+                        {% for value, label in niveaux %}
+                        <option value="{{ value }}" {% if niveau_filter == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Classe</label>
+                    <select name="classe" class="form-select">
+                        <option value="">Toutes les classes</option>
+                        {% for classe in classes %}
+                        <option value="{{ classe.id }}" {% if classe_filter == classe.id|stringformat:"s" %}selected{% endif %}>{{ classe.nom }} {{ classe.subdivision }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Statut</label>
+                    <select name="statut" class="form-select">
+                        <option value="">Tous les statuts</option>
+                        {% for value, label in statuts %}
+                        <option value="{{ value }}" {% if statut_filter == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100"><i class="bi bi-search"></i> Filtrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% if eleves %}
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th><i class="bi bi-hash"></i> Matricule</th>
+                    <th><i class="bi bi-person"></i> Nom Prénom</th>
+                    <th><i class="bi bi-layer-forward"></i> Niveau</th>
+                    <th><i class="bi bi-door-open"></i> Classe</th>
+                    <th><i class="bi bi-calendar"></i> Naissance</th>
+                    <th><i class="bi bi-gender"></i> Sexe</th>
+                    <th><i class="bi bi-info-circle"></i> Statut</th>
+                    <th><i class="bi bi-gear"></i> Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for eleve in eleves %}
+                <tr>
+                    <td><span class="badge bg-dark">{{ eleve.matricule }}</span></td>
+                    <td><strong>{{ eleve.nom }}</strong> {{ eleve.prenom }}</td>
+                    <td>{{ eleve.get_niveau_display|default:"-" }}</td>
+                    <td>
+                        {% if eleve.current_inscriptions %}
+                            {% for inscr in eleve.current_inscriptions %}
+                                <span class="badge bg-info">{{ inscr.classe.nom }} {{ inscr.classe.subdivision }}</span><br>
+                            {% endfor %}
+                        {% else %}
+                            <span class="badge bg-light text-dark border">Non assigné</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ eleve.date_naissance|date:"d/m/Y" }}</td>
+                    <td>
+                        {% if eleve.sexe == 'M' %}
+                        <span class="badge bg-primary"><i class="bi bi-gender-male"></i> M</span>
+                        {% else %}
+                        <span class="badge bg-danger"><i class="bi bi-gender-female"></i> F</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if eleve.statut == 'actif' %}
+                        <span class="badge bg-success">{{ eleve.get_statut_display }}</span>
+                        {% else %}
+                        <span class="badge bg-secondary">{{ eleve.get_statut_display }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="btn-group btn-group-sm">
+                            <a href="{% url 'eleves:eleve_detail' eleve.pk %}" class="btn btn-outline-info" title="Voir">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            {% if can_edit_eleve %}
+                            <a href="{% url 'eleves:eleve_update' eleve.pk %}" class="btn btn-outline-warning" title="Modifier">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            {% endif %}
+                            {% if can_delete_eleve %}
+                            <a href="{% url 'eleves:eleve_delete' eleve.pk %}" class="btn btn-outline-danger" title="Supprimer" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cet élève ?');">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <!-- Pagination -->
+        {% if eleves.has_other_pages %}
+        <nav aria-label="Page navigation" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if eleves.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page={{ eleves.previous_page_number }}&search={{ search }}&niveau={{ niveau_filter }}&classe={{ classe_filter }}&statut={{ statut_filter }}">Précédent</a></li>
+                {% else %}
+                <li class="page-item disabled"><span class="page-link">Précédent</span></li>
+                {% endif %}
+                
+                {% for i in eleves.paginator.page_range %}
+                    {% if eleves.number == i %}
+                    <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+                    {% else %}
+                    <li class="page-item"><a class="page-link" href="?page={{ i }}&search={{ search }}&niveau={{ niveau_filter }}&classe={{ classe_filter }}&statut={{ statut_filter }}">{{ i }}</a></li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if eleves.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ eleves.next_page_number }}&search={{ search }}&niveau={{ niveau_filter }}&classe={{ classe_filter }}&statut={{ statut_filter }}">Suivant</a></li>
+                {% else %}
+                <li class="page-item disabled"><span class="page-link">Suivant</span></li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="bi bi-people" style="font-size: 4rem; color: var(--gray-300);"></i>
+        <h5 class="text-muted mt-3">Aucun élève enregistré</h5>
+        <p class="text-muted">Commencez par ajouter un nouvel élève</p>
+        <a href="{% url 'eleves:eleve_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Nouvel élève
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

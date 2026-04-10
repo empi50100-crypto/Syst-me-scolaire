@@ -1,0 +1,173 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if discipline %}Modifier{% else %}Nouvelle{% endif %} discipline - SyGeS-AM{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Accueil</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'eleves:discipline_list' %}">Discipline</a></li>
+                <li class="breadcrumb-item active">{% if discipline %}Modifier{% else %}Nouvelle{% endif %} inscription</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-shield-exclamation"></i> {% if discipline %}Modifier{% else %}Nouvelle{% endif %} inscription disciplinaire</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Élève *</label>
+                        <select name="eleve" class="form-select" required>
+                            <option value="">Sélectionner un élève</option>
+                            {% for eleve in eleves %}
+                            <option value="{{ eleve.pk }}" {% if discipline and discipline.eleve_id == eleve.pk %}selected{% endif %}>{{ eleve.nom_complet }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Type *</label>
+                            <select name="type" id="typeSelect" class="form-select" required onchange="updateDetails()">
+                                <option value="">Sélectionner</option>
+                                <option value="sanction" {% if discipline and discipline.type == 'sanction' %}selected{% endif %}>Sanction</option>
+                                <option value="recompense" {% if discipline and discipline.type == 'recompense' %}selected{% endif %}>Récompense</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Catégorie *</label>
+                            <select name="type_detail" id="typeDetail" class="form-select" required onchange="updatePoints()">
+                                <option value="">Sélectionner d'abord le type</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Points à appliquer *</label>
+                            <input type="number" name="points" id="pointsInput" class="form-control" value="{{ discipline.points|default:'0' }}" required>
+                            <div class="form-text small text-muted">- pour sanction, + pour récompense</div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Date de l'incident *</label>
+                            <input type="date" name="date_incident" class="form-control" required value="{{ discipline.date_incident|date:'Y-m-d'|default:'now' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Signalé aux parents</label>
+                            <div class="form-check mt-2">
+                                <input class="form-check-input" type="checkbox" name="est_signale" id="est_signale" {% if discipline and discipline.est_signale %}checked{% endif %}>
+                                <label class="form-check-label" for="est_signale">Oui, signaler aux parents</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if user.is_direction or user.is_superadmin or user.professeur %}
+                    <div class="alert alert-info mb-3">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Note :</strong> La période (Trimestre/Semestre) est déterminée automatiquement en fonction des clôtures effectuées par le professeur principal. 
+                        <a href="{% url 'eleves:periode_cloture_list' %}">Voir les clôtures</a>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Description *</label>
+                        <textarea name="description" class="form-control" rows="4" required placeholder="Décrivez les faits...">{{ discipline.description|default:'' }}</textarea>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'eleves:discipline_list' %}" class="btn btn-secondary">Annuler</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Enregistrer
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const sanctions = [
+    {value: 'avertissement', label: 'Avertissement'},
+    {value: 'blame', label: 'Blâmage'},
+    {value: 'retenue', label: 'Retenue'},
+    {value: 'absence_non_justifiee', label: 'Absence non justifiée'},
+    {value: 'exclusion_temporaire', label: 'Exclusion temporaire'},
+    {value: 'exclusion_definitive', label: 'Exclusion définitive'},
+    {value: 'autre_sanction', label: 'Autre sanction'}
+];
+
+const recompenses = [
+    {value: 'felicitations', label: 'Félicitations'},
+    {value: 'commencement', label: 'Commencement'},
+    {value: 'prix_excellence', label: "Prix d'excellence"},
+    {value: 'mention_honorable', label: 'Mention honorable'},
+    {value: 'autre_recompense', label: 'Autre récompense'}
+];
+
+const defaultPoints = {
+    'avertissement': -1,
+    'blame': -2,
+    'retenue': -3,
+    'absence_non_justifiee': -4,
+    'exclusion_temporaire': -5,
+    'exclusion_definitive': -10,
+    'autre_sanction': 0,
+    'felicitations': 1,
+    'commencement': 2,
+    'prix_excellence': 3,
+    'mention_honorable': 2,
+    'autre_recompense': 0
+};
+
+function updateDetails() {
+    const type = document.getElementById('typeSelect').value;
+    const detailSelect = document.getElementById('typeDetail');
+    const pointsInput = document.getElementById('pointsInput');
+    detailSelect.innerHTML = '<option value="">Sélectionner</option>';
+    pointsInput.value = 0;
+    
+    const items = type === 'sanction' ? sanctions : (type === 'recompense' ? recompenses : []);
+    items.forEach(item => {
+        const option = document.createElement('option');
+        option.value = item.value;
+        option.textContent = item.label;
+        detailSelect.appendChild(option);
+    });
+}
+
+function updatePoints() {
+    const detail = document.getElementById('typeDetail').value;
+    const pointsInput = document.getElementById('pointsInput');
+    if (defaultPoints[detail] !== undefined) {
+        pointsInput.value = defaultPoints[detail];
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    {% if discipline %}
+    const type = document.getElementById('typeSelect').value;
+    const detailSelect = document.getElementById('typeDetail');
+    
+    const items = type === 'sanction' ? sanctions : (type === 'recompense' ? recompenses : []);
+    items.forEach(item => {
+        const option = document.createElement('option');
+        option.value = item.value;
+        option.textContent = item.label;
+        option.selected = item.value === '{{ discipline.type_detail }}';
+        detailSelect.appendChild(option);
+    });
+    {% endif %}
+});
+</script>
+{% endblock %}

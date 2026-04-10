@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+
+{% block title %}Attestation d'assiduité{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="bi bi-file-earmark-check"></i> Attestation d'assiduité</h1>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-info-circle"></i> Comment générer une attestation</h5>
+        <p class="card-text">Sélectionnez un élève ci-dessous pour générer une attestation d'assiduité au format PDF.</p>
+        <p class="text-muted">
+            <small>
+                <i class="bi bi-calendar3"></i> Année scolaire : <strong>{{ annee.libelle }}</strong>
+            </small>
+        </p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <form method="get" class="row g-3">
+            <div class="col-md-8">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input type="text" name="search" class="form-control" placeholder="Rechercher par nom, prénom ou matricule..." value="{{ search }}">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-search"></i> Rechercher
+                </button>
+            </div>
+        </form>
+    </div>
+    <div class="card-body">
+        {% if eleves %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Matricule</th>
+                        <th>Nom</th>
+                        <th>Prénom</th>
+                        <th>Classe</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for eleve in eleves %}
+                    {% with eleve.inscription_set.first as inscription %}
+                    <tr>
+                        <td>{{ eleve.matricule|default:"-" }}</td>
+                        <td>{{ eleve.nom }}</td>
+                        <td>{{ eleve.prenom }}</td>
+                        <td>
+                            {% if inscription %}
+                                {{ inscription.classe.nom }}
+                            {% else %}
+                                <span class="text-muted">Non inscrit</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <form method="post" action="{% url 'presences:attestation_assiduite_form' %}" class="d-inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="eleve" value="{{ eleve.pk }}">
+                                <button type="submit" class="btn btn-success btn-sm">
+                                    <i class="bi bi-file-earmark-pdf"></i> Générer PDF
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endwith %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-search" style="font-size: 3rem; color: var(--gray-300);"></i>
+            <h5 class="text-muted mt-3">Aucun élève trouvé</h5>
+            {% if search %}
+            <p class="text-muted">Aucun résultat pour "{{ search }}"</p>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header bg-light">
+        <h5 class="mb-0"><i class="bi bi-file-earmark-pdf"></i> Que contient l'attestation ?</h5>
+    </div>
+    <div class="card-body">
+        <ul class="mb-0">
+            <li>Informations de l'élève (nom, prénom, matricule, classe)</li>
+            <li>Année scolaire</li>
+            <li>Période de fréquentée</li>
+            <li>Statistiques de présence :
+                <ul>
+                    <li>Nombre de jours de présence</li>
+                    <li>Nombre de jours d'absence</li>
+                    <li>Nombre de retards</li>
+                    <li>Taux d'assiduité</li>
+                </ul>
+            </li>
+            <li>Date et lieu de délivrance</li>
+            <li>Espace signature du Directeur</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

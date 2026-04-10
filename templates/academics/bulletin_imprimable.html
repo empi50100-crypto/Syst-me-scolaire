@@ -1,0 +1,279 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+{% block title %}Bulletin - {{ eleve.nom }} {{ eleve.prenom }}{% endblock %}
+
+{% block content %}
+<div class="no-print mb-3 d-flex justify-content-between">
+    <a href="{% url 'academics:bulletin_classe' eleve.inscription_set.first.classe.pk %}" class="btn btn-secondary">
+        <i class="bi bi-arrow-left"></i> Retour
+    </a>
+    <button onclick="window.print()" class="btn btn-primary">
+        <i class="bi bi-printer"></i> Imprimer
+    </button>
+</div>
+
+<div class="bulletin-page" id="bulletinPrint">
+    <div class="bulletin-header">
+        <div class="row align-items-center">
+            <div class="col-2 text-center">
+                <img src="/static/img/logo.png" alt="Logo" style="max-height: 80px;" onerror="this.style.display='none'">
+            </div>
+            <div class="col-8 text-center">
+                <h4 class="mb-0">REPUBLIQUE DU BENIN</h4>
+                <p class="mb-0"><strong>MINISTERE DES ENSEIGNEMENTS MATERNEL ET PRIMAIRE</strong></p>
+                <p class="mb-0"><strong>{% if annee.etablissement %}{{ annee.etablissement }}{% else %}NOM DE L'ÉTABLISSEMENT{% endif %}</strong></p>
+            </div>
+            <div class="col-2 text-end">
+                <small>Année Scolaire<br><strong>{{ annee.libelle|default:"-" }}</strong></small>
+            </div>
+        </div>
+    </div>
+
+    <div class="bulletin-title">
+        <h3>BULLETIN DE NOTES</h3>
+    </div>
+
+    <div class="bulletin-info">
+        <table class="table table-sm table-bordered mb-0">
+            <tr>
+                <td><strong>Nom et Prénom:</strong></td>
+                <td><strong>{{ eleve.nom|upper }} {{ eleve.prenom|upper }}</strong></td>
+                <td><strong>Matricule:</strong></td>
+                <td><strong>{{ eleve.matricule }}</strong></td>
+            </tr>
+            <tr>
+                <td><strong>Classe:</strong></td>
+                <td>{{ classe.nom|default:"-" }}</td>
+                <td><strong>Effectif:</strong></td>
+                <td>{{ eleves_count|default:"-" }}</td>
+            </tr>
+        </table>
+    </div>
+
+    {% if moyenne_generale %}
+    <div class="bulletin-summary">
+        <div class="row text-center g-2">
+            <div class="col-3">
+                <div class="p-2 border rounded bg-light">
+                    <small class="text-muted d-block">MOYENNE GÉNÉRALE</small>
+                    <strong class="fs-4 {% if moyenne_generale >= 10 %}text-success{% elif moyenne_generale >= 5 %}text-warning{% else %}text-danger{% endif %}">
+                        {{ moyenne_generale|floatformat:2 }}/20
+                    </strong>
+                </div>
+            </div>
+            <div class="col-3">
+                <div class="p-2 border rounded bg-light">
+                    <small class="text-muted d-block">TOTAL COEFF.</small>
+                    <strong class="fs-4">{{ grand_total_coef }}</strong>
+                </div>
+            </div>
+            <div class="col-3">
+                <div class="p-2 border rounded bg-light">
+                    <small class="text-muted d-block">TOTAL PTS × COEF</small>
+                    <strong class="fs-4">{{ grand_total_moy_coef|floatformat:2 }}</strong>
+                </div>
+            </div>
+            <div class="col-3">
+                <div class="p-2 border rounded bg-primary text-white">
+                    <small class="d-block">MENTION</small>
+                    <strong class="fs-4">
+                        {% if moyenne_generale >= 16 %}EXCELLENT
+                        {% elif moyenne_generale >= 14 %}TRÈS BIEN
+                        {% elif moyenne_generale >= 12 %}BIEN
+                        {% elif moyenne_generale >= 10 %}PASSABLE
+                        {% else %}INSUFFISANT{% endif %}
+                    </strong>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% for item in cycles_data %}
+    {% if item.matieres_data %}
+    <div class="bulletin-cycle">
+        <h5 class="bg-primary text-white p-2 mb-0">{{ item.cycle.libelle }}</h5>
+        <table class="table table-bordered table-sm mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th rowspan="2">Matières</th>
+                    <th rowspan="2" class="text-center">Coef.</th>
+                    <th colspan="4" class="text-center">Calcul de la Moyenne</th>
+                    <th rowspan="2" class="text-center">Moy/20</th>
+                    <th rowspan="2" class="text-center">Moy×Coef</th>
+                    <th rowspan="2" class="text-center">Rang</th>
+                </tr>
+                <tr>
+                    <th class="text-center small">Interro.</th>
+                    <th class="text-center small">Mini Dev.</th>
+                    <th class="text-center small">Devoir</th>
+                    <th class="text-center small">Examen</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for matiere_item in item.matieres_data %}
+                <tr>
+                    <td><strong>{{ matiere_item.matiere.nom }}</strong></td>
+                    <td class="text-center">{{ matiere_item.coefficient }}</td>
+                    <td class="text-center">
+                        {% with matiere_item.group.interrogation as evals %}
+                        {% if evals %}
+                        <small>{{ evals|avg_note|floatformat:1 }}</small>
+                        {% else %}<small class="text-muted">-</small>{% endif %}
+                        {% endwith %}
+                    </td>
+                    <td class="text-center">
+                        {% with matiere_item.group.mini_devoir as evals %}
+                        {% if evals %}{{ evals|avg_note|floatformat:1 }}{% else %}<small class="text-muted">-</small>{% endif %}
+                        {% endwith %}
+                    </td>
+                    <td class="text-center">
+                        {% with matiere_item.group.devoir as evals %}
+                        {% if evals %}{{ evals|avg_note|floatformat:1 }}{% else %}<small class="text-muted">-</small>{% endif %}
+                        {% endwith %}
+                    </td>
+                    <td class="text-center">
+                        {% with matiere_item.group.examen as evals %}
+                        {% if evals %}{{ evals|avg_note|floatformat:1 }}{% else %}<small class="text-muted">-</small>{% endif %}
+                        {% endwith %}
+                    </td>
+                    <td class="text-center fw-bold {% if matiere_item.moyenne_sur_20 >= 10 %}text-success{% elif matiere_item.moyenne_sur_20 and matiere_item.moyenne_sur_20 >= 5 %}text-warning{% else %}text-danger{% endif %}">
+                        {{ matiere_item.moyenne_sur_20|floatformat:2|default:"-" }}
+                    </td>
+                    <td class="text-center">{{ matiere_item.moyenne_coef|floatformat:2|default:"-" }}</td>
+                    <td class="text-center">{{ matiere_item.fiche.rang|default:"-" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot class="table-light">
+                <tr>
+                    <td class="fw-bold">TOTAUX</td>
+                    <td class="text-center fw-bold">{{ item.total_coef }}</td>
+                    <td colspan="4"></td>
+                    <td class="text-center fw-bold">{{ item.moyenne_cycle|floatformat:2|default:"-" }}</td>
+                    <td class="text-center fw-bold">{{ item.total_moy_coef|floatformat:2 }}</td>
+                    <td></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+    {% endif %}
+    {% endfor %}
+
+    {% if recap_data %}
+    <div class="bulletin-recap">
+        <h5 class="bg-dark text-white p-2 mb-0">Récapitulatif Annuel</h5>
+        <table class="table table-bordered table-sm mb-0">
+            <thead class="table-secondary">
+                <tr>
+                    <th>#</th>
+                    <th>Matières</th>
+                    <th class="text-center">Coef.</th>
+                    <th class="text-center">Moy. /20</th>
+                    <th class="text-center">Moy. × Coef</th>
+                    <th class="text-center">Rang</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in recap_data %}
+                <tr>
+                    <td class="text-center">{{ forloop.counter }}</td>
+                    <td><strong>{{ item.matiere.nom }}</strong></td>
+                    <td class="text-center">{{ item.coefficient }}</td>
+                    <td class="text-center">{{ item.moyenne_sur_20|floatformat:2 }}</td>
+                    <td class="text-center">{{ item.moyenne_coef|floatformat:2 }}</td>
+                    <td class="text-center">{{ item.rang|default:"-" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot class="table-dark">
+                <tr>
+                    <td colspan="2" class="text-end fw-bold">TOTAUX GÉNÉRAUX</td>
+                    <td class="text-center fw-bold">{{ grand_total_coef }}</td>
+                    <td class="text-center fw-bold">{{ moyenne_generale|floatformat:2 }}</td>
+                    <td class="text-center fw-bold">{{ grand_total_moy_coef|floatformat:2 }}</td>
+                    <td></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+    {% endif %}
+
+    <div class="bulletin-footer mt-4">
+        <div class="row">
+            <div class="col-4">
+                <p class="mb-0"><strong>Signature du Chef d'Établissement</strong></p>
+                <div style="height: 80px;"></div>
+            </div>
+            <div class="col-4 text-center">
+                <p class="mb-0"><strong>Signature du Parent/Tuteur</strong></p>
+                <div style="height: 80px;"></div>
+            </div>
+            <div class="col-4 text-end">
+                <p class="mb-0"><strong>L'Élève</strong></p>
+                <div style="height: 80px;"></div>
+            </div>
+        </div>
+        <p class="text-center text-muted mt-3 mb-0">
+            <small>Bulletin généré le {% now "d/m/Y H:i" %}</small>
+        </p>
+    </div>
+</div>
+
+<style>
+.bulletin-page {
+    background: white;
+    padding: 15px;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.bulletin-header {
+    border-bottom: 2px solid #333;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+.bulletin-title {
+    text-align: center;
+    background: #0d6efd;
+    color: white;
+    padding: 8px;
+    margin-bottom: 15px;
+}
+
+.bulletin-title h3 {
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+.bulletin-info {
+    margin-bottom: 15px;
+}
+
+.bulletin-summary {
+    margin-bottom: 15px;
+}
+
+.bulletin-cycle {
+    margin-bottom: 15px;
+}
+
+.bulletin-recap {
+    margin-bottom: 15px;
+}
+
+@media print {
+    .no-print { display: none !important; }
+    .bulletin-page {
+        padding: 0;
+        max-width: 100%;
+        box-shadow: none !important;
+    }
+    .card { box-shadow: none !important; }
+    body { font-size: 10px; }
+    .table { font-size: 9px; }
+    h3, h4, h5 { font-size: 12px; }
+}
+</style>
+{% endblock %}

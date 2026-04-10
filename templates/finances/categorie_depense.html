@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}Catégories Dépenses - SyGeS-AM{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Accueil</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'finances:charges_list' %}">Finances</a></li>
+                <li class="breadcrumb-item active">Catégories Dépenses</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-tag"></i> Catégories de Dépenses</h1>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mx-auto">
+        <div class="card">
+            <div class="card-body">
+                {% if categories %}
+                <div class="list-group">
+                    {% for cat in categories %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>
+                            <i class="bi bi-folder text-primary me-2"></i>
+                            {{ cat.nom }}
+                        </span>
+                        {% if cat.est_active %}
+                            <span class="badge bg-success">Active</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Inactif</span>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted text-center mb-0">Aucune catégorie configurée</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

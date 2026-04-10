@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block title %}Cycles - Configuration{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="bi bi-calendar-range"></i> Configuration des Cycles</h1>
+    <a href="{% url 'finances:cycle_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Nouveau Cycle
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <p class="text-muted">Configurez les cycles de paiement (Trimestre ou Semestre) avec les dates limites et pourcentages.</p>
+        
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Année Scolaire</th>
+                        <th>Type</th>
+                        <th>Numéro</th>
+                        <th>Date début</th>
+                        <th>Date fin</th>
+                        <th>Pourcentage</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cycle in cycles %}
+                    <tr>
+                        <td>{{ cycle.annee_scolaire.libelle }}</td>
+                        <td>
+                            {% if cycle.type_cycle == 'trimestriel' %}
+                            <span class="badge bg-primary">Trimestriel</span>
+                            {% else %}
+                            <span class="badge bg-success">Semestriel</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ cycle.libelle }}</td>
+                        <td>{{ cycle.date_debut|date:"d/m/Y" }}</td>
+                        <td>{{ cycle.date_fin|date:"d/m/Y" }}</td>
+                        <td>{{ cycle.pourcentage }}%</td>
+                        <td>
+                            <a href="{% url 'finances:cycle_edit' cycle.pk %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <a href="{% url 'finances:cycle_delete' cycle.pk %}" class="btn btn-sm btn-outline-danger">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">
+                            Aucun cycle configuré. Cliquez sur "Nouveau Cycle" pour commencer.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="mt-4">
+    <a href="{% url 'finances:eleves_en_retard' %}" class="btn btn-warning">
+        <i class="bi bi-exclamation-triangle"></i> Voir les élèves en retard
+    </a>
+</div>
+{% endblock %}

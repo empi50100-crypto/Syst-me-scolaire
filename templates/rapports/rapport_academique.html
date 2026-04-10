@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}Rapport Académique{% endblock %}
+
+{% block content %}
+<h1>Rapport Académique</h1>
+<h4 class="text-muted">{{ annee.libelle }}</h4>
+
+<div class="card">
+    <div class="card-body">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Classe</th>
+                    <th>Effectif</th>
+                    <th>Moyenne Classe</th>
+                    <th>Taux de Réussite</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in stats %}
+                <tr>
+                    <td>{{ s.classe.nom }}</td>
+                    <td>{{ s.effectif }}</td>
+                    <td>{{ s.moyenne_classe }}/20</td>
+                    <td>
+                        <div class="progress" style="height: 20px;">
+                            <div class="progress-bar bg-success" style="width: {{ s.taux_reussite }}%">
+                                {{ s.taux_reussite }}%
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4" class="text-center text-muted">Aucune donnée</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% if user.is_direction %}
+<div class="mt-4">
+    <a href="{% url 'rapports:transition_annee' %}" class="btn btn-warning">
+        <i class="bi bi-calendar-plus"></i> Gérer la transition d'année
+    </a>
+</div>
+{% endif %}
+{% endblock %}

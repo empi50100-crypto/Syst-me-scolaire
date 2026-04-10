@@ -1,0 +1,78 @@
+# ============ Environement ============
+.env
+.env.local
+.env.*.local
+*.env
+
+# ============ Base de données ============
+db.sqlite3
+db.sqlite3-journal
+*.sqlite
+*.sqlite3
+
+# ============ Médias uploadés ============
+media/
+!media/.gitkeep
+
+# ============ Logs ============
+logs/
+*.log
+
+# ============ Python ============
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv/
+
+# ============ Django ============
+*.pot
+*.pyc
+staticfiles/
+static/
+django_extensions/
+
+# ============ Sauvegardes ============
+backups/
+*.bak
+*.backup
+*.old
+
+# ============ IDE & OS ============
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ============ Secrets & Certificats ============
+*.pem
+*.key
+*.crt
+*.cert
+credentials.json
+secrets.json
+
+# ============ Node (si utilisé) ============
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+
+# ============ Tests ============
+htmlcov/
+.coverage
+.coverage.*
+.pytest_cache/
+.tox/
+
+# ============ Distribution ============
+dist/
+build/
+*.egg-info/

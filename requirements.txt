@@ -1,0 +1,27 @@
+# Django et REST Framework
+Django>=5.0,<6.0
+djangorestframework>=3.14
+django-filter>=25.0
+
+# Configuration
+python-dotenv>=1.0
+
+# Media (photos)
+Pillow>=10.0
+
+# Rapports PDF
+reportlab>=4.0
+
+# Excel
+openpyxl>=3.1
+
+# ============ SÉCURITÉ ============
+django-axes>=6.0
+django-cors-headers>=4.0
+djangorestframework-simplejwt>=5.3
+qrcode>=7.4
+pyotp>=2.9
+
+# Optionnel: SQL Server
+# django-pyodbc-azure>=2.1
+# pyodbc>=4.0

@@ -1,0 +1,207 @@
+{% extends 'base.html' %}
+
+{% block title %}Salaire{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="bi bi-wallet2"></i> Nouveau Salaire</h1>
+</div>
+
+<div class="form-container">
+    {% if form.errors %}
+    <div class="alert alert-danger">
+        <strong>Erreurs dans le formulaire:</strong>
+        <ul>
+        {% for field in form %}
+            {% if field.errors %}
+            <li>{{ field.label }}: {{ field.errors.0 }}</li>
+            {% endif %}
+        {% endfor %}
+        {% for error in form.non_field_errors %}
+            <li>{{ error }}</li>
+        {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+    
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="form-section">
+            <div class="form-section-header">
+                <i class="bi bi-person"></i> Informations du Salaire
+            </div>
+            
+            <div class="row g-4">
+                {% if selected_personnel or form.instance.personnel_id %}
+                <div class="col-md-12">
+                    <div class="alert alert-success">
+                        <i class="bi bi-check-circle"></i> 
+                        <strong>Personnel sélectionné: </strong>
+                        {% if selected_personnel %}
+                            {{ selected_personnel.nom_complet }} ({{ selected_personnel.get_fonction_display }})
+                        {% elif form.instance.personnel %}
+                            {{ form.instance.personnel.nom_complet }}
+                        {% endif %}
+                    </div>
+                    <input type="hidden" name="source_type" value="manual">
+                </div>
+                {% else %}
+                <div class="col-md-12 mb-3">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Choisir le type de personnel:</strong>
+                        <div class="form-check form-check-inline ms-3">
+                            <input class="form-check-input" type="radio" name="source_type" id="source_system" value="system" {% if source == 'system' %}checked{% endif %} onchange="toggleSource()">
+                            <label class="form-check-label" for="source_system">Utilisateurs du système</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="source_type" id="source_manual" value="manual" {% if source == 'manual' %}checked{% endif %} onchange="toggleSource()">
+                            <label class="form-check-label" for="source_manual">Personnel manuel</label>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div id="system_users_section" style="{% if source != 'system' %}display: none;{% endif %}">
+                    <div class="col-md-12">
+                        <div class="card mb-3">
+                            <div class="card-header bg-primary text-white">
+                                <i class="bi bi-people"></i> Utilisateurs du système
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
+                                    <table class="table table-sm table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Sélectionner</th>
+                                                <th>Nom</th>
+                                                <th>Rôle</th>
+                                                <th>Salaire défini</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for user in system_users %}
+                                            <tr>
+                                                <td>
+                                                    <input class="form-check-input" type="radio" name="system_user" value="{{ user.id }}" 
+                                                           data-personnel-id="{% if user.dossier_personnel %}{{ user.dossier_personnel.id }}{% endif %}"
+                                                           {% if form.instance.personnel_id and user.dossier_personnel.id == form.instance.personnel_id %}checked{% endif %}>
+                                                </td>
+                                                <td>{{ user.get_full_name|default:user.username }}</td>
+                                                <td>{{ user.get_role_display }}</td>
+                                                <td>
+                                                    {% if user.dossier_personnel %}
+                                                        {{ user.dossier_personnel.salaire_mensuel|floatformat:0 }} Fcfa
+                                                    {% else %}
+                                                        <span class="text-muted">Non défini</span>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                            {% empty %}
+                                            <tr><td colspan="4" class="text-muted">Aucun utilisateur trouvé</td></tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <small class="text-muted">Sélectionnez un utilisateur ci-dessus puis cliquez sur "Utiliser ce salary"</small>
+                                <button type="button" class="btn btn-sm btn-primary ms-2" onclick="useSelectedUser()">
+                                    <i class="bi bi-check"></i> Utiliser ce salary
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if not selected_personnel and not form.instance.personnel_id %}
+                <div id="manual_section" style="{% if source != 'manual' %}display: none;{% endif %}">
+                {% else %}
+                <div id="manual_section" style="display: none;">
+                {% endif %}
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Personnel manuel</label>
+                            {{ form.personnel }}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label class="form-label">Mois</label>
+                        {{ form.mois }}
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label class="form-label">Année</label>
+                        {{ form.annee }}
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label class="form-label">Salaire brut (FCFA)</label>
+                        {{ form.salaire_brut }}
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label class="form-label">Retenues (FCFA)</label>
+                        {{ form.retenues }}
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label class="form-label">Date de versement</label>
+                        {{ form.date_versement }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-success btn-lg">
+                <i class="bi bi-check-circle"></i> Enregistrer
+            </button>
+            <a href="{% url 'finances:gestion_salaires' %}" class="btn btn-secondary btn-lg">
+                <i class="bi bi-x-circle"></i> Annuler
+            </a>
+        </div>
+    </form>
+</div>
+
+<script>
+function toggleSource() {
+    const source = document.querySelector('input[name="source_type"]:checked').value;
+    document.getElementById('system_users_section').style.display = source === 'system' ? 'block' : 'none';
+    document.getElementById('manual_section').style.display = source === 'manual' ? 'block' : 'none';
+    
+    window.history.replaceState({}, '', '?source=' + source);
+}
+
+function useSelectedUser() {
+    const selected = document.querySelector('input[name="system_user"]:checked');
+    if (!selected) {
+        alert('Veuillez sélectionner un utilisateur');
+        return;
+    }
+    
+    const personnelId = selected.dataset.personnelId;
+    if (!personnelId) {
+        alert('Cet utilisateur n\'a pas de dossier personnel. Veuillez d\'abord créer un dossier personnel pour cet utilisateur dans Personnel.');
+        return;
+    }
+    
+    window.location.href = '{% url "finances:salaire_create" %}?source=manual&personnel=' + personnelId;
+}
+
+function checkAndSubmit() {
+    const checkedRadio = document.querySelector('input[name="source_type"]:checked');
+    if (checkedRadio && checkedRadio.value === 'system') {
+        alert('Veuillez d\'abord sélectionner un utilisateur et cliquer sur "Utiliser ce salary"');
+        return;
+    }
+    document.querySelector('form').submit();
+}
+</script>
+{% endblock %}

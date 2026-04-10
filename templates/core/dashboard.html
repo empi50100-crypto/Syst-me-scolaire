@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}Tableau de bord{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="bi bi-speedometer2"></i> Tableau de bord</h1>
+    {% if annee_courante %}
+    <span class="badge bg-primary fs-6">{{ annee_courante.libelle|default:annee_courante }}</span>
+    {% endif %}
+</div>
+
+{% if role == 'superadmin' %}
+{% include 'core/dashboard_superadmin.html' %}
+{% elif role == 'direction' %}
+{% include 'core/dashboard_direction.html' %}
+{% elif role == 'comptable' %}
+{% include 'core/dashboard_comptable.html' %}
+{% elif role == 'secretaire' %}
+{% include 'core/dashboard_secretaire.html' %}
+{% elif role == 'surveillance' %}
+{% include 'core/dashboard_surveillance.html' %}
+{% elif role == 'professeur' %}
+{% include 'core/dashboard_professeur.html' %}
+{% else %}
+<div class="alert alert-warning">Votre rôle n'est pas configuré. Veuillez contacter l'administrateur.</div>
+{% endif %}
+{% endblock %}

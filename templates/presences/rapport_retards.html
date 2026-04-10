@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}Rapport Retards{% endblock %}
+
+{% block content %}
+<h1>Rapport des Retards</h1>
+
+<h4 class="mb-4">Élèves avec retards</h4>
+<table class="table table-striped mb-4">
+    <thead>
+        <tr>
+            <th>Élève</th>
+            <th>Classe</th>
+            <th>Nombre de retards</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for key, data in eleves_avec_retards.items %}
+        <tr>
+            <td>{{ data.eleve.nom_complet }}</td>
+            <td>{{ data.classe.nom }}</td>
+            <td class="text-warning">{{ data.count }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="3" class="text-center text-muted">Aucun retard</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<h4>Historique des retards</h4>
+<table class="table table-sm">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Élève</th>
+            <th>Classe</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for r in retards %}
+        <tr>
+            <td>{{ r.date }}</td>
+            <td>{{ r.eleve.nom_complet }}</td>
+            <td>{{ r.classe.nom }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

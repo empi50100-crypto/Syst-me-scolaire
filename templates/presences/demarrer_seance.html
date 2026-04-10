@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}Démarrer une séance{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="bi bi-play-circle"></i> Démarrer une séance de cours</h1>
+</div>
+
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">Informations du cours</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Classe:</strong> {{ ens.classe.nom }}</p>
+                <p><strong>Matière:</strong> {{ ens.matiere.nom }}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Professeur:</strong> {{ ens.professeur }}</p>
+                <p><strong>Date:</strong> {{ today|date:"d/m/Y" }}</p>
+            </div>
+        </div>
+        
+        {% if ens.horaires %}
+        <div class="mt-3">
+            <h6>Horaires:</h6>
+            <ul>
+            {% for h in ens.horaires %}
+                <li>{{ h.jour|capfirst }}: {{ h.heure_debut }} - {{ h.heure_fin }}</li>
+            {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success btn-lg">
+                <i class="bi bi-play-fill"></i> Démarrer la séance
+            </button>
+            <a href="{% url 'presences:mes_seances' %}" class="btn btn-secondary btn-lg ms-2">
+                Annuler
+            </a>
+        </form>
+    </div>
+</div>
+
+{% if seance %}
+<div class="alert alert-info mt-4">
+    <h5>Séance déjà en cours</h5>
+    <p>Cette séance a déjà été démarrée à {{ seance.heure_debut|date:"H:i" }}</p>
+    <a href="{% url 'presences:terminer_seance' seance.pk %}" class="btn btn-danger">
+        Terminer la séance
+    </a>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,378 @@
+{% extends 'base.html' %}
+
+{% block title %}Classes{% endblock %}
+
+{% block extra_css %}
+<style>
+.matiere-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 15px;
+    background: var(--bs-body-bg);
+    border: 1px solid var(--bs-border-color);
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+.matiere-card:hover {
+    border-color: var(--bs-primary);
+    background: var(--bs-primary-bg-subtle);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.matiere-card.disabled {
+    opacity: 0.4;
+    pointer-events: none;
+}
+.matiere-card .form-check {
+    margin: 0;
+    display: flex;
+    align-items: center;
+}
+.matiere-card .form-check-input {
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+    cursor: pointer;
+}
+.matiere-card .form-check-label {
+    cursor: pointer;
+    font-weight: 500;
+    color: var(--bs-body-color);
+}
+.matiere-card .matiere-coef {
+    background: var(--bs-tertiary-bg);
+    color: var(--bs-secondary-color);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.matiere-card:hover .matiere-coef {
+    background: var(--bs-primary);
+    color: white;
+}
+.matiere-card.selected {
+    border-color: var(--bs-primary);
+    background: var(--bs-primary-bg-subtle);
+}
+.matiere-card.selected .matiere-coef {
+    background: var(--bs-primary);
+    color: white;
+}
+
+.eleve-card {
+    display: flex;
+    align-items: center;
+    padding: 12px 15px;
+    background: var(--bs-body-bg);
+    border: 1px solid var(--bs-border-color);
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+.eleve-card:hover {
+    border-color: var(--bs-primary);
+    background: var(--bs-primary-bg-subtle);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.eleve-card.selected {
+    border-color: var(--bs-primary);
+    background: var(--bs-primary-bg-subtle);
+}
+.eleve-card .form-check {
+    margin: 0;
+    display: flex;
+    align-items: center;
+}
+.eleve-card .form-check-input {
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+    cursor: pointer;
+}
+.eleve-card .form-check-label {
+    cursor: pointer;
+    font-weight: 500;
+    color: var(--bs-body-color);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="bi bi-collection"></i> {{ action|default:"Créer" }} une Classe</h1>
+</div>
+
+<div class="form-container">
+    <form method="post">
+        {% csrf_token %}
+        
+        {% if form.errors %}
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <strong><i class="bi bi-exclamation-triangle"></i> Erreurs dans le formulaire:</strong>
+            <ul class="mb-0 mt-2">
+                {% for field in form %}
+                    {% for error in field.errors %}
+                        <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+                    {% endfor %}
+                {% endfor %}
+                {% for error in form.non_field_errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+        
+        <div class="form-section">
+            <div class="form-section-header">
+                <i class="bi bi-collection"></i> Informations de la Classe
+            </div>
+            
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">Nom de la classe</label>
+                        {{ form.nom }}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">Niveau</label>
+                        {{ form.niveau }}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">Série (Lycée)</label>
+                        {{ form.serie }}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">Domaine (Université)</label>
+                        {{ form.domaine }}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">Subdivision</label>
+                        {{ form.subdivision }}
+                        <small class="text-muted">Ex: 1, 2, A, B... (laisser vide si une seule classe)</small>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">Professeur principal</label>
+                        {{ form.professeur_principal }}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">Capacité</label>
+                        {{ form.capacite }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="form-section">
+            <div class="form-section-header">
+                <i class="bi bi-book"></i> Matières de la Classe
+            </div>
+            <p class="text-muted mb-3">Sélectionnez les matières enseignées dans cette classe.</p>
+            <div class="matieres-container" id="matieresContainer">
+                <div class="row">
+                    {% for matiere in form.matieres.field.queryset %}
+                    <div class="col-md-6 col-lg-4 mb-2 matiere-item" data-nom="{{ matiere.nom }}" data-coef="{{ matiere.coefficient }}">
+                        <div class="matiere-card" id="matiere_card_{{ matiere.id }}">
+                            <div class="form-check">
+                                <input type="checkbox" 
+                                       class="form-check-input matiere-checkbox" 
+                                       name="matieres" 
+                                       value="{{ matiere.id }}" 
+                                       id="matiere_{{ matiere.id }}"
+                                       {% if matiere.id in form.get_selected_matiere_ids %}checked{% endif %}
+                                       onchange="updateMatieres(this)">
+                                <label class="form-check-label" for="matiere_{{ matiere.id }}">
+                                    <strong>{{ matiere.nom }}</strong>
+                                </label>
+                            </div>
+                            <span class="matiere-coef">Coeff. {{ matiere.coefficient }}</span>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="col-12">
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> Aucune matière créée. 
+                            <a href="{% url 'academics:matiere_create' %}">Créer une matière</a> d'abord.
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <small class="text-muted d-block mt-2">Le coefficient de chaque matière sera automatiquement assigné.</small>
+        </div>
+        
+        <div class="form-section">
+            <div class="form-section-header">
+                <i class="bi bi-people"></i> Élèves de la Classe
+            </div>
+            <p class="text-muted mb-3">Sélectionnez les élèves à inscrire dans cette classe.</p>
+            
+            <div class="mb-3">
+                <input type="text" id="searchEleves" class="form-control" placeholder="Rechercher un élève par nom ou prénom..." onkeyup="filterEleves()">
+            </div>
+            
+            <div class="eleves-container" id="elevesContainer">
+                <div class="row" id="elevesList">
+                    {% for eleve in form.eleves.field.queryset %}
+                    <div class="col-md-6 col-lg-4 mb-2 eleve-item" data-nom="{{ eleve.nom|lower }}" data-prenom="{{ eleve.prenom|lower }}" data-niveau="{{ eleve.niveau }}">
+                        <div class="eleve-card" id="eleve_card_{{ eleve.id }}">
+                            <div class="form-check">
+                                <input type="checkbox" 
+                                       class="form-check-input eleve-checkbox" 
+                                       name="eleves" 
+                                       value="{{ eleve.id }}" 
+                                       id="eleve_{{ eleve.id }}"
+                                       {% if eleve.id in form.get_selected_eleve_ids %}checked{% endif %}>
+                                <label class="form-check-label" for="eleve_{{ eleve.id }}">
+                                    <strong>{{ eleve.nom }}</strong> {{ eleve.prenom }}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="col-12">
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> Aucun élève disponible à inscrire. 
+                            <a href="{% url 'eleves:eleve_create' %}">Créer un élève</a> d'abord.
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div id="noElevesFound" class="alert alert-warning" style="display: none;">
+                    <i class="bi bi-search"></i> Aucun élève ne correspond à votre recherche.
+                </div>
+            </div>
+            <small class="text-muted d-block mt-2">Les élèves déjà inscrits dans une autre classe pour cette année scolaire n'apparaissent pas.</small>
+        </div>
+        
+        <script>
+        function updateMatieres(changedCheckbox) {
+            const container = document.getElementById('matieresContainer');
+            const allItems = container.querySelectorAll('.matiere-item');
+            
+            const selectedNoms = new Set();
+            const selectedCoefs = new Map(); // Store nom -> selected coefficient
+            
+            // Get all currently selected subject names and their coefficients
+            container.querySelectorAll('.matiere-checkbox:checked').forEach(cb => {
+                const item = cb.closest('.matiere-item');
+                const nom = item.dataset.nom;
+                const coef = item.dataset.coef;
+                selectedNoms.add(nom);
+                selectedCoefs.set(nom, coef);
+            });
+            
+            // Show all items first, then hide duplicates
+            allItems.forEach(item => {
+                item.style.display = '';
+                const nom = item.dataset.nom;
+                const coef = item.dataset.coef;
+                const card = item.querySelector('.matiere-card');
+                const checkbox = item.querySelector('.matiere-checkbox');
+                
+                if (checkbox.checked) {
+                    card.classList.add('selected');
+                } else if (selectedNoms.has(nom)) {
+                    // If this variant is NOT the selected one, hide it
+                    if (selectedCoefs.get(nom) !== coef) {
+                        item.style.display = 'none';
+                    }
+                } else {
+                    card.classList.remove('selected');
+                }
+            });
+        }
+        
+        // Initialize on page load - run after a small delay to ensure DOM is ready
+        setTimeout(function() {
+            document.querySelectorAll('.matiere-checkbox').forEach(cb => {
+                updateMatieres(cb);
+            });
+            filterElevesByNiveau();
+        }, 100);
+        
+        // Listen to niveau dropdown changes
+        const niveauSelect = document.getElementById('id_niveau');
+        if (niveauSelect) {
+            niveauSelect.addEventListener('change', filterElevesByNiveau);
+        }
+        
+        function filterElevesByNiveau() {
+            if (!niveauSelect) return;
+            const targetNiveauRaw = niveauSelect.value || '';
+            const targetNiveau = targetNiveauRaw.replace(/\s+/g, '').toLowerCase();
+            const searchInput = document.getElementById('searchEleves');
+            const searchFilter = searchInput ? searchInput.value.toLowerCase() : '';
+            
+            const container = document.getElementById('elevesList');
+            if(!container) return;
+            const items = container.querySelectorAll('.eleve-item');
+            let visibleCount = 0;
+            
+            items.forEach(item => {
+                const rawNiveau = item.dataset.niveau || '';
+                const niveau = rawNiveau.replace(/\s+/g, '').toLowerCase();
+                const nom = item.dataset.nom || '';
+                const prenom = item.dataset.prenom || '';
+                
+                const matchNiveau = !targetNiveau || niveau === targetNiveau;
+                const matchSearch = searchFilter === '' || nom.includes(searchFilter) || prenom.includes(searchFilter);
+                
+                if (matchNiveau && matchSearch) {
+                    item.style.display = '';
+                    visibleCount++;
+                } else {
+                    item.style.display = 'none';
+                    // Optional: uncheck the box if it gets hidden because of level mismatch
+                    if (!matchNiveau) {
+                        const checkbox = item.querySelector('.eleve-checkbox');
+                        if (checkbox && checkbox.checked) {
+                            checkbox.checked = false;
+                        }
+                    }
+                }
+            });
+            
+            checkEmptyEleves(visibleCount);
+        }
+        
+        function checkEmptyEleves(visibleCount) {
+            const noResultsMsg = document.getElementById('noElevesFound');
+            if(noResultsMsg) {
+                if (visibleCount === 0) {
+                    noResultsMsg.style.display = 'block';
+                } else {
+                    noResultsMsg.style.display = 'none';
+                }
+            }
+        }
+        
+        function filterEleves() {
+            filterElevesByNiveau();
+        }
+        </script>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-lg">
+                <i class="bi bi-check-circle"></i> Enregistrer
+            </button>
+            <a href="{% url 'academics:classe_list' %}" class="btn btn-secondary btn-lg">
+                <i class="bi bi-x-circle"></i> Annuler
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

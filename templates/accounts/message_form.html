@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+
+{% block title %}Nouveau message{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="bi bi-envelope-plus"></i> Nouveau message</h1>
+</div>
+
+<div class="form-container">
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="form-section">
+            <div class="form-section-header">
+                <i class="bi bi-envelope"></i> Composition du message
+            </div>
+            
+            <div class="row g-4">
+                <div class="col-12">
+                    <div class="form-group">
+                        <label class="form-label">Type de message</label>
+                        <div class="btn-group w-100" role="group">
+                            <input type="radio" class="btn-check" name="type_message" id="type_individuel" value="individuel" checked autocomplete="off">
+                            <label class="btn btn-outline-primary" for="type_individuel">
+                                <i class="bi bi-person"></i> Individuel
+                            </label>
+                            
+                            <input type="radio" class="btn-check" name="type_message" id="type_service" value="service" autocomplete="off">
+                            <label class="btn btn-outline-primary" for="type_service">
+                                <i class="bi bi-people"></i> Au service
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-12" id="destinataire-field">
+                    <div class="form-group">
+                        <label class="form-label">Destinataire</label>
+                        <select name="destinataire" class="form-select" {% if destinataire_preselection %}data-preselected="{{ destinataire_preselection.pk }}"{% endif %}>
+                            <option value="">Sélectionner un destinataire</option>
+                            {% for user in utilisateurs %}
+                            <option value="{{ user.pk }}" {% if destinataire_preselection.pk == user.pk %}selected{% endif %}>
+                                {{ user.get_full_name }} ({{ user.get_role_display }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="col-12 d-none" id="service-field">
+                    <div class="form-group">
+                        <label class="form-label">Service</label>
+                        <select name="service" class="form-select">
+                            <option value="">Sélectionner un service</option>
+                            <option value="direction">Direction générale</option>
+                            <option value="secretaire">Secrétariat</option>
+                            <option value="comptable">Comptabilité</option>
+                            <option value="professeur">Enseignement</option>
+                            <option value="surveillance">Contrôle & Supervision</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="col-12">
+                    <div class="form-group">
+                        <label class="form-label">Sujet</label>
+                        <input type="text" name="sujet" class="form-control" required placeholder="Objet du message" value="{{ reply_sujet|default:'' }}">
+                    </div>
+                </div>
+                
+                <div class="col-12">
+                    <div class="form-group">
+                        <label class="form-label">Message</label>
+                        <textarea name="contenu" class="form-control" rows="6" required placeholder="Écrivez votre message ici..."></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-lg">
+                <i class="bi bi-send"></i> Envoyer
+            </button>
+            <a href="{% url 'accounts:message_list' %}" class="btn btn-secondary btn-lg">
+                <i class="bi bi-x-circle"></i> Annuler
+            </a>
+        </div>
+    </form>
+</div>
+
+<script>
+document.querySelectorAll('input[name="type_message"]').forEach(function(radio) {
+    radio.addEventListener('change', function() {
+        var destinataireField = document.getElementById('destinataire-field');
+        var serviceField = document.getElementById('service-field');
+        
+        if (this.value === 'individuel') {
+            destinataireField.classList.remove('d-none');
+            serviceField.classList.add('d-none');
+        } else {
+            destinataireField.classList.add('d-none');
+            serviceField.classList.remove('d-none');
+        }
+    });
+});
+</script>
+{% endblock %}

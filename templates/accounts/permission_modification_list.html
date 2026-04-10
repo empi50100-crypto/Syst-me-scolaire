@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+{% block title %}Demandes de Modification de Permissions{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-shield-lock"></i> Demandes de Modification de Permissions</h1>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <ul class="nav nav-tabs card-header-tabs" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link {% if not statut %}active{% endif %}" href="{% url 'accounts:permission_modification_list' %}">
+                    Toutes <span class="badge bg-dark">{{ total }}</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if statut == 'en_attente' %}active{% endif %}" href="?statut=en_attente">
+                    En attente <span class="badge bg-warning text-dark">{{ en_attente }}</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if statut == 'approuve' %}active{% endif %}" href="?statut=approuve">
+                    Approuvées <span class="badge bg-success">{{ approuve }}</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if statut == 'rejete' %}active{% endif %}" href="?statut=rejete">
+                    Rejetées <span class="badge bg-danger">{{ rejete }}</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Module</th>
+                        <th>Service</th>
+                        <th>Demandeur</th>
+                        <th>Type de modification</th>
+                        <th>Actions demandées</th>
+                        <th>Niveau demandé</th>
+                        <th>Date</th>
+                        <th>Statut</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for mod in modifications %}
+                    <tr>
+                        <td><strong>{{ mod.module.nom }}</strong></td>
+                        <td>{{ mod.module.service.nom }}</td>
+                        <td>{{ mod.demandeur.get_full_name|default:mod.demandeur.username }}</td>
+                        <td>
+                            {% if mod.type_modification == 'ajout' %}
+                                <span class="badge bg-success">Ajout</span>
+                            {% elif mod.type_modification == 'modification' %}
+                                <span class="badge bg-primary">Modification</span>
+                            {% else %}
+                                <span class="badge bg-danger">Suppression</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% for action in mod.actions_demandees %}
+                                <span class="badge bg-info text-dark">{{ action }}</span>
+                            {% endfor %}
+                        </td>
+                        <td>{{ mod.get_niveau_display }}</td>
+                        <td><small>{{ mod.created_at|date:"d/m/Y H:i" }}</small></td>
+                        <td>
+                            {% if mod.statut == 'en_attente' %}
+                                <span class="badge bg-warning text-dark">En attente</span>
+                            {% elif mod.statut == 'approuve' %}
+                                <span class="badge bg-success">Approuvée</span>
+                            {% else %}
+                                <span class="badge bg-danger">Rejetée</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <a href="{% url 'accounts:permission_modification_detail' mod.pk %}" class="btn btn-sm btn-info" title="Voir détails">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            {% if mod.statut == 'en_attente' %}
+                            <button type="button" class="btn btn-sm btn-success" onclick="showApproveModal({{ mod.pk }})" title="Approuver">
+                                <i class="bi bi-check-circle"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-danger" onclick="showRejectModal({{ mod.pk }})" title="Rejeter">
+                                <i class="bi bi-x-circle"></i>
+                            </button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" class="text-center text-muted py-4">
+                            <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+                            <p class="mb-0 mt-2">Aucune demande de modification</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% for mod in modifications %}
+{% if mod.statut == 'en_attente' %}
+<div id="approveModal{{ mod.pk }}" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+    <div style="background: var(--bs-body-bg, white); padding: 20px; border-radius: 8px; width: 400px; max-width: 90%;">
+        <h5>Approuver la demande</h5>
+        <p>Êtes-vous sûr de vouloir approuver cette demande pour <strong>{{ mod.module.nom }}</strong>?</p>
+        <form method="post" action="{% url 'accounts:permission_modification_approuver' mod.pk %}">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label class="form-label">Commentaire (optionnel)</label>
+                <textarea name="commentaire" class="form-control" rows="2"></textarea>
+            </div>
+            <div class="d-flex gap-2 justify-content-end">
+                <button type="button" onclick="document.getElementById('approveModal{{ mod.pk }}').style.display='none'" class="btn btn-secondary">Annuler</button>
+                <button type="submit" class="btn btn-success">Approuver</button>
+            </div>
+        </form>
+    </div>
+</div>
+<div id="rejectModal{{ mod.pk }}" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+    <div style="background: var(--bs-body-bg, white); padding: 20px; border-radius: 8px; width: 400px; max-width: 90%;">
+        <h5>Rejeter la demande</h5>
+        <p>Êtes-vous sûr de vouloir rejeter cette demande pour <strong>{{ mod.module.nom }}</strong>?</p>
+        <form method="post" action="{% url 'accounts:permission_modification_rejeter' mod.pk %}">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label class="form-label">Motif du rejet</label>
+                <textarea name="commentaire" class="form-control" rows="2" required></textarea>
+            </div>
+            <div class="d-flex gap-2 justify-content-end">
+                <button type="button" onclick="document.getElementById('rejectModal{{ mod.pk }}').style.display='none'" class="btn btn-secondary">Annuler</button>
+                <button type="submit" class="btn btn-danger">Rejeter</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+{% endfor %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showApproveModal(pk) {
+    document.getElementById('approveModal' + pk).style.display = 'flex';
+}
+function showRejectModal(pk) {
+    document.getElementById('rejectModal' + pk).style.display = 'flex';
+}
+</script>
+{% endblock %}

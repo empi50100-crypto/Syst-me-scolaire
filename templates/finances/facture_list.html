@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+
+{% block title %}Factures - SyGeS-AM{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Accueil</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'finances:frais_list' %}">Finances</a></li>
+                <li class="breadcrumb-item active">Factures</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-file-earmark-text"></i> Factures</h1>
+    <a href="{% url 'finances:facture_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Nouvelle facture
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="get" class="row g-3 mb-4">
+            <div class="col-md-4">
+                <input type="text" name="search" class="form-control" placeholder="Rechercher un élève..." value="{{ search }}">
+            </div>
+            <div class="col-md-3">
+                <select name="statut" class="form-select">
+                    <option value="">Tous les statuts</option>
+                    <option value="en_attente" {% if statut == 'en_attente' %}selected{% endif %}>En attente</option>
+                    <option value="partiellement_payee" {% if statut == 'partiellement_payee' %}selected{% endif %}>Partiellement payée</option>
+                    <option value="payee" {% if statut == 'payee' %}selected{% endif %}>Payée</option>
+                    <option value="annulee" {% if statut == 'annulee' %}selected{% endif %}>Annulée</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-outline-primary w-100">
+                    <i class="bi bi-search"></i> Filtrer
+                </button>
+            </div>
+        </form>
+
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>N° Facture</th>
+                        <th>Date</th>
+                        <th>Échéance</th>
+                        <th>Élève</th>
+                        <th>Montant</th>
+                        <th>Payé</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for facture in factures %}
+                    <tr>
+                        <td><strong>{{ facture.numero_facture }}</strong></td>
+                        <td>{{ facture.date_facture|date:"d/m/Y" }}</td>
+                        <td>{{ facture.date_echeance|date:"d/m/Y" }}</td>
+                        <td>
+                            <a href="{% url 'eleves:eleve_detail' facture.eleve.pk %}">
+                                {{ facture.eleve.nom_complet }}
+                            </a>
+                        </td>
+                        <td><strong>{{ facture.montant_total|floatformat:0 }} FCFA</strong></td>
+                        <td>{{ facture.montant_paye|floatformat:0 }} FCFA</td>
+                        <td>
+                            {% if facture.statut == 'payee' %}
+                                <span class="badge bg-success">Payée</span>
+                            {% elif facture.statut == 'partiellement_payee' %}
+                                <span class="badge bg-warning">Partiellement payée</span>
+                            {% elif facture.statut == 'annulee' %}
+                                <span class="badge bg-secondary">Annulée</span>
+                            {% else %}
+                                <span class="badge bg-danger">En attente</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'finances:facture_detail' facture.pk %}" class="btn btn-outline-primary" title="Voir">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{% url 'finances:facture_pdf' facture.pk %}" class="btn btn-outline-success" title="Télécharger PDF">
+                                    <i class="bi bi-file-pdf"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-4">
+                            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                            Aucune facture trouvée
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if factures.has_other_pages %}
+        <nav>
+            <ul class="pagination justify-content-center">
+                {% if factures.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page=1">Première</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ factures.previous_page_number }}">Précédente</a></li>
+                {% endif %}
+                <li class="page-item active"><span class="page-link">Page {{ factures.number }} / {{ factures.paginator.num_pages }}</span></li>
+                {% if factures.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ factures.next_page_number }}">Suivante</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ factures.paginator.num_pages }}">Dernière</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

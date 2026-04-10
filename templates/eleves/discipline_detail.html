@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+
+{% block title %}Détails de la Discipline - SyGeS-AM{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Accueil</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'eleves:eleve_list' %}">Élèves</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'eleves:discipline_list' %}">Discipline</a></li>
+                <li class="breadcrumb-item active">Détails</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col-md-12">
+        <a href="{% url 'eleves:discipline_list' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Retour à la liste
+        </a>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header bg-primary text-white">
+        <h5><i class="bi bi-shield-exclamation"></i> Détails de la Discipline</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Élève:</strong> <a href="{% url 'eleves:eleve_detail' discipline.eleve.pk %}">{{ discipline.eleve.nom_complet }}</a></p>
+                <p><strong>Date de l'incident:</strong> {{ discipline.date_incident|date:"d/m/Y" }}</p>
+                <p><strong>Type:</strong> 
+                    {% if discipline.type == 'sanction' %}
+                        <span class="badge bg-danger">{{ discipline.get_type_display }}</span>
+                    {% else %}
+                        <span class="badge bg-success">{{ discipline.get_type_display }}</span>
+                    {% endif %}
+                </p>
+                <p><strong>Détails:</strong> {{ discipline.get_type_detail_display }}</p>
+                <p><strong>Points:</strong> 
+                    {% if discipline.points > 0 %}
+                        <span class="text-success">+{{ discipline.points }}</span>
+                    {% elif discipline.points < 0 %}
+                        <span class="text-danger">{{ discipline.points }}</span>
+                    {% else %}
+                        <span class="text-muted">0</span>
+                    {% endif %}
+                </p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Statut:</strong> 
+                    {% if discipline.statut_traitement == 'en_attente' %}
+                        <span class="badge bg-warning text-dark">En attente</span>
+                    {% elif discipline.statut_traitement == 'traite' %}
+                        <span class="badge bg-success">Traité</span>
+                    {% else %}
+                        <span class="badge bg-secondary">{{ discipline.get_statut_traitement_display }}</span>
+                    {% endif %}
+                </p>
+                <p><strong>Enregistré par:</strong> {{ discipline.enregistre_par|default:"-" }}</p>
+                <p><strong>Traité par:</strong> {{ discipline.service_traitant|default:"-" }}</p>
+                <p><strong>Date de traitement:</strong> {{ discipline.date_traitement|date:"d/m/Y"|default:"-" }}</p>
+                <p><strong>Signené aux parents:</strong> 
+                    {% if discipline.est_signale %}
+                        <span class="badge bg-success">Oui</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Non</span>
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-12">
+                <p><strong>Description:</strong></p>
+                <div class="p-3 bg-light rounded">{{ discipline.description }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if conduite %}
+<div class="card mb-3">
+    <div class="card-header bg-info text-white">
+        <h5><i class="bi bi-card-list"></i> Note de Conduite</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <p><strong>Note de base:</strong> {{ conduite.note_base }}/20</p>
+            </div>
+            <div class="col-md-4">
+                <p><strong>Déductions:</strong> <span class="text-danger">-{{ conduite.total_deductions }}</span></p>
+            </div>
+            <div class="col-md-4">
+                <p><strong>Récompenses:</strong> <span class="text-success">+{{ conduite.total_recompenses }}</span></p>
+            </div>
+        </div>
+        <hr>
+        <div class="row">
+            <div class="col-md-12">
+                <h4 class="text-center">
+                    <strong>Note finale: </strong>
+                    <span class="{% if conduite.note_finale >= 10 %}text-success{% elif conduite.note_finale >= 5 %}text-warning{% else %}text-danger{% endif %}">
+                        {{ conduite.note_finale }}/20
+                    </span>
+                </h4>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if can_treat and discipline.statut_traitement == 'en_attente' %}
+<div class="card">
+    <div class="card-header bg-success text-white">
+        <h5><i class="bi bi-check-circle"></i> Traiter cette discipline</h5>
+    </div>
+    <div class="card-body">
+        <form method="post" action="{% url 'eleves:discipline_treat' discipline.pk %}">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label class="form-label">Action</label>
+                <select name="action" class="form-select" required onchange="togglePoints()">
+                    <option value="">Sélectionner une action</option>
+                    <option value="traiter">Confirmer et appliquer les points</option>
+                    <option value="rejeter">Rejeter cette discipline</option>
+                </select>
+            </div>
+            <div class="mb-3" id="pointsSection" style="display:none;">
+                <label class="form-label">Modifier les points si nécessaire</label>
+                <input type="number" name="points" class="form-control" value="{{ discipline.points }}">
+                <div class="form-text">Laissez la même valeur ou modifiez (- pour sanction, + pour récompense)</div>
+            </div>
+            <button type="submit" class="btn btn-success">
+                <i class="bi bi-check-circle"></i> Soumettre
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+function togglePoints() {
+    const action = document.querySelector('select[name="action"]').value;
+    const pointsSection = document.getElementById('pointsSection');
+    pointsSection.style.display = action === 'traiter' ? 'block' : 'none';
+}
+</script>
+{% endif %}
+
+{% endblock %}

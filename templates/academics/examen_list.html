@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+
+{% block title %}Examens{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="bi bi-file-earmark-text"></i> Examens</h1>
+    <a href="{% url 'academics:examen_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Nouvel examen
+    </a>
+</div>
+
+{% if annee %}
+<div class="card mb-3">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Type d'examen</label>
+                <select name="type" class="form-select">
+                    <option value="">Tous</option>
+                    {% for type in examen.TypeExamen.choices %}
+                    <option value="{{ type.0 }}" {% if type_filter == type.0 %}selected{% endif %}>{{ type.1 }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Classe</label>
+                <select name="classe" class="form-select">
+                    <option value="">Toutes</option>
+                    {% for classe in annee.classes.all %}
+                    <option value="{{ classe.pk }}" {% if classe_filter == classe.pk %}selected{% endif %}>{{ classe.nom }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-outline-primary">
+                    <i class="bi bi-filter"></i> Filtrer
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+{% if examens %}
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Nom</th>
+                        <th>Type</th>
+                        <th>Classe</th>
+                        <th>Matière</th>
+                        <th>Date</th>
+                        <th>Durée</th>
+                        <th>Lieu</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for examen in examens %}
+                    <tr>
+                        <td>{{ examen.nom }}</td>
+                        <td><span class="badge bg-secondary">{{ examen.get_type_examen_display }}</span></td>
+                        <td>{{ examen.classe.nom }}</td>
+                        <td>{{ examen.matiere.nom }}</td>
+                        <td>{{ examen.date_examen|date:"d/m/Y" }}</td>
+                        <td>{{ examen.duree_minutes }} min</td>
+                        <td>{{ examen.lieu|default:"-" }}</td>
+                        <td>
+                            {% if examen.est_publie %}
+                            <span class="badge bg-success">Publié</span>
+                            {% else %}
+                            <span class="badge bg-warning">Non publié</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'academics:examen_detail' examen.pk %}" class="btn btn-outline-primary" title="Voir">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{% url 'academics:examen_edit' examen.pk %}" class="btn btn-outline-secondary" title="Modifier">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                {% if not examen.est_publie %}
+                                <a href="{% url 'academics:examen_generate_epreuves' examen.pk %}" class="btn btn-outline-success" title="Générer épreuves">
+                                    <i class="bi bi-people"></i>
+                                </a>
+                                {% endif %}
+                                <a href="{% url 'academics:examen_delete' examen.pk %}" class="btn btn-outline-danger" title="Supprimer" onclick="return confirm('Supprimer cet examen ?')">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="card">
+    <div class="card-body text-center py-5">
+        <i class="bi bi-file-earmark-text" style="font-size: 4rem; color: var(--gray-300);"></i>
+        <h5 class="text-muted mt-3">Aucun examen programmé</h5>
+        <p class="text-muted">Planifiez votre premier examen</p>
+        <a href="{% url 'academics:examen_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Nouvel examen
+        </a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if parent %}Modifier{% else %}Nouveau{% endif %} Parent/Tuteur{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="bi bi-person-badge"></i> {% if parent %}Modifier{% else %}Nouveau{% endif %} Parent / Tuteur</h1>
+</div>
+
+<div class="content-container">
+    <div class="card">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Nom <span class="text-danger">*</span></label>
+                        <input type="text" name="nom" class="form-control" required value="{{ parent.nom|default:'' }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Prénom <span class="text-danger">*</span></label>
+                        <input type="text" name="prenom" class="form-control" required value="{{ parent.prenom|default:'' }}">
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Lien de parenté <span class="text-danger">*</span></label>
+                        <select name="lien_parente" class="form-select" required>
+                            <option value="">Sélectionner...</option>
+                            <option value="pere" {% if parent.lien_parente == 'pere' %}selected{% endif %}>Père</option>
+                            <option value="mere" {% if parent.lien_parente == 'mere' %}selected{% endif %}>Mère</option>
+                            <option value="tuteur" {% if parent.lien_parente == 'tuteur' %}selected{% endif %}>Tuteur/Tutrice</option>
+                            <option value="grand_parent" {% if parent.lien_parente == 'grand_parent' %}selected{% endif %}>Grand-parent</option>
+                            <option value="frere" {% if parent.lien_parente == 'frere' %}selected{% endif %}>Frère</option>
+                            <option value="soeur" {% if parent.lien_parente == 'soeur' %}selected{% endif %}>Soeur</option>
+                            <option value="oncle" {% if parent.lien_parente == 'oncle' %}selected{% endif %}>Oncle</option>
+                            <option value="tante" {% if parent.lien_parente == 'tante' %}selected{% endif %}>Tante</option>
+                            <option value="autre" {% if parent.lien_parente == 'autre' %}selected{% endif %}>Autre</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Téléphone <span class="text-danger">*</span></label>
+                        <input type="tel" name="telephone" class="form-control" required value="{{ parent.telephone|default:'' }}">
+                    </div>
+                </div>
+                
+                {% if eleve %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> Ce parent sera associé à l'élève: <strong>{{ eleve.nom_complet }}</strong>
+                    <input type="hidden" name="eleve" value="{{ eleve.pk }}">
+                </div>
+                {% else %}
+                <div class="mb-3">
+                    <label class="form-label">Élève <span class="text-danger">*</span></label>
+                    <select name="eleve" class="form-select" required>
+                        <option value="">Sélectionner un élève...</option>
+                        {% for e in eleves %}
+                        <option value="{{ e.pk }}">{{ e.nom_complet }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+                
+                <div class="form-check mb-4">
+                    <input type="checkbox" name="est_contact_principal" class="form-check-input" id="contactPrincipal"
+                           {% if parent.est_contact_principal %}checked{% endif %}>
+                    <label class="form-check-label" for="contactPrincipal">
+                        Contact principal (prioritaire pour les communications)
+                    </label>
+                </div>
+                
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-circle"></i> Enregistrer
+                    </button>
+                    <a href="{% url 'eleves:parent_list' %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Annuler
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

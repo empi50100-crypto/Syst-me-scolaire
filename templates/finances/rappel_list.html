@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block title %}Rappels{% endblock %}
+
+{% block content %}
+<h1>Liste des Rappels</h1>
+
+<div class="card">
+    <div class="card-body">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Date échéance</th>
+                    <th>Élève</th>
+                    <th>Type</th>
+                    <th>Montant dû</th>
+                    <th>Statut</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for rappel in rappels %}
+                <tr>
+                    <td>{{ rappel.date_echeance }}</td>
+                    <td>{{ rappel.eleve.nom_complet }}</td>
+                    <td>{{ rappel.type_rappel }}</td>
+                    <td>{{ rappel.montant_due }} FCFA</td>
+                    <td>
+                        <span class="badge bg-{% if rappel.statut == 'acquitte' %}success{% else %}warning{% endif %}">
+                            {{ rappel.get_statut_display }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if rappel.statut != 'acquitte' %}
+                        <a href="#" class="btn btn-sm btn-success">Marquer acquitté</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" class="text-center text-muted">Aucun rappel</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

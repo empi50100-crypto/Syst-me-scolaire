@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ examen.nom }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="bi bi-file-earmark-text"></i> {{ examen.nom }}</h1>
+    <div class="btn-group">
+        {% if not examen.est_publie %}
+        <form method="post" action="{% url 'academics:examen_generate_epreuves' examen.pk %}" class="d-inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success">
+                <i class="bi bi-people"></i> Générer épreuves
+            </button>
+        </form>
+        <form method="post" action="{% url 'academics:examen_publier' examen.pk %}" class="d-inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary" onclick="return confirm('Publier les résultats ?')">
+                <i class="bi bi-check-circle"></i> Publier résultats
+            </button>
+        </form>
+        {% else %}
+        <span class="badge bg-success fs-6"><i class="bi bi-check-circle"></i> Résultats publiés</span>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <table class="table table-sm mb-0">
+                    <tr>
+                        <td><strong>Type</strong></td>
+                        <td>{{ examen.get_type_examen_display }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Classe</strong></td>
+                        <td>{{ examen.classe.nom }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Matière</strong></td>
+                        <td>{{ examen.matiere.nom }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Date</strong></td>
+                        <td>{{ examen.date_examen|date:"d/m/Y" }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Durée</strong></td>
+                        <td>{{ examen.duree_minutes }} minutes</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Note sur</strong></td>
+                        <td>{{ examen.note_sur }}</td>
+                    </tr>
+                    {% if examen.lieu %}
+                    <tr>
+                        <td><strong>Lieu</strong></td>
+                        <td>{{ examen.lieu.nom }}</td>
+                    </tr>
+                    {% endif %}
+                    {% if examen.surveillant %}
+                    <tr>
+                        <td><strong>Surveillant</strong></td>
+                        <td>{{ examen.surveillant.get_full_name }}</td>
+                    </tr>
+                    {% endif %}
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-people"></i> Épreuves ({{ epreuves.count }})</h5>
+            </div>
+            <div class="card-body">
+                {% if epreuves %}
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Élève</th>
+                                    <th>Note</th>
+                                    <th>Appréciation</th>
+                                    <th>Statut</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for epreuve in epreuves %}
+                                <tr>
+                                    <td>{{ epreuve.eleve.prenom }} {{ epreuve.eleve.nom }}</td>
+                                    <td>
+                                        <input type="number" name="note_{{ epreuve.pk }}" class="form-control form-control-sm" 
+                                               value="{{ epreuve.note|stringformat:'g' }}" step="0.01" min="0" max="{{ examen.note_sur }}"
+                                               {% if examen.est_publie %}readonly{% endif %}>
+                                    </td>
+                                    <td>
+                                        <input type="text" name="appreciation_{{ epreuve.pk }}" class="form-control form-control-sm"
+                                               value="{{ epreuve.appreciation }}" {% if examen.est_publie %}readonly{% endif %}>
+                                    </td>
+                                    <td>
+                                        {% if epreuve.est_corrige %}
+                                        <span class="badge bg-success">Corrigé</span>
+                                        {% else %}
+                                        <span class="badge bg-warning">En attente</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% if not examen.est_publie %}
+                    <div class="mt-3">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Enregistrer les notes
+                        </button>
+                    </div>
+                    {% endif %}
+                </form>
+                {% else %}
+                <p class="text-muted mb-0">
+                    Aucune épreuve créée. Cliquez sur "Générer épreuves" pour créer les épreuves pour tous les élèves de la classe.
+                </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if examen.instructions %}
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-info-circle"></i> Instructions</h5>
+    </div>
+    <div class="card-body">
+        {{ examen.instructions|linebreaks }}
+    </div>
+</div>
+{% endif %}
+
+<div class="mt-3">
+    <a href="{% url 'academics:examen_list' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Retour aux examens
+    </a>
+</div>
+{% endblock %}

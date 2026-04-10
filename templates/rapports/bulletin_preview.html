@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% block title %}Bulletin - {{ eleve.nom }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="bi bi-file-earmark-text"></i> Bulletin de {{ eleve.nom }} {{ eleve.prenom }}</h1>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="bi bi-school"></i> Bulletin scolaire - Année {{ annee.libelle }}</h5>
+    </div>
+    <div class="card-body">
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <h6 class="text-muted">Informations élève</h6>
+                <p class="mb-1"><strong>Nom:</strong> {{ eleve.nom }} {{ eleve.prenom }}</p>
+                <p class="mb-1"><strong>Classe:</strong> {{ classe.nom }}</p>
+                <p class="mb-0"><strong>Matricule:</strong> {{ eleve.matricule }}</p>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <h6 class="text-muted">Résultats</h6>
+                <p class="mb-1"><strong>Moyenne générale:</strong> 
+                    <span class="badge bg-{% if moyenne_generale >= 10 %}success{% elif moyenne_generale >= 8 %}warning{% else %}danger{% endif %}">
+                        {{ moyenne_generale|default:"-" }}/20
+                    </span>
+                </p>
+                <p class="mb-1"><strong>Rang:</strong> {{ rang|default:"-" }}</p>
+                <p class="mb-0"><strong>Mention:</strong> {{ mention|default:"-" }}</p>
+            </div>
+        </div>
+
+        <h6 class="text-muted mb-3">Notes par matière</h6>
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead class="table-light">
+                    <tr>
+                        <th>Matière</th>
+                        <th>Coefficient</th>
+                        <th>Note</th>
+                        <th>Moyenne classe</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for matiere, data in notes_par_matiere.items %}
+                    <tr>
+                        <td>{{ matiere.nom }}</td>
+                        <td>{{ matiere.coefficient }}</td>
+                        <td>
+                            <span class="badge bg-{% if data.note >= 10 %}success{% elif data.note >= 8 %}warning{% else %}danger{% endif %}">
+                                {{ data.note }}/20
+                            </span>
+                        </td>
+                        <td>{{ data.moyenne_classe|default:"-"|floatformat:2 }}/20</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center text-muted">Aucune note enregistrée</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if bulletin.appreciation %}
+        <div class="mt-4 p-3 bg-light rounded">
+            <h6 class="text-muted">Appréciation du professeur</h6>
+            <p class="mb-0">{{ bulletin.appreciation }}</p>
+        </div>
+        {% endif %}
+    </div>
+    <div class="card-footer">
+        <a href="{% url 'rapports:bulletin_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Retour à la liste
+        </a>
+        <a href="{% url 'rapports:exporter_bulletin_pdf' bulletin.pk %}" class="btn btn-primary">
+            <i class="bi bi-download"></i> Exporter en PDF
+        </a>
+    </div>
+</div>
+{% endblock %}

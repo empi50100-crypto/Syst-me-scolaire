@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+
+{% block title %}Rapports Financiers - SyGeS-AM{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Accueil</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'finances:frais_list' %}">Finances</a></li>
+                <li class="breadcrumb-item active">Rapports Financiers</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-bar-chart"></i> Rapports Financiers</h1>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Générer un rapport</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Type de rapport</label>
+                        <select name="type_rapport" class="form-select" required>
+                            <option value="mensuel">Mensuel</option>
+                            <option value="trimestriel">Trimestriel</option>
+                            <option value="semestriel">Semestriel</option>
+                            <option value="annuel">Annuel</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Date de début</label>
+                        <input type="date" name="date_debut" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Date de fin</label>
+                        <input type="date" name="date_fin" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-file-earmark"></i> Générer
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Historique des rapports</h5>
+            </div>
+            <div class="card-body">
+                {% if annee %}
+                <p class="text-muted mb-3">Année scolaire: <strong>{{ annee.libelle }}</strong></p>
+                {% endif %}
+                
+                {% if rapports %}
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Période</th>
+                                <th>Recettes</th>
+                                <th>Dépenses</th>
+                                <th>Salaires</th>
+                                <th>Solde</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for rapport in rapports %}
+                            <tr>
+                                <td>
+                                    <span class="badge bg-secondary">{{ rapport.get_type_rapport_display }}</span>
+                                </td>
+                                <td>{{ rapport.date_debut|date:"d/m/Y" }} - {{ rapport.date_fin|date:"d/m/Y" }}</td>
+                                <td class="text-success">{{ rapport.total_recettes|floatformat:0 }} F</td>
+                                <td class="text-danger">{{ rapport.total_depenses|floatformat:0 }} F</td>
+                                <td class="text-warning">{{ rapport.total_salaires|floatformat:0 }} F</td>
+                                <td>
+                                    {% if rapport.solde >= 0 %}
+                                        <span class="text-success fw-bold">{{ rapport.solde|floatformat:0 }} F</span>
+                                    {% else %}
+                                        <span class="text-danger fw-bold">{{ rapport.solde|floatformat:0 }} F</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ rapport.date_generation|date:"d/m/Y" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted text-center mb-0 py-4">Aucun rapport généré</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

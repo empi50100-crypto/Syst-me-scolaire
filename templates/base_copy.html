@@ -1,0 +1,874 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>">
+    <title>{% block title %}Système de Gestion Scolaire{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{% static 'css/custom.css' %}?v=20260405f">
+    <style>
+        /* =============================================== */
+        /* DARK MODE - Navbar */
+        /* =============================================== */
+        body.dark-bg .navbar {
+            background: #1e293b !important;
+            border-bottom: 3px solid;
+            border-image: linear-gradient(90deg, #6366f1, #8b5cf6, #6366f1) 1;
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.3), 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+        }
+        body.dark-bg .navbar > .container-fluid {
+            background: transparent !important;
+        }
+        body.dark-bg .navbar-collapse {
+            background: transparent !important;
+        }
+        body.dark-bg .navbar-brand { color: #f1f5f9 !important; }
+        body.dark-bg .brand-icon {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+            box-shadow: 0 2px 10px rgba(99, 102, 241, 0.5) !important;
+        }
+        body.dark-bg .nav-icon-btn { 
+            color: #cbd5e1 !important; 
+            background: rgba(255,255,255,0.05) !important;
+            transition: all 0.2s ease;
+        }
+        body.dark-bg .nav-icon-btn:hover {
+            background: rgba(99, 102, 241, 0.3) !important;
+            color: #a5b4fc !important;
+            transform: scale(1.1);
+        }
+        body.dark-bg .nav-badge {
+            background: #ef4444;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
+        }
+        body.dark-bg .nav-divider-v { background: #334155 !important; }
+        body.dark-bg .nav-user-btn { 
+            color: #f1f5f9 !important; 
+            background: rgba(255,255,255,0.05) !important;
+            transition: all 0.2s ease;
+        }
+        body.dark-bg .nav-user-btn:hover {
+            background: rgba(99, 102, 241, 0.25) !important;
+            transform: scale(1.02);
+        }
+        body.dark-bg .nav-avatar {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+            box-shadow: 0 2px 10px rgba(99, 102, 241, 0.5) !important;
+        }
+        body.dark-bg .nav-user-name { color: #f1f5f9 !important; }
+        body.dark-bg .nav-user-role { color: #a5b4fc !important; }
+        body.dark-bg .nav-chevron { color: #94a3b8 !important; }
+        body.dark-bg .nav-link.dropdown-toggle {
+            color: #cbd5e1 !important;
+            transition: all 0.2s ease;
+        }
+        body.dark-bg .nav-link.dropdown-toggle:hover {
+            background: rgba(99, 102, 241, 0.2) !important;
+            color: #f1f5f9 !important;
+        }
+        body.dark-bg .dropdown-menu {
+            background: linear-gradient(135deg, #4f46e5, #3b82f6) !important;
+            border: none !important;
+        }
+        body.dark-bg .sidebar .nav-dashboard {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+            color: #ffffff !important;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4) !important;
+        }
+        body.dark-bg .sidebar .nav-dashboard:hover {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed) !important;
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5) !important;
+        }
+        body.dark-bg .sidebar {
+            background: #1e293b !important;
+            border-right: 1px solid #334155 !important;
+        }
+        
+        /* Sidebar - same dark style in both modes */
+        .sidebar {
+            background-color: #1e293b !important;
+            border-right: 1px solid #334155 !important;
+            color: #e2e8f0 !important;
+        }
+        .sidebar a, .sidebar .nav-link, .sidebar .nav-dashboard, .sidebar .group-header, .sidebar .gh-label {
+            color: #e2e8f0 !important;
+        }
+        .sidebar a:hover, .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            background-color: rgba(99, 102, 241, 0.3) !important;
+        }
+
+        /* Avatar in chat */
+        .avatar {
+            font-weight: 600;
+            color: #fff !important;
+        }
+        .bg-gradient {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+        }
+        .bg-gradient.text-white {
+            color: #fff !important;
+        }
+        body.dark-bg .main-content {
+            background: #1e2936 !important;
+        }
+        body.dark-bg .content-wrapper {
+            background: #1e2936 !important;
+        }
+        
+        body.dark-bg .card {
+            background: #1e293b !important;
+            border-color: #334155 !important;
+        }
+        body.dark-bg .card-header {
+            background: #1e293b !important;
+            border-color: #334155 !important;
+            color: #f1f5f9 !important;
+        }
+        body.dark-bg .card-body {
+            background: #1e293b !important;
+            color: #e2e8f0 !important;
+        }
+        
+        /* Tables */
+        body.dark-bg .table {
+            color: #e2e8f0 !important;
+        }
+        body.dark-bg .table thead.table-dark {
+            background: #334155 !important;
+            color: #f1f5f9 !important;
+        }
+        body.dark-bg .table-striped > tbody > tr:nth-of-type(odd) {
+            background: rgba(255, 255, 255, 0.05) !important;
+        }
+        body.dark-bg .table-hover tbody tr:hover {
+            background: rgba(99, 102, 241, 0.2) !important;
+        }
+        body.dark-bg .table-secondary {
+            background: #334155 !important;
+            color: #e2e8f0 !important;
+        }
+        
+        /* Table action buttons - solid filled for clear visibility */
+        body.dark-bg .table .btn-outline-primary {
+            color: #fff !important;
+            background-color: #6366f1 !important;
+            border-color: #6366f1 !important;
+        }
+        body.dark-bg .table .btn-outline-info {
+            color: #fff !important;
+            background-color: #0ea5e9 !important;
+            border-color: #0ea5e9 !important;
+        }
+        body.dark-bg .table .btn-outline-warning {
+            color: #000 !important;
+            background-color: #f59e0b !important;
+            border-color: #f59e0b !important;
+        }
+        body.dark-bg .table .btn-outline-danger {
+            color: #fff !important;
+            background-color: #ef4444 !important;
+            border-color: #ef4444 !important;
+        }
+        body.dark-bg .table .btn-success {
+            color: #fff !important;
+            background-color: #22c55e !important;
+            border-color: #22c55e !important;
+        }
+
+        /* Dashboard quick actions and tables */
+        body.dark-bg .card .table {
+            color: #e2e8f0 !important;
+        }
+        body.dark-bg .card .table td {
+            color: #e2e8f0 !important;
+            border-color: #334155 !important;
+        }
+        body.dark-bg .card .table strong {
+            color: #f1f5f9 !important;
+        }
+        
+        /* Annee table */
+        body.dark-bg .annee-info {
+            color: #e2e8f0 !important;
+        }
+        body.dark-bg .annee-info strong {
+            color: #f1f5f9 !important;
+        }
+        
+        /* Badge */
+        body.dark-bg .badge {
+            color: #fff !important;
+        }
+        
+        /* Quick action buttons - filled for dashboard */
+        body.dark-bg .dashboard-actions .btn-outline-primary,
+        body.dark-bg .card .btn-outline-primary {
+            color: #fff !important;
+            background-color: #6366f1 !important;
+            border-color: #6366f1 !important;
+        }
+        body.dark-bg .dashboard-actions .btn-outline-success,
+        body.dark-bg .card .btn-outline-success {
+            color: #fff !important;
+            background-color: #22c55e !important;
+            border-color: #22c55e !important;
+        }
+        body.dark-bg .dashboard-actions .btn-outline-warning,
+        body.dark-bg .card .btn-outline-warning {
+            color: #000 !important;
+            background-color: #f59e0b !important;
+            border-color: #f59e0b !important;
+        }
+
+        /* Nav tabs */
+        body.dark-bg .nav-tabs .nav-link {
+            color: #94a3b8 !important;
+        }
+        body.dark-bg .nav-tabs .nav-link.active {
+            background: #1e293b !important;
+            color: #f1f5f9 !important;
+            border-color: #334155 #334155 #1e293b !important;
+        }
+        body.dark-bg .nav-tabs .nav-link:hover {
+            border-color: #334155 #334155 #334155 !important;
+            color: #f1f5f9 !important;
+        }
+        
+        /* List groups */
+        body.dark-bg .list-group-item {
+            background: #1e293b !important;
+            border-color: #334155 !important;
+            color: #e2e8f0 !important;
+        }
+        body.dark-bg .list-group-item-action:hover {
+            background: #334155 !important;
+        }
+        
+        /* Messages non lus */
+        body.dark-bg .unread-message {
+            background: rgba(99, 102, 241, 0.2) !important;
+            border-left: 3px solid #6366f1 !important;
+        }
+        
+        /* Chat conversations */
+        body.dark-bg .conv-list {
+            background: #1e293b !important;
+        }
+        body.dark-bg .unread-conv {
+            background: rgba(99, 102, 241, 0.2) !important;
+            border-left: 3px solid #6366f1 !important;
+        }
+        
+        /* Chat bubbles */
+        body.dark-bg .chat-messages {
+            background: #1e293b !important;
+        }
+        body.dark-bg .chat-messages .bg-white {
+            background: #334155 !important;
+            color: #e2e8f0 !important;
+            border-color: #475569 !important;
+        }
+        
+        /* Notifications */
+        body.dark-bg .unread-notif {
+            background: rgba(99, 102, 241, 0.15) !important;
+            border-left: 3px solid #6366f1 !important;
+        }
+
+        /* =============================================== */
+        /* LIGHT MODE - Navbar */
+        /* =============================================== */
+        .navbar {
+            border-bottom: 3px solid #7c3aed !important;
+            box-shadow: 0 4px 20px rgba(124, 58, 237, 0.3), 0 0 30px rgba(124, 58, 237, 0.15) !important;
+        }
+        .nav-icon-btn {
+            transition: all 0.2s ease;
+        }
+        .nav-icon-btn:hover {
+            transform: scale(1.1);
+            background: rgba(124, 58, 237, 0.2) !important;
+        }
+        .nav-user-btn {
+            transition: all 0.2s ease;
+        }
+        .nav-user-btn:hover {
+            transform: scale(1.02);
+            background: rgba(124, 58, 237, 0.15) !important;
+        }
+        .nav-link.dropdown-toggle {
+            transition: all 0.2s ease;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    {% block extra_js %}{% endblock %}
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    {% if user.is_authenticated %}
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg">
+    <div class="container-fluid">
+
+        <a class="navbar-brand" href="{% url 'dashboard' %}">
+            <div class="brand-icon">
+                <i class="bi bi-mortarboard-fill"></i>
+            </div>
+            <span>SyGeS-AM</span>
+        </a>
+
+        <!-- Mobile Menu Button -->
+        <button class="navbar-toggler d-lg-none" type="button" onclick="toggleSidebar()">
+            <i class="bi bi-list"></i>
+        </button>
+
+        <div class="navbar-nav ms-auto d-flex align-items-center gap-2">
+            <!-- Notifications -->
+            <a class="nav-icon-btn position-relative" href="{% url 'accounts:notification_list' %}" title="Notifications">
+                <i class="bi bi-bell"></i>
+                {% if unread_notifications_count %}
+                <span class="nav-badge">{{ unread_notifications_count }}</span>
+                {% endif %}
+            </a>
+
+            <!-- Messages -->
+            <a class="nav-icon-btn position-relative" href="{% url 'accounts:chat_inbox' %}" title="Messages">
+                <i class="bi bi-chat-dots"></i>
+                {% if unread_messages_count %}
+                <span class="nav-badge" style="background: #10b981;">{{ unread_messages_count }}</span>
+                {% endif %}
+            </a>
+
+            <!-- Theme Toggle -->
+            <button class="nav-icon-btn" id="themeToggle" title="Changer le thème">
+                <i class="bi bi-moon-stars" id="themeIcon"></i>
+            </button>
+
+            <!-- Annee Scolaire Dropdown -->
+            <div class="dropdown" id="anneeDropdown">
+                <a class="nav-icon-btn" href="javascript:void(0)" onclick="toggleMobileDropdown('anneeDropdown')" title="Année scolaire">
+                    <i class="bi bi-calendar-range"></i>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end" id="mobileAnneeMenu">
+                    <li><h6 class="dropdown-header">Sélectionner une année</h6></li>
+                    {% for annee in annees %}
+                    <li>
+                        <a class="dropdown-item {% if annee.pk == request.annee_active.pk %}active{% endif %}" 
+                           href="{% url 'finances:annee_selectionner' annee.pk %}">
+                            {% if annee.est_active %}<i class="bi bi-check-circle-fill text-success"></i> {% else %}{% endif %}{{ annee.libelle }}
+                        </a>
+                    </li>
+                    {% endfor %}
+                    <li><hr class="dropdown-divider"></li>
+                     <li><a class="dropdown-item" href="{% url 'finances:annee_list' %}"><i class="bi bi-gear"></i> Gérer les années</a></li>
+                </ul>
+            </div>
+
+            <!-- User Menu Dropdown -->
+            <div class="dropdown" id="userDropdown">
+                <a class="nav-icon-btn" href="javascript:void(0)" onclick="toggleMobileDropdown('userDropdown')" title="Mon compte">
+                    <i class="bi bi-person-circle"></i>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end" id="mobileUserMenu">
+                    <li><span class="dropdown-item-text fw-bold">{{ user.get_full_name|default:user.username }}</span></li>
+                    <li><span class="dropdown-item-text text-muted small">{{ user.get_role_display }}</span></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="{% url 'accounts:profile' %}"><i class="bi bi-person"></i> Mon profil</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item text-danger" href="{% url 'accounts:logout' %}"><i class="bi bi-box-arrow-right"></i> Déconnexion</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</nav>
+
+    <div class="d-flex">
+        <!-- Sidebar -->
+        <nav class="sidebar" id="sidebar">
+            <a href="{% url 'dashboard' %}" id="nav-dashboard" class="nav-dashboard">
+                <i class="bi bi-speedometer2"></i> Tableau de bord
+            </a>
+
+            {% if user.is_direction or user.is_superadmin or user.is_secretaire or user.is_surveillance or user.is_professeur %}
+            <div class="nav-group">
+                <div class="group-header">
+                    <i class="bi bi-people gh-icon"></i>
+                    <span class="gh-label">Gestion des élèves</span>
+                    <span class="arrow">▶</span>
+                </div>
+                <div class="group-body">
+                    <a href="{% url 'eleves:eleve_list' %}" class="nav-link" data-url="/eleves/">
+                        <i class="bi bi-person-badge"></i> Élèves
+                    </a>
+                    <a href="{% url 'eleves:dossiers_medical' %}" class="nav-link" data-url="/eleves/dossiers-medicaux/">
+                        <i class="bi bi-heart-pulse"></i> Dossiers médicaux
+                    </a>
+                    <a href="{% url 'eleves:documents_eleve' %}" class="nav-link" data-url="/eleves/documents/">
+                        <i class="bi bi-file-earmark"></i> Documents
+                    </a>
+                    {% if user.is_surveillance or user.is_direction or user.is_superadmin %}
+                    <a href="{% url 'eleves:discipline_list' %}" class="nav-link" data-url="/eleves/discipline/">
+                        <i class="bi bi-shield-exclamation"></i> Discipline
+                    </a>
+                    <a href="{% url 'eleves:conduite_config_list' %}" class="nav-link" data-url="/eleves/conduite/config/">
+                        <i class="bi bi-gear"></i> Config. Conduite
+                    </a>
+                    {% elif user.is_professeur %}
+                    <a href="{% url 'eleves:discipline_list' %}" class="nav-link" data-url="/eleves/discipline/">
+                        <i class="bi bi-shield-exclamation"></i> Discipline
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+                    <a href="{% url 'academics:fiche_notes_list' %}" class="nav-link" data-url="/academics/fiches-notes/">
+                        <i class="bi bi-file-text"></i> Fiches de Notes
+                    </a>
+                    <a href="{% url 'rapports:bulletin_list' %}" class="nav-link" data-url="/rapports/bulletins/">
+                        <i class="bi bi-journal"></i> Bulletins
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if user.is_direction or user.is_superadmin or user.is_secretaire or user.is_professeur %}
+            <div class="nav-group">
+                <div class="group-header">
+                    <i class="bi bi-building gh-icon"></i>
+                    <span class="gh-label">Gestion académique</span>
+                    <span class="arrow">▶</span>
+                </div>
+                <div class="group-body">
+                    <a href="{% url 'academics:classe_list' %}" class="nav-link" data-url="/academics/classes/">
+                        <i class="bi bi-tag"></i> Classes
+                    </a>
+                    <a href="{% url 'academics:professeur_list' %}" class="nav-link" data-url="/academics/professeurs/">
+                        <i class="bi bi-person-workspace"></i> Professeurs
+                    </a>
+                    <a href="{% url 'academics:matiere_list' %}" class="nav-link" data-url="/academics/matieres/">
+                        <i class="bi bi-book"></i> Matières
+                    </a>
+                    <a href="{% url 'academics:salle_list' %}" class="nav-link" data-url="/academics/salles/">
+                        <i class="bi bi-door-open"></i> Salles
+                    </a>
+                    <a href="{% url 'academics:examen_list' %}" class="nav-link" data-url="/academics/examens/">
+                        <i class="bi bi-clipboard-check"></i> Examens
+                    </a>
+                    <a href="{% url 'academics:contrainte_list' %}" class="nav-link" data-url="/academics/contraintes/">
+                        <i class="bi bi-clock"></i> Contraintes horaires
+                    </a>
+                    <a href="{% url 'academics:attribution_list' %}" class="nav-link" data-url="/academics/attributions/">
+                        <i class="bi bi-diagram-3"></i> Attributions
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if user.is_professeur %}
+            <div class="nav-group">
+                <div class="group-header">
+                    <i class="bi bi-mortarboard gh-icon"></i>
+                    <span class="gh-label">Espace enseignant</span>
+                    <span class="arrow">▶</span>
+                </div>
+                <div class="group-body">
+                    <a href="{% url 'academics:mes_classes' %}" class="nav-link" data-url="/academics/mes-classes/">
+                        <i class="bi bi-collection"></i> Mes Classes
+                    </a>
+                    <a href="{% url 'academics:emploi_du_temps' %}" class="nav-link" data-url="/academics/emploi-du-temps/">
+                        <i class="bi bi-calendar-week"></i> Emploi du temps
+                    </a>
+                    <a href="{% url 'presences:mes_seances' %}" class="nav-link" data-url="/presences/mes-seances/">
+                        <i class="bi bi-clock-history"></i> Mes Séances
+                    </a>
+                    <a href="{% url 'academics:saisie_notes' %}" class="nav-link" data-url="/academics/saisie-notes/">
+                        <i class="bi bi-pencil-square"></i> Saisie Notes
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if user.is_direction or user.is_superadmin or user.is_surveillance or user.is_professeur %}
+            <div class="nav-group">
+                <div class="group-header">
+                    <i class="bi bi-clipboard-check gh-icon"></i>
+                    <span class="gh-label">Gestion des présences</span>
+                    <span class="arrow">▶</span>
+                </div>
+                <div class="group-body">
+                    <a href="{% url 'presences:presence_list' %}" class="nav-link" data-url="/presences/">
+                        <i class="bi bi-calendar-check"></i> Présences
+                    </a>
+                    <a href="{% url 'presences:rapport_retards' %}" class="nav-link" data-url="/presences/rapport-retards/">
+                        <i class="bi bi-clock"></i> Retards
+                    </a>
+                    <a href="{% url 'presences:statistiques_presence' %}" class="nav-link" data-url="/presences/statistiques/">
+                        <i class="bi bi-bar-chart"></i> Statistiques
+                    </a>
+                    <a href="{% url 'attestation_assiduite_form' %}" class="nav-link" data-url="/presences/attestation/">
+                        <i class="bi bi-file-earmark-check"></i> Attestations
+                    </a>
+                    <a href="{% url 'presences:liste_seances' %}" class="nav-link" data-url="/presences/seances/">
+                        <i class="bi bi-clock-history"></i> Séances Cours
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if user.is_direction or user.is_superadmin or user.is_comptable %}
+            <div class="nav-group">
+                <div class="group-header">
+                    <i class="bi bi-currency-dollar gh-icon"></i>
+                    <span class="gh-label">Finances & Comptabilité</span>
+                    <span class="arrow">▶</span>
+                </div>
+                <div class="group-body">
+                    <a href="{% url 'finances:frais_list' %}" class="nav-link" data-url="/finances/frais/">
+                        <i class="bi bi-currency-exchange"></i> Frais scolaires
+                    </a>
+                    <a href="{% url 'finances:facture_list' %}" class="nav-link" data-url="/finances/factures/">
+                        <i class="bi bi-file-earmark-text"></i> Factures
+                    </a>
+                    <a href="{% url 'finances:bourse_list' %}" class="nav-link" data-url="/finances/bourses/">
+                        <i class="bi bi-award"></i> Bourses & Remises
+                    </a>
+                    <a href="{% url 'finances:paiement_list' %}" class="nav-link" data-url="/finances/paiements/">
+                        <i class="bi bi-receipt"></i> Paiements
+                    </a>
+                    <a href="{% url 'finances:eleves_en_retard' %}" class="nav-link" data-url="/finances/eleves-en-retard/">
+                        <i class="bi bi-exclamation-triangle"></i> Relances
+                    </a>
+                    <a href="{% url 'finances:rapport_financier' %}" class="nav-link" data-url="/finances/rapport-financier/">
+                        <i class="bi bi-bar-chart"></i> Rapports financiers
+                    </a>
+                    <a href="{% url 'finances:categorie_depense' %}" class="nav-link" data-url="/finances/categories-depense/">
+                        <i class="bi bi-tag"></i> Catégories dépenses
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if user.is_direction or user.is_superadmin or user.is_comptable %}
+            <div class="nav-group">
+                <div class="group-header">
+                    <i class="bi bi-people-fill gh-icon"></i>
+                    <span class="gh-label">Gestion du personnel</span>
+                    <span class="arrow">▶</span>
+                </div>
+                <div class="group-body">
+                    <a href="{% url 'finances:personnel_list' %}" class="nav-link" data-url="/finances/personnel/">
+                        <i class="bi bi-person-lines-fill"></i> Personnel
+                    </a>
+                    <a href="{% url 'finances:operation_caisse' %}" class="nav-link" data-url="/finances/caisse/">
+                        <i class="bi bi-safe"></i> Opérations de caisse
+                    </a>
+                    <a href="{% url 'finances:charges_list' %}" class="nav-link" data-url="/finances/charges/">
+                        <i class="bi bi-receipt"></i> Charges de l'école
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if user.is_direction or user.is_superadmin %}
+            <div class="nav-group">
+                <div class="group-header">
+                    <i class="bi bi-gear gh-icon"></i>
+                    <span class="gh-label">Administration</span>
+                    <span class="arrow">▶</span>
+                </div>
+                <div class="group-body">
+                    <a href="{% url 'finances:annee_list' %}" class="nav-link" data-url="/finances/annees/">
+                        <i class="bi bi-calendar-event"></i> Années scolaires
+                    </a>
+                    <a href="{% url 'accounts:user_list' %}" class="nav-link" data-url="/accounts/users/">
+                        <i class="bi bi-person-badge"></i> Utilisateurs
+                    </a>
+                    {% if user.is_direction or user.is_superadmin %}
+                    <a href="{% url 'accounts:locked_accounts' %}" class="nav-link" data-url="/accounts/comptes-bloques/">
+                        <i class="bi bi-lock-fill"></i> Comptes bloqués
+                    </a>
+                    {% endif %}
+                    {% if user.is_superadmin %}
+                    <a href="{% url 'admin:index' %}" class="nav-link" target="_blank">
+                        <i class="bi bi-hdd"></i> Admin Django
+                    </a>
+                    {% endif %}
+                    {% if not user.is_professeur %}
+                    <a href="{% url 'rapports:rapport_academique' %}" class="nav-link" data-url="/rapports/academique/">
+                        <i class="bi bi-bar-chart"></i> Rapports
+                    </a>
+                    <a href="{% url 'accounts:demande_list' %}" class="nav-link" data-url="/accounts/demandes/">
+                        <i class="bi bi-shield-check"></i> Approbations
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="nav-group">
+                <div class="group-header">
+                    <i class="bi bi-chat-dots gh-icon"></i>
+                    <span class="gh-label">Communication</span>
+                    <span class="arrow">▶</span>
+                </div>
+                <div class="group-body">
+                    <a href="{% url 'accounts:notification_list' %}" class="nav-link" data-url="/accounts/notifications/">
+                        <i class="bi bi-bell"></i> Notifications
+                    </a>
+                    <a href="{% url 'accounts:chat_inbox' %}" class="nav-link" data-url="/accounts/chat/">
+                        <i class="bi bi-chat-square"></i> Messages
+                    </a>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                {% if messages and not hide_messages %}
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {% if message.tags == 'success' %}<i class="bi bi-check-circle-fill"></i>{% elif message.tags == 'error' %}<i class="bi bi-exclamation-circle-fill"></i>{% else %}<i class="bi bi-info-circle-fill"></i>{% endif %}
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+                
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    {% else %}
+    {% block unauth_content %}{% endblock %}
+    {% endif %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Fermer les dropdowns en cliquant dehors
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.dropdown')) {
+                document.querySelectorAll('.dropdown-menu.show').forEach(function(m) {
+                    m.classList.remove('show');
+                });
+            }
+        });
+    </script>
+    <script>
+        function toggleSidebar() {
+            var sidebar = document.getElementById('sidebar');
+            var overlay = document.getElementById('sidebar-overlay');
+            if (sidebar.classList.contains('show')) {
+                sidebar.classList.remove('show');
+                if (overlay) overlay.remove();
+            } else {
+                sidebar.classList.add('show');
+                var ov = document.createElement('div');
+                ov.id = 'sidebar-overlay';
+                ov.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:999;';
+                ov.onclick = toggleSidebar;
+                document.body.appendChild(ov);
+            }
+        }
+        
+        function toggleMobileDropdown(dropdownId) {
+            var dropdown = document.getElementById(dropdownId);
+            if (!dropdown) return;
+            var menu = dropdown.querySelector('.dropdown-menu');
+            if (!menu) return;
+            if (menu.classList.contains('show')) {
+                menu.classList.remove('show');
+            } else {
+                document.querySelectorAll('.dropdown-menu.show').forEach(function(m) {
+                    m.classList.remove('show');
+                });
+                menu.classList.add('show');
+            }
+        }
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const sidebar = document.getElementById('sidebar');
+            if (!sidebar) return;
+
+            const currentPath = window.location.pathname.replace(/\/$/, '').toLowerCase();
+
+            // ── Utilitaires ──────────────────────────────────────────────────────────
+
+            function normalizeUrl(url) {
+                return url.replace(/\/$/, '').toLowerCase();
+            }
+
+            function toggleMobileDropdown(dropdownId) {
+                var dropdown = document.getElementById(dropdownId);
+                var menu = dropdown.querySelector('.dropdown-menu');
+                if (menu.classList.contains('show')) {
+                    menu.classList.remove('show');
+                } else {
+                    document.querySelectorAll('.dropdown-menu.show').forEach(function(m) {
+                        m.classList.remove('show');
+                    });
+                    menu.classList.add('show');
+                }
+            }
+
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.dropdown')) {
+                    document.querySelectorAll('.dropdown-menu.show').forEach(function(m) {
+                        m.classList.remove('show');
+                    });
+                }
+            });
+
+            function closeAllGroups() {
+                sidebar.querySelectorAll('.group-header').forEach(h => h.classList.remove('open'));
+                sidebar.querySelectorAll('.group-body').forEach(b => {
+                    b.classList.remove('open');
+                    b.style.maxHeight = '0';
+                });
+            }
+
+            function openGroup(header) {
+                const body = header.nextElementSibling;
+                if (!body || !body.classList.contains('group-body')) return;
+                header.classList.add('open');
+                body.classList.add('open');
+                body.style.maxHeight = body.scrollHeight + 'px';
+            }
+
+            function clearActiveLinks() {
+                sidebar.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            }
+
+            // ── Trouver le lien correspondant à l'URL courante ───────────────────────
+
+            function findActiveLink() {
+                const links = sidebar.querySelectorAll('.nav-link[data-url]');
+                let bestMatch = null;
+                let bestLength = 0;
+
+                for (const link of links) {
+                    const url = normalizeUrl(link.getAttribute('data-url'));
+                    if (currentPath === url) return link;
+                    if (currentPath.startsWith(url + '/') && url.length > bestLength) {
+                        bestLength = url.length;
+                        bestMatch = link;
+                    }
+                }
+                return bestMatch;
+            }
+
+            // ── Activer un lien et ouvrir son groupe parent ──────────────────────────
+
+            function activateLink(link) {
+                clearActiveLinks();
+                closeAllGroups();
+                link.classList.add('active');
+                
+                const groupBody = link.closest('.group-body');
+                if (groupBody) {
+                    const header = groupBody.previousElementSibling;
+                    if (header && header.classList.contains('group-header')) {
+                        header.classList.add('open');
+                        groupBody.classList.add('open');
+                        groupBody.style.maxHeight = groupBody.scrollHeight + 'px';
+                    }
+                }
+            }
+
+            // ── Initialisation au chargement ─────────────────────────────────────────
+
+            function initSidebar() {
+                const active = findActiveLink();
+                if (active) {
+                    activateLink(active);
+                    setTimeout(() => {
+                        sidebar.scrollTop = active.offsetTop - sidebar.clientHeight / 2;
+                    }, 10);
+                }
+            }
+            
+            // Exécuter après un petit délai pour que le CSS soit appliqué
+            setTimeout(initSidebar, 10);
+
+            // ── Clic sur un sous-module ─────────────────────────────────────────────
+
+            sidebar.addEventListener('click', function (e) {
+                const link = e.target.closest('.nav-link[data-url]');
+                if (link) {
+                    activateLink(link);
+                }
+            });
+
+            // ── Clic sur un header de module (toggle) ──────────────────────────────
+
+            sidebar.addEventListener('click', function (e) {
+                const header = e.target.closest('.group-header');
+                if (!header) return;
+                
+                if (header.classList.contains('open')) {
+                    header.classList.remove('open');
+                    const body = header.nextElementSibling;
+                    if (body) {
+                        body.classList.remove('open');
+                        body.style.maxHeight = '0';
+                        body.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                    }
+                } else {
+                    closeAllGroups();
+                    header.classList.add('open');
+                    const body = header.nextElementSibling;
+                    if (body) {
+                        body.classList.add('open');
+                        body.style.maxHeight = body.scrollHeight + 'px';
+                    }
+                }
+            });
+
+            // ── Clic sur Tableau de bord ────────────────────────────────────────────
+
+            const dashboard = document.getElementById('nav-dashboard');
+            if (dashboard) {
+                dashboard.addEventListener('click', function (e) {
+                    closeAllGroups();
+                    clearActiveLinks();
+                });
+            }
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('themeToggle');
+            const themeIcon = document.getElementById('themeIcon');
+            
+            let isDark = localStorage.getItem('theme') === 'dark';
+            
+            function applyTheme(dark) {
+                if (dark) {
+                    document.body.classList.add('dark-bg');
+                    if (themeIcon) themeIcon.className = 'bi bi-sun';
+                } else {
+                    document.body.classList.remove('dark-bg');
+                    if (themeIcon) themeIcon.className = 'bi bi-moon-stars';
+                }
+            }
+            
+            applyTheme(isDark);
+            
+            if (themeToggle) {
+                themeToggle.addEventListener('click', function() {
+                    isDark = !isDark;
+                    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+                    applyTheme(isDark);
+                });
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% block title %}Salaires du Personnel{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-cash-stack"></i> Salaires du Personnel</h1>
+    <a href="{% url 'finances:salaire_personnel_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Nouveau salaire
+    </a>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card stat-card warning h-100">
+            <div class="card-body">
+                <h5>Total Salaires {{ annee_selectionnee }}</h5>
+                <h2>{{ total_salaires|floatformat:0 }} <small>FCFA</small></h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <select name="annee" class="form-select" onchange="this.form.submit()">
+                    {% for y in years %}
+                    <option value="{{ y }}" {% if annee_selectionnee == y %}selected{% endif %}>{{ y }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Personnel</th>
+                    <th>Fonction</th>
+                    <th>Période</th>
+                    <th>Salaire Brut</th>
+                    <th>Retenues</th>
+                    <th>Salaire Net</th>
+                    <th>Payé</th>
+                    <th>Date Versement</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sal in salaries %}
+                <tr>
+                    <td><strong>{{ sal.personnel.nom_complet }}</strong></td>
+                    <td>
+                        <span class="badge bg-secondary">{{ sal.personnel.get_fonction_display }}</span>
+                    </td>
+                    <td>{{ sal.get_mois_display }} {{ sal.annee }}</td>
+                    <td class="text-end">{{ sal.salaire_brut|floatformat:0 }} FCFA</td>
+                    <td class="text-end text-danger">-{{ sal.retenues|floatformat:0 }} FCFA</td>
+                    <td class="text-end fw-bold text-success">{{ sal.salaire_net|floatformat:0 }} FCFA</td>
+                    <td>
+                        {% if sal.est_paye %}
+                            <span class="badge bg-success">Payé</span>
+                        {% else %}
+                            <span class="badge bg-warning text-dark">En attente</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ sal.date_versement|date:"d/m/Y"|default:"-" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="text-center text-muted">Aucun salaire enregistré</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

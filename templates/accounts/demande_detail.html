@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+
+{% block title %}Détails de la demande{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="bi bi-file-text"></i> Détails de la demande</h1>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">Demande #{{ demande.pk }}</h5>
+    </div>
+    <div class="card-body">
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <p><strong>Demandeur:</strong> {{ demande.demandeur.get_full_name|default:demande.demandeur.username }}</p>
+                <p><strong>Date de création:</strong> {{ demande.date_creation|date:"d/m/Y H:i" }}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Type d'action:</strong> 
+                    <span class="badge bg-{% if demande.type_action == 'creation' %}success{% elif demande.type_action == 'modification' %}warning{% else %}danger{% endif %}">
+                        {{ demande.get_type_action_display }}
+                    </span>
+                </p>
+                <p><strong>Objet:</strong> {{ demande.get_type_objet_display }}</p>
+                <p><strong>Statut:</strong> 
+                    <span class="badge bg-{% if demande.statut == 'approuve' %}success{% elif demande.statut == 'rejete' %}danger{% else %}warning{% endif %}">
+                        {{ demande.get_statut_display }}
+                    </span>
+                </p>
+            </div>
+        </div>
+        
+        {% if demande.objet_repr %}
+        <hr>
+        <h6>Objet concerné:</h6>
+        <p class="text-muted">{{ demande.objet_repr }}</p>
+        {% endif %}
+        
+        <hr>
+        <h6>Détails de la demande:</h6>
+        <div class="bg-light p-3 rounded">
+            {{ demande.details|linebreaks }}
+        </div>
+        
+        {% if demande.details_avant %}
+        <hr>
+        <h6>État avant modification:</h6>
+        <div class="bg-light p-3 rounded">
+            {{ demande.details_avant|linebreaks }}
+        </div>
+        {% endif %}
+        
+        {% if demande.details_apos %}
+        <hr>
+        <h6>État après modification:</h6>
+        <div class="bg-light p-3 rounded">
+            {{ demande.details_apos|linebreaks }}
+        </div>
+        {% endif %}
+        
+        {% if demande.motif %}
+        <hr>
+        <h6>Motif:</h6>
+        <p class="text-muted">{{ demande.motif|linebreaks }}</p>
+        {% endif %}
+        
+        {% if demande.statut == 'approuve' or demande.statut == 'rejete' %}
+        <hr>
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Traité par:</strong> {{ demande.approbateur.get_full_name|default:demande.approbateur.username }}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Date de traitement:</strong> {{ demande.date_traitement|date:"d/m/Y H:i" }}</p>
+            </div>
+        </div>
+        {% if demande.observations %}
+        <hr>
+        <h6>Observations:</h6>
+        <p class="text-muted">{{ demande.observations|linebreaks }}</p>
+        {% endif %}
+        {% endif %}
+    </div>
+    <div class="card-footer">
+        <a href="{% url 'accounts:demande_list' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Retour à la liste
+        </a>
+        
+        {% if demande.statut == 'en_attente' %}
+        <a href="{% url 'accounts:demande_approuver' demande.pk %}" class="btn btn-success" onclick="return confirm('Êtes-vous sûr de vouloir APPROUVER cette demande?');">
+            <i class="bi bi-check-lg"></i> Approuver
+        </a>
+        <a href="{% url 'accounts:demande_rejeter' demande.pk %}" class="btn btn-danger" onclick="return confirm('Êtes-vous sûr de vouloir REJETER cette demande?');">
+            <i class="bi bi-x-lg"></i> Rejeter
+        </a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

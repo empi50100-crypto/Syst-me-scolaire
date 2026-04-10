@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}Supprimer la Classe{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="bi bi-trash"></i> Supprimer la Classe</h1>
+</div>
+
+<div class="card mt-4">
+    <div class="card-body">
+        <p>Êtes-vous sûr de vouloir supprimer la classe <strong>{{ classe.nom }}</strong> ?</p>
+        <p class="text-muted">Niveau: {{ classe.get_niveau_display }}</p>
+        {% if classe.serie %}
+        <p class="text-muted">Série: {{ classe.get_serie_display }}</p>
+        {% endif %}
+        {% if classe.domaine %}
+        <p class="text-muted">Domaine: {{ classe.get_domaine_display }}</p>
+        {% endif %}
+    </div>
+    <div class="card-footer">
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">
+                <i class="bi bi-trash"></i> Confirmer la suppression
+            </button>
+            <a href="{% url 'academics:classe_list' %}" class="btn btn-secondary">
+                <i class="bi bi-x-circle"></i> Annuler
+            </a>
+        </form>
+    </div>
+</div>
+{% endblock %}

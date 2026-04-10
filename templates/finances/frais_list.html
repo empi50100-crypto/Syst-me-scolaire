@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% block title %}Frais{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Configuration des Frais</h1>
+    <a href="{% url 'finances:frais_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Nouveau frais
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Application</th>
+                    <th>Année</th>
+                    <th>Montant</th>
+                    <th>Description</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for frais in frais %}
+                <tr>
+                    <td><span class="badge bg-primary">{{ frais.get_type_frais_display }}</span></td>
+                    <td>
+                        {% if frais.mode_application == 'general' %}
+                            <span class="badge bg-success">Toutes les classes</span>
+                        {% elif frais.mode_application == 'niveau' %}
+                            <span class="badge bg-info text-dark">{{ frais.get_niveau_display }}{% if frais.filiere %} {{ frais.filiere }}{% endif %}</span>
+                        {% else %}
+                            {% if frais.classe %}
+                                {{ frais.classe.nom }}{% if frais.classe.filiere %} {{ frais.classe.filiere }}{% endif %}
+                            {% else %}
+                                <span class="text-muted">Non spécifié</span>
+                            {% endif %}
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if frais.annee_scolaire %}
+                            {{ frais.annee_scolaire.libelle }}
+                        {% else %}
+                            <span class="text-muted">-</span>
+                        {% endif %}
+                    </td>
+                    <td><strong>{{ frais.montant }} Fcfa</strong></td>
+                    <td>{{ frais.description|default:"-" }}</td>
+                    <td>
+                        <a href="{% url 'finances:frais_update' frais.id %}" class="btn btn-sm btn-warning">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" class="text-center text-muted">Aucun frais configuré. Cliquez sur "Nouveau frais" pour commencer.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+
+{% block title %}Séances de Cours - Liste{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="bi bi-calendar-check"></i> Suivi des Séances de Cours</h1>
+    <form method="get" class="d-flex gap-2">
+        <input type="date" name="date" value="{{ today|date:'Y-m-d' }}" class="form-control">
+        <button type="submit" class="btn btn-primary">Filtrer</button>
+    </form>
+</div>
+
+{% if seances_en_cours %}
+<div class="card mb-4 border-warning">
+    <div class="card-header bg-warning text-dark">
+        <h5 class="mb-0"><i class="bi bi-play-circle"></i> Séances en cours ({{ seances_en_cours.count }})</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-warning">
+                <thead>
+                    <tr>
+                        <th>Professeur</th>
+                        <th>Classe</th>
+                        <th>Matière</th>
+                        <th>Début</th>
+                        <th>Durée</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for seance in seances_en_cours %}
+                    <tr>
+                        <td><strong>{{ seance.professeur }}</strong></td>
+                        <td>{{ seance.classe.nom }}</td>
+                        <td>{{ seance.matiere.nom }}</td>
+                        <td>{{ seance.heure_debut|date:"H:i" }}</td>
+                        <td>
+                            {% now "Y-m-d H:i:s" as now_time %}
+                            <span class="badge bg-warning text-dark">
+                                En cours
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-check-circle"></i> Séances terminées ({{ seances_terminees.count }})</h5>
+    </div>
+    <div class="card-body">
+        {% if seances_terminees %}
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Professeur</th>
+                        <th>Classe</th>
+                        <th>Matière</th>
+                        <th>Début</th>
+                        <th>Fin</th>
+                        <th>Durée</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for seance in seances_terminees %}
+                    <tr>
+                        <td><strong>{{ seance.professeur }}</strong></td>
+                        <td>{{ seance.classe.nom }}</td>
+                        <td>{{ seance.matiere.nom }}</td>
+                        <td>{{ seance.heure_debut|date:"H:i" }}</td>
+                        <td>{{ seance.heure_fin|date:"H:i" }}</td>
+                        <td><span class="badge bg-info">{{ seance.duree_formatee }}</span></td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-3">
+                            Aucune séance terminée ce jour.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4 text-muted">
+            <i class="bi bi-calendar-x" style="font-size: 3rem;"></i>
+            <p class="mt-2">Aucune séance enregistrée pour cette date.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

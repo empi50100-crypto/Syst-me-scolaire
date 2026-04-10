@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ action }} Frais{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="bi bi-currency-dollar"></i> {{ action }} des Frais</h1>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Type de frais *</label>
+                    {{ form.type_frais }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Mode d'application *</label>
+                    {{ form.mode_application }}
+                    <small class="text-muted d-block">Choisissez comment ces frais s'appliquent</small>
+                </div>
+                
+                <div class="col-12" id="section-classe-detaille" style="display:none;">
+                    <label class="form-label">Classe(s)</label>
+                    {{ form.classe }}
+                    <small class="text-muted d-block">Sélectionnez la ou les classes concernées</small>
+                </div>
+                
+                <div class="col-md-6" id="section-niveau" style="display:none;">
+                    <label class="form-label">Niveau</label>
+                    {{ form.niveau }}
+                    <small class="text-muted d-block">Ex: Terminale, Première, Sixième...</small>
+                </div>
+                
+                <div class="col-md-6" id="section-filiere" style="display:none;">
+                    <label class="form-label">Filière (optionnel)</label>
+                    {{ form.filiere }}
+                    <small class="text-muted d-block">Spécifique à une filière (ex: A1, C, D). Laisser vide pour toutes.</small>
+                </div>
+                
+                <div class="col-md-6">
+                    <label class="form-label">Année scolaire</label>
+                    {{ form.annee_scolaire }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Montant (FCFA) *</label>
+                    {{ form.montant }}
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Description (optionnel)</label>
+                    {{ form.description }}
+                </div>
+            </div>
+            
+            {% if form.errors %}
+            <div class="alert alert-danger mt-3">
+                {% for field in form %}
+                    {% for error in field.errors %}
+                        <div>{{ field.label }}: {{ error }}</div>
+                    {% endfor %}
+                {% endfor %}
+                {% for error in form.non_field_errors %}
+                    <div>{{ error }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-circle"></i> Enregistrer
+                </button>
+                <a href="{% url 'finances:frais_list' %}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Retour
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const modeSelect = document.querySelector('select[name="mode_application"]');
+    const sectionDetaille = document.getElementById('section-classe-detaille');
+    const sectionNiveau = document.getElementById('section-niveau');
+    const sectionFiliere = document.getElementById('section-filiere');
+    
+    function updateFields() {
+        const mode = modeSelect.value;
+        
+        sectionDetaille.style.display = mode === 'detaille' ? 'block' : 'none';
+        sectionNiveau.style.display = mode === 'niveau' ? 'block' : 'none';
+        sectionFiliere.style.display = mode === 'niveau' ? 'block' : 'none';
+    }
+    
+    if (modeSelect) {
+        modeSelect.addEventListener('change', updateFields);
+        updateFields();
+    }
+});
+</script>
+{% endblock %}

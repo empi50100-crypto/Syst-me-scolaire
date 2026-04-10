@@ -1,0 +1,236 @@
+{% load permissions_tags %}
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card primary h-100">
+            <div class="card-body text-center">
+                <h6 class="text-muted">ÉLÈVES INSCRITS</h6>
+                <h2>{{ total_eleves|default:"0" }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card success h-100">
+            <div class="card-body text-center">
+                <h6 class="text-muted">CLASSES</h6>
+                <h2>{{ total_classes|default:"0" }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card warning h-100">
+            <div class="card-body text-center">
+                <h6 class="text-muted">NOUVELLES INSCRIPTIONS</h6>
+                <h2>{{ nouvelles_inscriptions|default:"0" }}</h2>
+                <small class="text-muted">ce mois</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card info h-100">
+            <div class="card-body text-center">
+                <h6 class="text-muted">TAUX PRÉSENCE</h6>
+                <h2>{{ taux_presence_global|default:"0" }}%</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card success h-100" style="background: linear-gradient(135deg, #198754, #146c43);">
+            <div class="card-body text-center text-white">
+                <h6 class="text-white-50">TOTAL FRAIS</h6>
+                <h3 class="text-white">{{ total_frais|default:"0"|floatformat:0 }}</h3>
+                <small class="text-white-50">FCA</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card primary h-100" style="background: linear-gradient(135deg, #0d6efd, #0a58ca);">
+            <div class="card-body text-center text-white">
+                <h6 class="text-white-50">ENCAISSÉ</h6>
+                <h3 class="text-white">{{ total_encaissé|default:"0"|floatformat:0 }}</h3>
+                <small class="text-white-50">FCA</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card info h-100" style="background: linear-gradient(135deg, #0dcaf0, #0aa8c0);">
+            <div class="card-body text-center text-white">
+                <h6 class="text-white-50">MASSE SALARIALE</h6>
+                <h3 class="text-white">{{ masse_salariale_mensuelle|default:"0"|floatformat:0 }}</h3>
+                <small class="text-white-50">FCA</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card danger h-100" style="background: linear-gradient(135deg, #dc3545, #bb2d3b);">
+            <div class="card-body text-center text-white">
+                <h6 class="text-white-50">DÉCAISSEMENTS</h6>
+                <h3 class="text-white">{{ total_decaissement|default:"0"|floatformat:0 }}</h3>
+                <small class="text-white-50">FCA</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card warning h-100" style="background: linear-gradient(135deg, #ffc107, #ffca2c);">
+            <div class="card-body text-center text-dark">
+                <h6 class="text-dark-50">SOLDE</h6>
+                <h3 class="text-dark">{{ montant_restant|default:"0"|floatformat:0 }}</h3>
+                <small class="text-dark-50">FCA</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card secondary h-100" style="background: linear-gradient(135deg, #6c757d, #545b62);">
+            <div class="card-body text-center text-white">
+                <h6 class="text-white-50">RESTE À PAYER</h6>
+                <h3 class="text-white">{{ reste_a_payer|default:"0"|floatformat:0 }}</h3>
+                <small class="text-white-50">FCA</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card success h-100" style="background: linear-gradient(135deg, #198754, #146c43);">
+            <div class="card-body text-center text-white">
+                <h6 class="text-white-50">NOMBRE PAIEMENTS</h6>
+                <h3 class="text-white">{{ nb_paiements|default:"0" }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card primary h-100" style="background: linear-gradient(135deg, #0d6efd, #0a58ca);">
+            <div class="card-body text-center text-white">
+                <h6 class="text-white-50">TAUX RECOUVREMENT</h6>
+                <h3 class="text-white">{{ taux_recouvrement|default:"0" }}%</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="bi bi-cash-stack me-2"></i>Situation financière</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Total Frais</span>
+                        <strong class="text-dark">{{ total_frais|default:"0"|floatformat:0 }} FCA</strong>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Encaissé</span>
+                        <strong class="text-success">{{ total_encaissé|default:"0"|floatformat:0 }} FCA</strong>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Taux Recouvrement</span>
+                        <strong class="text-{% if taux_recouvrement|default:0 >= 80 %}success{% else %}warning{% endif %}">{{ taux_recouvrement|default:"0" }}%</strong>
+                    </div>
+                    <div class="progress mt-1" style="height: 8px;">
+                        <div class="progress-bar bg-{% if taux_recouvrement|default:0 >= 80 %}success{% else %}warning{% endif %}" style="width: {{ taux_recouvrement|default:"0" }}%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="bi bi-people-dash me-2"></i>Présence aujourd'hui</h5>
+            </div>
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <h3 class="text-danger">{{ absents_aujourdhui|default:"0" }}</h3>
+                    <small class="text-muted">Absents</small>
+                </div>
+                <div class="mb-3">
+                    <h3 class="text-success">{{ taux_presence_global|default:"0" }}%</h3>
+                    <small class="text-muted">Taux de présence</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="bi bi-calendar-range me-2"></i>Année scolaire</h5>
+            </div>
+            <div class="card-body">
+                {% if annee_courante %}
+                <div class="mb-2">
+                    <strong class="text-muted">Libellé:</strong> <span class="text-dark">{{ annee_courante.libelle }}</span>
+                </div>
+                <div class="mb-2">
+                    <strong class="text-muted">Début:</strong> <span class="text-dark">{{ annee_courante.date_debut|date:"d/m/Y" }}</span>
+                </div>
+                <div class="mb-2">
+                    <strong class="text-muted">Fin:</strong> <span class="text-dark">{{ annee_courante.date_fin|date:"d/m/Y" }}</span>
+                </div>
+                {% else %}
+                <p class="text-muted text-center">Aucune année active</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-lightning-charge me-2"></i>Actions rapides</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-3">
+                    <a href="{% url 'eleves:eleve_create' %}" class="btn btn-outline-primary text-start py-3">
+                        <i class="bi bi-person-plus me-2"></i> Nouvel élève
+                    </a>
+                    <a href="{% url 'academics:classe_create' %}" class="btn btn-outline-primary text-start py-3">
+                        <i class="bi bi-collection me-2"></i> Nouvelle classe
+                    </a>
+                    <a href="{% url 'presences:presence_list' %}" class="btn btn-outline-success text-start py-3">
+                        <i class="bi bi-clipboard-check me-2"></i> Gestion présences
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0"><i class="bi bi-file-earmark-bar-graph me-2"></i>Rapports</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-3">
+                    <a href="{% url 'rapports:rapport_academique' %}" class="btn btn-outline-success text-start py-3">
+                        <i class="bi bi-graph-up me-2"></i> Rapport académique
+                    </a>
+                    <a href="{% url 'rapports:rapport_financier' %}" class="btn btn-outline-warning text-start py-3">
+                        <i class="bi bi-cash-coin me-2"></i> Rapport financier
+                    </a>
+                    <a href="{% url 'presences:statistiques_presence' %}" class="btn btn-outline-info text-start py-3">
+                        <i class="bi bi-pie-chart me-2"></i> Statistiques présence
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.stat-card { border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+.stat-card.primary { border-left: 4px solid #0d6efd; }
+.stat-card.success { border-left: 4px solid #198754; }
+.stat-card.warning { border-left: 4px solid #ffc107; }
+.stat-card.info { border-left: 4px solid #0dcaf0; }
+.stat-card.danger { border-left: 4px solid #dc3545; }
+</style>

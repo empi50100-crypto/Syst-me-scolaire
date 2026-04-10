@@ -1,0 +1,187 @@
+{% extends 'base.html' %}
+
+{% block title %}Relances{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-exclamation-triangle"></i> Relances & Retards de Paiement</h1>
+    <div>
+        <a href="{% url 'finances:cycle_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-gear"></i> Cycles
+        </a>
+    </div>
+</div>
+
+{% if not annee_active or not annee_active.type_cycle_actif %}
+<div class="alert alert-warning">
+    <i class="bi bi-warning"></i> Veuillez configurer l'année scolaire active avec un type de cycle pour accéder à cette page.
+</div>
+{% else %}
+
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card warning h-100">
+            <div class="card-body">
+                <h5>Élèves en retard</h5>
+                <h2>{{ eleves_list|length }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card danger h-100">
+            <div class="card-body">
+                <h5>Rappels envoyés</h5>
+                <h2>{{ rappels_envoyes|length }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card success h-100">
+            <div class="card-body">
+                <h5>Cycles terminés</h5>
+                <h2>{{ cycles_expires.count }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card primary h-100">
+            <div class="card-body">
+                <h5>Cycles en cours</h5>
+                <h2>{{ cycles_en_cours.count }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-bell"></i> Générer des rappels</span>
+        <form method="post" class="d-inline">
+            {% csrf_token %}
+            <input type="hidden" name="generer_rappels" value="1">
+            <button type="submit" class="btn btn-primary btn-sm">
+                <i class="bi bi-send"></i> Générer rappels pour tous
+            </button>
+        </form>
+    </div>
+</div>
+
+<ul class="nav nav-tabs mb-3" id="relancesTab" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="retards-tab" data-bs-toggle="tab" data-bs-target="#retards" type="button" role="tab">
+            <i class="bi bi-exclamation-circle"></i> Élèves en retard ({{ eleves_list|length }})
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="rappels-tab" data-bs-toggle="tab" data-bs-target="#rappels" type="button" role="tab">
+            <i class="bi bi-send"></i> Rappels envoyés ({{ rappels_envoyes|length }})
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content" id="relancesTabContent">
+    <div class="tab-pane fade show active" id="retards" role="tabpanel">
+        <div class="card">
+            <div class="card-body">
+                {% if eleves_list %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Élève</th>
+                                <th>Cycle</th>
+                                <th>Date fin</th>
+                                <th>Montant attendu</th>
+                                <th>Montant payé</th>
+                                <th>Restant</th>
+                                <th>Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in eleves_list %}
+                            <tr>
+                                <td>
+                                    <strong>{{ item.eleve.nom }} {{ item.eleve.prenom }}</strong>
+                                    <br><small class="text-muted">{{ item.eleve.matricule }}</small>
+                                </td>
+                                <td>{{ item.cycle.libelle }}</td>
+                                <td>{{ item.cycle.date_fin|date:"d/m/Y" }}</td>
+                                <td class="text-end">{{ item.montant_attendu|floatformat:0 }} Fcfa</td>
+                                <td class="text-end">{{ item.montant_paye|floatformat:0 }} Fcfa</td>
+                                <td class="text-end text-danger fw-bold">{{ item.montant_restant|floatformat:0 }} Fcfa</td>
+                                <td>
+                                    {% if item.cycle.date_fin < today %}
+                                    <span class="badge bg-danger">Expiré</span>
+                                    {% else %}
+                                    <span class="badge bg-warning text-dark">En cours</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-check-circle text-success" style="font-size: 3rem;"></i>
+                    <p class="mt-2">Aucun élève en retard pour le moment.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="tab-pane fade" id="rappels" role="tabpanel">
+        <div class="card">
+            <div class="card-body">
+                {% if rappels_envoyes %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Élève</th>
+                                <th>Type</th>
+                                <th>Date émission</th>
+                                <th>Date échéance</th>
+                                <th>Montant dû</th>
+                                <th>Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for rappel in rappels_envoyes %}
+                            <tr>
+                                <td>
+                                    <strong>{{ rappel.eleve.nom }} {{ rappel.eleve.prenom }}</strong>
+                                    <br><small class="text-muted">{{ rappel.eleve.matricule }}</small>
+                                </td>
+                                <td><span class="badge bg-info">{{ rappel.type_rappel }}</span></td>
+                                <td>{{ rappel.date_emission|date:"d/m/Y" }}</td>
+                                <td>{{ rappel.date_echeance|date:"d/m/Y" }}</td>
+                                <td class="text-end fw-bold text-danger">{{ rappel.montant_due|floatformat:0 }} Fcfa</td>
+                                <td>
+                                    {% if rappel.statut == 'envoye' %}
+                                    <span class="badge bg-warning text-dark">Envoyé</span>
+                                    {% elif rappel.statut == 'acquitte' %}
+                                    <span class="badge bg-success">Acquitté</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">Annulé</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-inbox" style="font-size: 3rem;"></i>
+                    <p class="mt-2">Aucun rappel envoyé.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endif %}
+{% endblock %}

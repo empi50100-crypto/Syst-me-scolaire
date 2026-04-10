@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block title %}Confirmer la suppression{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h4 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Confirmer la suppression</h4>
+            </div>
+            <div class="card-body">
+                <p>Êtes-vous sûr de vouloir supprimer l'utilisateur <strong>{{ user.get_full_name }}</strong> ({{ user.username }}) ?</p>
+                <p class="text-muted">Cette action est irréversible.</p>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash"></i> Supprimer
+                        </button>
+                        <a href="{% url 'accounts:user_list' %}" class="btn btn-secondary">
+                            Annuler
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

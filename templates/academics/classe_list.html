@@ -1,0 +1,378 @@
+{% extends 'base.html' %}
+
+{% block title %}Classes{% endblock %}
+
+{% block extra_css %}
+<style>
+:root {
+    --classe-header-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --classe-header-gradient-dark: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    --card-body-bg: #ffffff;
+    --card-footer-bg: #f8f9fa;
+    --info-border: #e9ecef;
+    --classe-text: #212529;
+    --classe-label: #6c757d;
+    --classe-value: #212529;
+}
+
+body.dark-bg {
+    --classe-header-gradient-dark: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    --card-body-bg: #000000;
+    --card-footer-bg: #111111;
+    --info-border: #333333;
+    --classe-text: #ffffff;
+    --classe-label: #888888;
+    --classe-value: #ffffff;
+}
+
+body.dark-bg {
+    --classe-header-gradient-dark: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    --card-body-bg: #000000;
+    --card-footer-bg: #111111;
+    --info-border: #333333;
+    --classe-text: #ffffff;
+    --classe-label: #888888;
+    --classe-value: #ffffff;
+}
+
+.classe-card {
+    border: none;
+    border-radius: 16px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    background: var(--card-body-bg);
+}
+.classe-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+.classe-card .card-header {
+    background: var(--classe-header-gradient);
+    padding: 18px 20px;
+    border: none;
+}
+body.dark-bg .classe-card .card-header {
+    background: var(--classe-header-gradient-dark);
+}
+.classe-header-info {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 15px;
+}
+.classe-header-left {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.classe-card .classe-nom {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: white;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+.classe-card .niveau-badge {
+    background: rgba(255,255,255,0.25);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    margin-top: 4px;
+    display: inline-block;
+}
+.classe-header-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+}
+.classe-header-actions .btn {
+    background: rgba(255,255,255,0.25);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: white;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    font-size: 1rem;
+}
+.classe-header-actions .btn:hover {
+    background: rgba(255,255,255,0.45);
+    color: white;
+    transform: scale(1.05);
+}
+.classe-card .card-body {
+    padding: 20px;
+}
+.classe-info {
+    display: flex;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--info-border);
+}
+.classe-info:last-child {
+    border-bottom: none;
+}
+.classe-info-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 14px;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+.classe-info-icon.serie { background: #e3f2fd; color: #1976d2; }
+.classe-info-icon.domaine { background: #f3e5f5; color: #7b1fa2; }
+.classe-info-icon.subdivision { background: #fff3e0; color: #f57c00; }
+.classe-info-icon.annee { background: #e8f5e9; color: #388e3c; }
+.classe-info-icon.effectif { background: #fce4ec; color: #c2185b; }
+.classe-info-icon.matiere { background: #fff8e1; color: #ffa000; }
+
+body.dark-bg .classe-info-icon.serie { background: #1e3a5f; color: #60a5fa; }
+body.dark-bg .classe-info-icon.domaine { background: #2d1f4a; color: #c4b5fd; }
+body.dark-bg .classe-info-icon.subdivision { background: #3d2a0f; color: #fbbf24; }
+body.dark-bg .classe-info-icon.annee { background: #14532d; color: #4ade80; }
+body.dark-bg .classe-info-icon.effectif { background: #4a1942; color: #f472b6; }
+body.dark-bg .classe-info-icon.matiere { background: #45350d; color: #facc15; }
+
+.classe-info-content {
+    flex: 1;
+    min-width: 0;
+}
+.classe-info-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--classe-label);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 2px;
+}
+.classe-info-value {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--classe-value) !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.classe-card .card-footer {
+    background: var(--card-footer-bg);
+    padding: 15px 20px;
+    border-top: 1px solid var(--info-border);
+}
+.classe-card .btn-action {
+    border-radius: 10px;
+    font-weight: 600;
+    padding: 10px 16px;
+    font-size: 0.9rem;
+}
+.empty-state {
+    text-align: center;
+    padding: 80px 20px;
+    background: var(--card-body-bg);
+    border-radius: 20px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+.empty-icon {
+    width: 120px;
+    height: 120px;
+    background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 25px;
+    font-size: 3rem;
+    color: #6366f1;
+}
+
+body.dark-bg .empty-icon {
+    background: linear-gradient(135deg, #312e81 0%, #4c1d95 100%);
+    color: #a5b4fc;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="bi bi-collection"></i> Liste des classes</h1>
+    <a href="{% url 'academics:classe_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Nouvelle classe
+    </a>
+</div>
+
+<div class="card mb-4" style="background: var(--card-body-bg); border: none; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label" style="color: var(--classe-label); font-weight: 600; font-size: 0.85rem; text-transform: uppercase;">Nom exact</label>
+                <input type="text" name="search" class="form-control" placeholder="Nom de classe..." value="{{ search }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label" style="color: var(--classe-label); font-weight: 600; font-size: 0.85rem; text-transform: uppercase;">Niveau</label>
+                <select name="niveau" class="form-select">
+                    <option value="">Tous les niveaux</option>
+                    {% for value, label in niveaux %}
+                    <option value="{{ value }}" {% if niveau_filter == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label" style="color: var(--classe-label); font-weight: 600; font-size: 0.85rem; text-transform: uppercase;">Série</label>
+                <select name="serie" class="form-select">
+                    <option value="">Toutes les séries</option>
+                    {% for value, label in series %}
+                    <option value="{{ value }}" {% if serie_filter == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label" style="color: var(--classe-label); font-weight: 600; font-size: 0.85rem; text-transform: uppercase;">Subdivision</label>
+                <input type="text" name="subdivision" class="form-control" placeholder="Ex: A, B, 1..." value="{{ subdivision_filter }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" style="color: var(--classe-label); font-weight: 600; font-size: 0.85rem; text-transform: uppercase;">Année Scolaire</label>
+                <select name="annee" class="form-select">
+                    <option value="">Toutes les années</option>
+                    {% for annee in annees %}
+                    <option value="{{ annee.id }}" {% if annee_filter == annee.id|stringformat:"s" %}selected{% endif %}>{{ annee.libelle }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-12 mt-3 text-end d-flex justify-content-end gap-2">
+                <a href="{% url 'academics:classe_list' %}" class="btn btn-light" style="border-radius: 10px; font-weight: 600; color: var(--classe-text);">
+                    <i class="bi bi-arrow-counterclockwise mt-1"></i> Réinitialiser
+                </a>
+                <button type="submit" class="btn btn-primary px-4" style="border-radius: 10px; font-weight: 600;">
+                    <i class="bi bi-search me-2"></i> Filtrer
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if classes %}
+<div class="row g-4">
+    {% for classe in classes %}
+    <div class="col-md-6 col-xl-4">
+        <div class="card classe-card h-100">
+            <div class="card-header">
+                <div class="classe-header-info">
+                    <div class="classe-header-left">
+                        <span class="classe-nom">{{ classe.nom }}{% if classe.subdivision %}-{{ classe.subdivision }}{% endif %}</span>
+                        <span class="niveau-badge">{{ classe.get_niveau_display }}</span>
+                    </div>
+                    <div class="classe-header-actions">
+                        <a href="{% url 'academics:classe_edit' classe.pk %}" class="btn" title="Modifier">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <form action="{% url 'academics:classe_delete' classe.pk %}" method="post" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn" title="Supprimer" onclick="return confirm('Supprimer cette classe ?')">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body" style="background: var(--card-body-bg);">
+                {% if classe.serie %}
+                <div class="classe-info">
+                    <div class="classe-info-icon serie">
+                        <i class="bi bi-diagram-3"></i>
+                    </div>
+                    <div class="classe-info-content">
+                        <div class="classe-info-label">Série</div>
+                        <div class="classe-info-value">{{ classe.get_serie_display }}</div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if classe.domaine %}
+                <div class="classe-info">
+                    <div class="classe-info-icon domaine">
+                        <i class="bi bi-globe"></i>
+                    </div>
+                    <div class="classe-info-content">
+                        <div class="classe-info-label">Domaine</div>
+                        <div class="classe-info-value">{{ classe.get_domaine_display }}</div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if classe.subdivision %}
+                <div class="classe-info">
+                    <div class="classe-info-icon subdivision">
+                        <i class="bi bi-hash"></i>
+                    </div>
+                    <div class="classe-info-content">
+                        <div class="classe-info-label">Subdivision</div>
+                        <div class="classe-info-value">{{ classe.subdivision }}</div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="classe-info">
+                    <div class="classe-info-icon annee">
+                        <i class="bi bi-calendar3"></i>
+                    </div>
+                    <div class="classe-info-content">
+                        <div class="classe-info-label">Année scolaire</div>
+                        <div class="classe-info-value">{{ classe.annee_scolaire.libelle }}</div>
+                    </div>
+                </div>
+                
+                <div class="classe-info">
+                    <div class="classe-info-icon effectif">
+                        <i class="bi bi-people"></i>
+                    </div>
+                    <div class="classe-info-content">
+                        <div class="classe-info-label">Effectif</div>
+                        <div class="classe-info-value">{{ classe.inscriptions.count }} / {{ classe.capacite }} élèves</div>
+                    </div>
+                </div>
+                
+                <div class="classe-info">
+                    <div class="classe-info-icon matiere">
+                        <i class="bi bi-book"></i>
+                    </div>
+                    <div class="classe-info-content">
+                        <div class="classe-info-label">Matières</div>
+                        <div class="classe-info-value">{{ classe.matieres.count }} matière(s)</div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer" style="background: var(--card-footer-bg);">
+                <div class="d-flex gap-2">
+                    <a href="{% url 'academics:saisie_notes_classe' classe.pk %}" class="btn btn-outline-primary btn-action flex-grow-1">
+                        <i class="bi bi-pencil-square me-2"></i> Notes
+                    </a>
+                    <a href="{% url 'presences:faire_appel' classe.pk %}" class="btn btn-outline-success btn-action flex-grow-1">
+                        <i class="bi bi-clipboard-check me-2"></i> Appel
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <div class="empty-icon">
+        <i class="bi bi-collection"></i>
+    </div>
+    <h4 style="color: var(--classe-value)">Aucune classe créée</h4>
+    <p style="color: var(--classe-label)">Commencez par créer votre première classe</p>
+    <a href="{% url 'academics:classe_create' %}" class="btn btn-primary btn-lg">
+        <i class="bi bi-plus-circle me-2"></i> Créer une classe
+    </a>
+</div>
+{% endif %}
+{% endblock %}

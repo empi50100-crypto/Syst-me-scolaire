@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+{% block title %}Bulletins - {{ classe }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1><i class="bi bi-file-earmark-spreadsheet"></i> Bulletins de Notes</h1>
+        <p class="text-muted mb-0">
+            Classe: <span class="badge bg-primary">{{ classe }}</span> | 
+            Année: {{ annee.libelle }}
+        </p>
+    </div>
+    <div>
+        <a href="{% url 'rapports:bulletin_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Retour
+        </a>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-calendar3"></i> Sélection de la Période</h5>
+            </div>
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label fw-bold">Période / Trimestre</label>
+                        <select name="cycle" class="form-select form-select-lg" onchange="this.form.submit()">
+                            {% for c in cycles %}
+                            <option value="{{ c.pk }}" {% if c.pk == cycle.pk %}selected{% endif %}>
+                                {{ c.libelle }} ({{ c.date_debut|date:"d/m/Y" }} - {{ c.date_fin|date:"d/m/Y" }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="bi bi-download"></i> Génération des Bulletins</h5>
+            </div>
+            <div class="card-body">
+                {% if inscriptions_data %}
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="cycle_id" value="{{ cycle.pk }}">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <strong class="text-success">{{ inscriptions_data|length }} élève(s)</strong>
+                            <p class="text-muted mb-0 small">Cliquez pour générer les bulletins PDF pour tous les élèves</p>
+                        </div>
+                        <button type="submit" name="generer_bulletins" class="btn btn-success btn-lg">
+                            <i class="bi bi-file-earmark-pdf"></i> Générer tous les bulletins
+                        </button>
+                    </div>
+                </form>
+                {% else %}
+                <div class="alert alert-warning mb-0">
+                    <i class="bi bi-exclamation-triangle"></i> Aucun élève trouvé dans cette classe.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-dark text-white">
+        <h5 class="mb-0"><i class="bi bi-list-ul"></i> Liste des élèves - {{ cycle.libelle }}</h5>
+    </div>
+    <div class="card-body">
+        {% if inscriptions_data %}
+        <div class="table-responsive">
+            <table class="table table-hover table-striped">
+                <thead class="table-light">
+                    <tr>
+                        <th>Rang</th>
+                        <th>Matricule</th>
+                        <th>Nom</th>
+                        <th>Prénom</th>
+                        <th class="text-center">Moyenne</th>
+                        <th>Mention</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for data in inscriptions_data %}
+                    <tr>
+                        <td><strong>{{ data.rang }}</strong></td>
+                        <td>{{ data.inscription.eleve.matricule }}</td>
+                        <td>{{ data.inscription.eleve.nom }}</td>
+                        <td>{{ data.inscription.eleve.prenom }}</td>
+                        <td class="text-center">
+                            {% if data.moyenne_generale %}
+                                <span class="badge {% if data.moyenne_generale >= 10 %}bg-success{% elif data.moyenne_generale >= 5 %}bg-warning text-dark{% else %}bg-danger{% endif %} fs-6">
+                                    {{ data.moyenne_generale|floatformat:2 }}/20
+                                </span>
+                            {% else %}
+                                <span class="badge bg-secondary">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if data.moyenne_generale %}
+                                {% if data.moyenne_generale >= 16 %}
+                                    <span class="badge bg-success">Excellent</span>
+                                {% elif data.moyenne_generale >= 14 %}
+                                    <span class="badge bg-success">Très Bien</span>
+                                {% elif data.moyenne_generale >= 12 %}
+                                    <span class="badge bg-primary">Bien</span>
+                                {% elif data.moyenne_generale >= 10 %}
+                                    <span class="badge bg-info">Assez Bien</span>
+                                {% elif data.moyenne_generale >= 8 %}
+                                    <span class="badge bg-warning text-dark">Passable</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Insuffisant</span>
+                                {% endif %}
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <a href="{% url 'rapports:generer_bulletin' data.inscription.pk %}?cycle={{ cycle.pk }}" class="btn btn-sm btn-primary" title="Aperçu">
+                                <i class="bi bi-eye"></i> Aperçu
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-people" style="font-size: 4rem; color: #ccc;"></i>
+            <p class="mt-3 text-muted">Aucun élève trouvé dans cette classe pour cette période.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block title %}Documents - SyGeS-AM{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Accueil</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'eleves:eleve_list' %}">Élèves</a></li>
+                <li class="breadcrumb-item active">Documents</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-file-earmark"></i> Documents des élèves</h1>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="get" class="row g-3 mb-4">
+            <div class="col-md-4">
+                <input type="text" name="search" class="form-control" placeholder="Rechercher un élève..." value="{{ search }}">
+            </div>
+            <div class="col-md-3">
+                <select name="type" class="form-select">
+                    <option value="">Tous les types</option>
+                    <option value="acte_naissance" {% if type_doc == 'acte_naissance' %}selected{% endif %}>Acte de naissance</option>
+                    <option value="certificat_scolarite" {% if type_doc == 'certificat_scolarite' %}selected{% endif %}>Certificat de scolarité</option>
+                    <option value="certificat_medical" {% if type_doc == 'certificat_medical' %}selected{% endif %}>Certificat médical</option>
+                    <option value="photo_identite" {% if type_doc == 'photo_identite' %}selected{% endif %}>Photo d'identité</option>
+                    <option value="bulletin_precedent" {% if type_doc == 'bulletin_precedent' %}selected{% endif %}>Bulletin précédent</option>
+                    <option value="autre" {% if type_doc == 'autre' %}selected{% endif %}>Autre</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-outline-primary w-100">
+                    <i class="bi bi-search"></i> Filtrer
+                </button>
+            </div>
+        </form>
+
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Date</th>
+                        <th>Élève</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                        <th>Fichier</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for doc in documents %}
+                    <tr>
+                        <td>{{ doc.date_upload|date:"d/m/Y" }}</td>
+                        <td>
+                            <a href="{% url 'eleves:eleve_detail' doc.eleve.pk %}">
+                                {{ doc.eleve.nom_complet }}
+                            </a>
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">{{ doc.get_type_document_display }}</span>
+                        </td>
+                        <td>{{ doc.description|default:"-" }}</td>
+                        <td>
+                            <a href="{{ doc.fichier.url }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                                <i class="bi bi-download"></i> Télécharger
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-4">
+                            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                            Aucun document trouvé
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if documents.has_other_pages %}
+        <nav>
+            <ul class="pagination justify-content-center">
+                {% if documents.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page=1">Première</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ documents.previous_page_number }}">Précédente</a></li>
+                {% endif %}
+                <li class="page-item active"><span class="page-link">Page {{ documents.number }} / {{ documents.paginator.num_pages }}</span></li>
+                {% if documents.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ documents.next_page_number }}">Suivante</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ documents.paginator.num_pages }}">Dernière</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

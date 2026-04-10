@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+
+{% block title %}Tableau de Bord Financier{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-center">
+    <div>
+        <h1><i class="bi bi-graph-up"></i> Tableau de Bord Financier</h1>
+        {% if annee %}
+        <span class="badge bg-primary fs-6">{{ annee.libelle }}</span>
+        <small class="text-muted">({{ annee.date_debut|date:"d/m/Y" }} - {{ annee.date_fin|date:"d/m/Y" }})</small>
+        {% endif %}
+    </div>
+    <div>
+        <a href="{% url 'finances:paiement_list' %}" class="btn btn-outline-primary">
+            <i class="bi bi-clock-history"></i> Historique paiements
+        </a>
+    </div>
+</div>
+
+{% if error %}
+<div class="alert alert-danger">{{ error }}</div>
+{% else %}
+
+<div class="row g-4 mb-4">
+    <div class="col-md-6 col-lg-3">
+        <div class="card stat-card primary h-100">
+            <div class="card-body">
+                <h5>Total Frais</h5>
+                <h2>{{ total_frais|default:0|floatformat:0 }} <small>FCFA</small></h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <div class="card stat-card success h-100">
+            <div class="card-body">
+                <h5>Encaissé</h5>
+                <h2>{{ total_paiements|default:0|floatformat:0 }} <small>FCFA</small></h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <div class="card stat-card warning h-100">
+            <div class="card-body">
+                <h5>Ce mois</h5>
+                <h2>{{ encaissements_mois|default:0|floatformat:0 }} <small>FCFA</small></h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <div class="card stat-card {% if reste_a_payer > 0 %}danger{% else %}success{% endif %} h-100">
+            <div class="card-body">
+                <h5>Reste à payer</h5>
+                <h2>{{ reste_a_payer|default:0|floatformat:0 }} <small>FCFA</small></h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-6 col-lg-4">
+        <div class="card stat-card info h-100">
+            <div class="card-body">
+                <h5>Total Décaissements</h5>
+                <h2>{{ total_decaissements|default:0|floatformat:0 }} <small>FCFA</small></h2>
+                <small class="text-muted">Dont salaires: {{ total_salaires|default:0|floatformat:0 }} FCFA</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-4">
+        <div class="card stat-card {% if solde >= 0 %}success{% else %}danger{% endif %} h-100">
+            <div class="card-body">
+                <h5>Solde</h5>
+                <h2>{{ solde|default:0|floatformat:0 }} <small>FCFA</small></h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-4">
+        <div class="card stat-card secondary h-100">
+            <div class="card-body">
+                <h5>Taux Recouvrement</h5>
+                <h2>{{ taux_recouvrement|default:0|floatformat:1 }}<small>%</small></h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-lightning-charge"></i> Actions rapides
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <a href="{% url 'finances:paiement_create' %}" class="btn btn-success w-100 py-3">
+                            <i class="bi bi-receipt fs-4 d-block mb-2"></i>
+                            Nouveau paiement
+                        </a>
+                    </div>
+                    <div class="col-md-6">
+                        <a href="{% url 'finances:paiement_list' %}" class="btn btn-primary w-100 py-3">
+                            <i class="bi bi-clock-history fs-4 d-block mb-2"></i>
+                            Historique paiements
+                        </a>
+                    </div>
+                    <div class="col-md-6">
+                        <a href="{% url 'finances:frais_create' %}" class="btn btn-info w-100 py-3">
+                            <i class="bi bi-currency-dollar fs-4 d-block mb-2"></i>
+                            Configurer frais
+                        </a>
+                    </div>
+                    <div class="col-md-6">
+                        <a href="{% url 'finances:operation_caisse' %}" class="btn btn-warning w-100 py-3">
+                            <i class="bi bi-safe fs-4 d-block mb-2"></i>
+                            Opérations caisse
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <i class="bi bi-info-circle"></i> Informations
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <tr>
+                        <td><i class="bi bi-file-text text-muted"></i> Nombre de paiements</td>
+                        <td class="text-end"><strong>{{ nb_paiements|default:0 }}</strong></td>
+                    </tr>
+                    <tr>
+                        <td><i class="bi bi-wallet2 text-muted"></i> Salaires versés</td>
+                        <td class="text-end"><strong>{{ total_salaires|default:0|floatformat:0 }} FCFA</strong></td>
+                    </tr>
+                    <tr>
+                        <td><i class="bi bi-calendar-month text-muted"></i> Mois en cours</td>
+                        <td class="text-end"><strong>{{ encaissements_mois|default:0|floatformat:0 }} FCFA</strong></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block title %}Appel - {{ classe.nom }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="bi bi-clipboard-check"></i> Appel - {{ classe.nom }}</h1>
+    <span class="badge bg-secondary fs-6">{{ today }}</span>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Matricule</th>
+                            <th>Élève</th>
+                            <th class="text-center">Présent</th>
+                            <th class="text-center">Absent</th>
+                            <th class="text-center">Retard</th>
+                            <th>Observation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for inscription in inscriptions %}
+                        <tr>
+                            <td><span class="badge bg-dark">{{ inscription.eleve.matricule }}</span></td>
+                            <td><strong>{{ inscription.eleve.nom_complet }}</strong></td>
+                            <td class="text-center">
+                                <input type="radio" name="statut_{{ inscription.eleve.pk }}" value="present" 
+                                       {% if inscription.statut_present == 'present' %}checked{% endif %}>
+                            </td>
+                            <td class="text-center">
+                                <input type="radio" name="statut_{{ inscription.eleve.pk }}" value="absent"
+                                       {% if inscription.statut_present == 'absent' %}checked{% endif %}>
+                            </td>
+                            <td class="text-center">
+                                <input type="radio" name="statut_{{ inscription.eleve.pk }}" value="retard"
+                                       {% if inscription.statut_present == 'retard' %}checked{% endif %}>
+                            </td>
+                            <td>
+                                <input type="text" name="observation_{{ inscription.eleve.pk }}" class="form-control form-control-sm" placeholder="Observation...">
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted">Aucun élève inscrit dans cette classe</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="mt-3">
+                <button type="submit" class="btn btn-success btn-lg">
+                    <i class="bi bi-check-circle"></i> Enregistrer l'appel
+                </button>
+                <a href="{% url 'presences:presence_list' %}" class="btn btn-secondary btn-lg">
+                    <i class="bi bi-arrow-left"></i> Retour
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

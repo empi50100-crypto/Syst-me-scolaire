@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+{% block title %}Historique des Notes{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-clock-history"></i> Historique des Notes</h1>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label fw-bold">Classe</label>
+                <select name="classe" class="form-select" onchange="this.form.submit()">
+                    <option value="">Toutes les classes</option>
+                    {% for c in classes %}
+                    <option value="{{ c.pk }}" {% if classe.pk == c.pk %}selected{% endif %}>{{ c.nom }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if historique %}
+<div class="card">
+    <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Dernières modifications de notes ({{ historique|length }})</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Date Évaluation</th>
+                        <th>Élève</th>
+                        <th>Matière</th>
+                        <th>Type</th>
+                        <th>Titre</th>
+                        <th class="text-center">Note</th>
+                        <th class="text-center">Enseignant</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for eval in historique %}
+                    <tr>
+                        <td>{{ eval.date_eval|date:"d/m/Y" }}</td>
+                        <td>
+                            <strong>{{ eval.eleve.matricule }}</strong><br>
+                            <small>{{ eval.eleve.nom }} {{ eval.eleve.prenom }}</small>
+                        </td>
+                        <td>{{ eval.matiere.nom }}</td>
+                        <td>
+                            {% if eval.type_eval == 'interrogation' %}<span class="badge bg-info">Interrogation</span>
+                            {% elif eval.type_eval == 'mini_devoir' %}<span class="badge bg-secondary">Mini Devoir</span>
+                            {% elif eval.type_eval == 'devoir' %}<span class="badge bg-primary">Devoir</span>
+                            {% elif eval.type_eval == 'examen' %}<span class="badge bg-success">Examen</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ eval.titre|default:"-" }}</td>
+                        <td class="text-center">
+                            <span class="badge {% if eval.note >= 10 %}bg-success{% elif eval.note >= 5 %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+                                {{ eval.note }}/20
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <small class="text-muted">{{ eval.annee_scolaire.libelle }}</small>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="alert alert-info text-center">
+    <i class="bi bi-clipboard-data" style="font-size: 2rem;"></i>
+    <p class="mt-2 mb-0">Aucune note trouvée.</p>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+
+{% block title %}Mes Séances de Cours{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="bi bi-clock-history"></i> Mes Séances de Cours</h1>
+    <span class="badge bg-primary">{{ today|date:"d/m/Y" }}</span>
+</div>
+
+{% if seances_en_cours %}
+<div class="card mb-4 border-warning">
+    <div class="card-header bg-warning text-dark">
+        <h5 class="mb-0"><i class="bi bi-play-circle"></i> Séance en cours</h5>
+    </div>
+    <div class="card-body">
+        {% for seance in seances_en_cours %}
+        <div class="alert alert-warning">
+            <h4>{{ seance.classe.nom }} - {{ seance.matiere.nom }}</h4>
+            <p class="mb-2">Début: {{ seance.heure_debut|date:"H:i" }}</p>
+            
+            <div class="d-flex align-items-center mb-3">
+                <div class="display-4 me-4" id="timer{{ seance.pk }}">
+                    <span id="hours{{ seance.pk }}">00</span>:<span id="minutes{{ seance.pk }}">00</span>:<span id="seconds{{ seance.pk }}">00</span>
+                </div>
+            </div>
+            
+            <form method="post" action="{% url 'presences:terminer_seance' seance.pk %}">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label">Notes/Observations (optionnel)</label>
+                    <textarea name="notes" class="form-control" rows="2" placeholder="Notes sur la séance..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-danger">
+                    <i class="bi bi-stop-circle"></i> Terminer la séance
+                </button>
+            </form>
+        </div>
+        
+        <script>
+            (function() {
+                var debut = new Date("{{ seance.date|date:'Y-m-d' }}" + "T" + "{{ seance.heure_debut|date:'H:i:s' }}");
+                var timer{{ seance.pk }} = document.getElementById('timer{{ seance.pk }}');
+                
+                function updateTimer{{ seance.pk }}() {
+                    var now = new Date();
+                    var diff = Math.floor((now - debut) / 1000);
+                    var hours = Math.floor(diff / 3600);
+                    var minutes = Math.floor((diff % 3600) / 60);
+                    var seconds = diff % 60;
+                    
+                    document.getElementById('hours{{ seance.pk }}').textContent = hours.toString().padStart(2, '0');
+                    document.getElementById('minutes{{ seance.pk }}').textContent = minutes.toString().padStart(2, '0');
+                    document.getElementById('seconds{{ seance.pk }}').textContent = seconds.toString().padStart(2, '0');
+                }
+                
+                setInterval(updateTimer{{ seance.pk }}, 1000);
+                updateTimer{{ seance.pk }}();
+            })();
+        </script>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-plus-circle"></i> Démarrer une nouvelle séance</h5>
+    </div>
+    <div class="card-body">
+        {% if enseignements %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Jour</th>
+                        <th>Classe</th>
+                        <th>Matière</th>
+                        <th>Horaire</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ens in enseignements %}
+                    <tr>
+                        <td>
+                            {% if ens.horaires %}
+                                {% for h in ens.horaires %}
+                                <span class="badge bg-secondary me-1">{{ h.jour|capfirst }}</span>
+                                {% endfor %}
+                            {% else %}
+                            <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td><strong>{{ ens.classe.nom }}</strong></td>
+                        <td>{{ ens.matiere.nom }}</td>
+                        <td>
+                            {% if ens.horaires %}
+                                {% for h in ens.horaires %}
+                                <div class="small">{{ h.heure_debut }} - {{ h.heure_fin }}</div>
+                                {% endfor %}
+                            {% else %}
+                                <span class="text-muted">Non défini</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'presences:demarrer_seance' ens.pk %}" class="btn btn-success btn-sm">
+                                <i class="bi bi-play"></i> Démarrer
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4 text-muted">
+            <i class="bi bi-calendar-x" style="font-size: 3rem;"></i>
+            <p class="mt-2">Aucun enseignement assigné pour le moment.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% if seances_terminees %}
+<div class="card">
+    <div class="card-header bg-success text-white">
+        <h5 class="mb-0"><i class="bi bi-check-circle"></i> Séances terminées aujourd'hui</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>Classe</th>
+                        <th>Matière</th>
+                        <th>Début</th>
+                        <th>Fin</th>
+                        <th>Durée</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for seance in seances_terminees %}
+                    <tr>
+                        <td>{{ seance.classe.nom }}</td>
+                        <td>{{ seance.matiere.nom }}</td>
+                        <td>{{ seance.heure_debut|date:"H:i" }}</td>
+                        <td>{{ seance.heure_fin|date:"H:i" }}</td>
+                        <td><span class="badge bg-info">{{ seance.duree_formatee }}</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

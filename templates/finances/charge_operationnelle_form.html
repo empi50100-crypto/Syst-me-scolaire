@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block title %}Nouvelle Charge Opérationnelle{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-receipt"></i> Nouvelle Charge Opérationnelle</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.date_charge.label }}</label>
+                            {{ form.date_charge }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.type_charge.label }}</label>
+                            {{ form.type_charge }}
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">{{ form.description.label }}</label>
+                            {{ form.description }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.montant.label }}</label>
+                            {{ form.montant }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.fournisseur.label }}</label>
+                            {{ form.fournisseur }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.reference.label }}</label>
+                            {{ form.reference }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.est_payee.label }}</label>
+                            <div class="form-check form-switch mt-2">
+                                {{ form.est_payee }}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.date_paiement.label }}</label>
+                            {{ form.date_paiement }}
+                        </div>
+                    </div>
+                    <div class="mt-4 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check"></i> Enregistrer
+                        </button>
+                        <a href="{% url 'finances:charges_list' %}" class="btn btn-secondary">Annuler</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

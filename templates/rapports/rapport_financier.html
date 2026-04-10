@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block title %}Rapport Financier{% endblock %}
+
+{% block content %}
+<h1>Rapport Financier</h1>
+<h4 class="text-muted">{{ annee.libelle }}</h4>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="card card-stat primary">
+            <div class="card-body">
+                <h5 class="card-title">Total Frais</h5>
+                <h3>{{ total_frais }} FCFA</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card card-stat success">
+            <div class="card-body">
+                <h5 class="card-title">Encaissé</h5>
+                <h3>{{ total_encaisse }} FCFA</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card card-stat warning">
+            <div class="card-body">
+                <h5 class="card-title">Taux Recouvrement</h5>
+                <h3>{{ taux_recouvrement }}%</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h4>Par type de frais</h4>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Type</th>
+            <th>Total Dû</th>
+            <th>Encaissé</th>
+            <th>Reste</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for s in stats_par_type %}
+        <tr>
+            <td>{{ s.type }}</td>
+            <td>{{ s.total }} FCFA</td>
+            <td>{{ s.encaisse }} FCFA</td>
+            <td>{{ s.reste }} FCFA</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

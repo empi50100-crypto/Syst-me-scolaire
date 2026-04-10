@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+{% block title %}Messages{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-envelope"></i> Messages</h1>
+    <div>
+        <a href="{% url 'accounts:message_mark_all_read' %}" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-check-all"></i> Tout marquer comme lu
+        </a>
+        <a href="{% url 'accounts:message_create' %}" class="btn btn-primary btn-sm">
+            <i class="bi bi-plus-circle"></i> Nouveau message
+        </a>
+    </div>
+</div>
+
+<div class="mb-3">
+    <div class="btn-group" role="group">
+        <a href="?filter=all" class="btn btn-sm btn-{% if filter_type == 'all' or not filter_type %}primary{% else %}outline-primary{% endif %}">
+            Tous les messages
+        </a>
+        <a href="?filter=unread" class="btn btn-sm btn-{% if filter_type == 'unread' %}primary{% else %}outline-primary{% endif %}">
+            Non lus
+        </a>
+        <a href="?filter=read" class="btn btn-sm btn-{% if filter_type == 'read' %}primary{% else %}outline-primary{% endif %}">
+            Lus
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <ul class="nav nav-tabs mb-3" id="messageTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="recus-tab" data-bs-toggle="tab" data-bs-target="#recus" type="button">
+                    <i class="bi bi-inbox"></i> Messages reçus
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="envoyes-tab" data-bs-toggle="tab" data-bs-target="#envoyes" type="button">
+                    <i class="bi bi-send"></i> Messages envoyés
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="services-tab" data-bs-toggle="tab" data-bs-target="#services" type="button">
+                    <i class="bi bi-people"></i> Messages de service
+                </button>
+            </li>
+        </ul>
+        
+        <div class="tab-content" id="messageTabContent">
+            <div class="tab-pane fade show active" id="recus" role="tabpanel">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="list-group">
+                            {% for msg in messages_recus %}
+                            <a href="{% url 'accounts:message_detail' msg.pk %}" class="list-group-item list-group-item-action {% if not msg.est_lu %}unread-message{% endif %}">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">{{ msg.sujet }}</h6>
+                                    <small class="text-muted">{{ msg.date_envoi|date:"d/m/Y H:i" }}</small>
+                                </div>
+                                <p class="mb-1 text-muted" style="font-size: 0.9rem;">{{ msg.contenu|truncatechars:80 }}</p>
+                                <small class="text-muted">De: {{ msg.auteur.get_full_name }}</small>
+                            </a>
+                            {% empty %}
+                            <div class="text-center text-muted py-4">
+                                <i class="bi bi-envelope-open display-4"></i>
+                                <p class="mt-2">Aucun message reçu</p>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tab-pane fade" id="envoyes" role="tabpanel">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="list-group">
+                            {% for msg in messages_envoyes %}
+                            <div class="list-group-item">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">{{ msg.sujet }}</h6>
+                                    <small class="text-muted">{{ msg.date_envoi|date:"d/m/Y H:i" }}</small>
+                                </div>
+                                <p class="mb-1 text-muted" style="font-size: 0.9rem;">{{ msg.contenu|truncatechars:80 }}</p>
+                                <small class="text-muted">À: {{ msg.destinataire.get_full_name }}</small>
+                            </div>
+                            {% empty %}
+                            <div class="text-center text-muted py-4">
+                                <i class="bi bi-send display-4"></i>
+                                <p class="mt-2">Aucun message envoyé</p>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tab-pane fade" id="services" role="tabpanel">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="list-group">
+                            {% for msg in messages_groupes %}
+                            <div class="list-group-item">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">{{ msg.sujet }}</h6>
+                                    <small class="text-muted">{{ msg.date_envoi|date:"d/m/Y H:i" }}</small>
+                                </div>
+                                <p class="mb-1 text-muted" style="font-size: 0.9rem;">{{ msg.contenu|truncatechars:80 }}</p>
+                                <small class="text-muted">De: {{ msg.auteur.get_full_name }} - {{ msg.get_type_message_display }}</small>
+                            </div>
+                            {% empty %}
+                            <div class="text-center text-muted py-4">
+                                <p>Aucun message de service</p>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.unread-message {
+    background: rgba(99, 102, 241, 0.15) !important;
+    border-left: 3px solid #6366f1 !important;
+}
+</style>
+{% endblock %}

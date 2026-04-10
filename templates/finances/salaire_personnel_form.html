@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% block title %}Enregistrer Salaire{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="bi bi-cash"></i> Enregistrer un Salaire</h1>
+</div>
+
+<div class="form-container">
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="form-section">
+            <div class="form-section-header">
+                <i class="bi bi-person"></i> Informations du Salaire
+            </div>
+            
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">Personnel</label>
+                        {{ form.personnel }}
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label class="form-label">Mois</label>
+                        {{ form.mois }}
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label class="form-label">Année</label>
+                        {{ form.annee }}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label class="form-label">Salaire Brut (FCFA)</label>
+                        {{ form.salaire_brut }}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label class="form-label">Retenues (FCFA)</label>
+                        {{ form.retenues }}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label class="form-label">Date de Versement</label>
+                        {{ form.date_versement }}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <div class="form-check">
+                            {{ form.est_paye }}
+                            <label class="form-check-label" for="{{ form.est_paye.id_for_label }}">
+                                Marquer comme payé
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-lg">
+                <i class="bi bi-check-circle"></i> Enregistrer
+            </button>
+            <a href="{% url 'finances:gestion_salaires' %}" class="btn btn-secondary btn-lg">
+                <i class="bi bi-x-circle"></i> Annuler
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

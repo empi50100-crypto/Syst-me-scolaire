@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if cycle %}Modifier{% else %}Nouveau{% endif %} Cycle{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="bi bi-calendar-range"></i> {% if cycle %}Modifier{% else %}Nouveau{% endif %} Cycle</h1>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Année Scolaire</label>
+                    {{ form.annee_scolaire }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Type de Cycle</label>
+                    {{ form.type_cycle }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Numéro</label>
+                    {{ form.numero }}
+                    <small class="text-muted">1, 2, 3 pour Trimestriel ou 1, 2 pour Semestriel</small>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Date début</label>
+                    {{ form.date_debut }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Date fin</label>
+                    {{ form.date_fin }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Pourcentage du montant</label>
+                    {{ form.pourcentage }}
+                    <small class="text-muted">% du montant total à payer pour ce cycle</small>
+                </div>
+            </div>
+            
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-save"></i> Enregistrer
+                </button>
+                <a href="{% url 'finances:cycle_list' %}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Retour
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

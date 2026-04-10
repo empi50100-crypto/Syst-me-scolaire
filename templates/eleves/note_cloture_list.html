@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+
+{% block title %}Mes Classes - Clôture Notes - SyGeS-AM{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Accueil</a></li>
+                <li class="breadcrumb-item active">Clôture des Notes</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<h1 class="mb-4"><i class="bi bi-journal-check"></i> Clôture des Notes par Période</h1>
+
+<div class="alert alert-info">
+    <i class="bi bi-info-circle"></i>
+    <strong>Comment ça marche :</strong>
+    <ul class="mb-0">
+        <li>Chaque professeur doit clôturer les notes de ses matières pour chaque période.</li>
+        <li>Le professeur principal peut clôturer la période seulement quand tous les professeurs ont clôturé leurs notes.</li>
+        <li>Une fois la période clôturée par le professeur principal, les disciplines seront automatiquement affectées à la période suivante.</li>
+    </ul>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Classe</th>
+                        <th>Professeur Principal</th>
+                        <th>Professeurs</th>
+                        <th>Statut Trimestre 1</th>
+                        <th>Statut Trimestre 2</th>
+                        <th>Statut Trimestre 3</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for data in classe_data %}
+                    <tr>
+                        <td><strong>{{ data.classe.nom }}</strong></td>
+                        <td>
+                            {% if data.classe.professeur_principal %}
+                                {{ data.classe.professeur_principal.user.get_full_name }}
+                                {% if data.is_principal %}
+                                <span class="badge bg-primary">Vous</span>
+                                {% endif %}
+                            {% else %}
+                            <span class="text-muted">Non défini</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ data.nombre_profs }} profs</td>
+                        <td>
+                            {% for prof in data.professeurs %}
+                                {% if prof.clotures.1 %}
+                                <span class="badge bg-success" title="{{ prof.professeur.user.get_full_name }}">✓</span>
+                                {% else %}
+                                <span class="badge bg-warning" title="{{ prof.professeur.user.get_full_name }}">○</span>
+                                {% endif %}
+                            {% endfor %}
+                        </td>
+                        <td>
+                            {% for prof in data.professeurs %}
+                                {% if prof.clotures.2 %}
+                                <span class="badge bg-success" title="{{ prof.professeur.user.get_full_name }}">✓</span>
+                                {% else %}
+                                <span class="badge bg-warning" title="{{ prof.professeur.user.get_full_name }}">○</span>
+                                {% endif %}
+                            {% endfor %}
+                        </td>
+                        <td>
+                            {% for prof in data.professeurs %}
+                                {% if prof.clotures.3 %}
+                                <span class="badge bg-success" title="{{ prof.professeur.user.get_full_name }}">✓</span>
+                                {% else %}
+                                <span class="badge bg-warning" title="{{ prof.professeur.user.get_full_name }}">○</span>
+                                {% endif %}
+                            {% endfor %}
+                        </td>
+                        <td>
+                            <a href="{% url 'eleves:note_cloture_edit' data.classe.id %}" class="btn btn-sm btn-primary">
+                                <i class="bi bi-journal-check"></i> Gérer
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">
+                            Aucune classe trouvée.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,190 @@
+{% extends 'base.html' %}
+{% block title %}Demandes d'approbation{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-shield-check"></i> Demandes d'approbation</h1>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <ul class="nav nav-tabs mb-3" id="demandeTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="attente-tab" data-bs-toggle="tab" data-bs-target="#attente" type="button" role="tab">
+                    <i class="bi bi-hourglass-split"></i> En attente
+                    {% if demandes %}<span class="badge bg-danger ms-1">{{ demandes.count }}</span>{% endif %}
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="traitees-tab" data-bs-toggle="tab" data-bs-target="#traitees" type="button" role="tab">
+                    <i class="bi bi-check2-circle"></i> Traitées
+                </button>
+            </li>
+        </ul>
+        
+        <div class="tab-content" id="demandeTabsContent">
+            <div class="tab-pane fade show active" id="attente" role="tabpanel">
+                {% if demandes %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Date</th>
+                                <th>Demandeur</th>
+                                <th>Type action</th>
+                                <th>Objet</th>
+                                <th>Détails</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for demande in demandes %}
+                            <tr>
+                                <td>{{ demande.date_creation|date:"d/m/Y H:i" }}</td>
+                                <td>{{ demande.demandeur.get_full_name|default:demande.demandeur.username }}</td>
+                                <td>
+                                    <span class="badge bg-{% if demande.type_action == 'creation' %}success{% elif demande.type_action == 'modification' %}warning{% else %}danger{% endif %}">
+                                        {{ demande.get_type_action_display }}
+                                    </span>
+                                </td>
+                                <td>{{ demande.get_type_objet_display }}</td>
+                                <td>
+                                    <a href="{% url 'accounts:demande_detail' demande.pk %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i> Voir
+                                    </a>
+                                </td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a href="{% url 'accounts:demande_approuver' demande.pk %}" class="btn btn-sm btn-success" onclick="return confirm('Êtes-vous sûr de vouloir APPROUVER cette demande?');">
+                                            <i class="bi bi-check-lg"></i> Approuver
+                                        </a>
+                                        <a href="{% url 'accounts:demande_rejeter' demande.pk %}" class="btn btn-sm btn-danger" onclick="return confirm('Êtes-vous sûr de vouloir REJETER cette demande?');">
+                                            <i class="bi bi-x-lg"></i> Rejeter
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> Aucune demande en attente d'approbation.
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="tab-pane fade" id="traitees" role="tabpanel">
+                {% if demandes_traitees %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Date</th>
+                                <th>Demandeur</th>
+                                <th>Type action</th>
+                                <th>Objet</th>
+                                <th>Statut</th>
+                                <th>Traité par</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for demande in demandes_traitees %}
+                            <tr class="{% if demande.statut == 'approuve' %}table-success{% else %}table-danger{% endif %}">
+                                <td>{{ demande.date_creation|date:"d/m/Y H:i" }}</td>
+                                <td>{{ demande.demandeur.get_full_name|default:demande.demandeur.username }}</td>
+                                <td>{{ demande.get_type_action_display }}</td>
+                                <td>{{ demande.get_type_objet_display }}</td>
+                                <td>
+                                    <span class="badge bg-{% if demande.statut == 'approuve' %}success{% else %}danger{% endif %}">
+                                        {{ demande.get_statut_display }}
+                                    </span>
+                                </td>
+                                <td>{{ demande.approbateur.get_full_name|default:demande.approbateur.username }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> Aucune demande traitée.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% for demande in demandes %}
+<div class="modal fade" id="detailModal{{ demande.pk }}" tabindex="-1" aria-labelledby="detailModalLabel{{ demande.pk }}" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="detailModalLabel{{ demande.pk }}">Détails de la demande</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <p><strong>Demandeur:</strong> {{ demande.demandeur.get_full_name|default:demande.demandeur.username }}</p>
+                        <p><strong>Date:</strong> {{ demande.date_creation|date:"d/m/Y H:i" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Type:</strong> {{ demande.get_type_action_display }} {{ demande.get_type_objet_display }}</p>
+                        <p><strong>Statut:</strong> <span class="badge bg-warning">{{ demande.get_statut_display }}</span></p>
+                    </div>
+                </div>
+                <hr>
+                <h6>Détails de la demande:</h6>
+                <p class="text-muted">{{ demande.details|linebreaks }}</p>
+                
+                {% if demande.details_avant %}
+                <hr>
+                <h6>État avant:</h6>
+                <p class="text-muted">{{ demande.details_avant|linebreaks }}</p>
+                {% endif %}
+                
+                {% if demande.details_apos %}
+                <hr>
+                <h6>État après:</h6>
+                <p class="text-muted">{{ demande.details_apos|linebreaks }}</p>
+                {% endif %}
+                
+                {% if demande.motif %}
+                <hr>
+                <h6>Motif:</h6>
+                <p class="text-muted">{{ demande.motif|linebreaks }}</p>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                <a href="{% url 'accounts:demande_rejeter' demande.pk %}" class="btn btn-danger" onclick="return confirm('Êtes-vous sûr de vouloir REJETER cette demande?');">
+                    <i class="bi bi-x-lg"></i> Rejeter
+                </a>
+                <a href="{% url 'accounts:demande_approuver' demande.pk %}" class="btn btn-success">
+                    <i class="bi bi-check-lg"></i> Approuver
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<script>
+function showDetailModal(pk) {
+    if (typeof bootstrap !== 'undefined') {
+        var modalEl = document.getElementById('detailModal' + pk);
+        if (modalEl) {
+            var modal = new bootstrap.Modal(modalEl);
+            modal.show();
+        } else {
+            console.error('Modal not found: detailModal' + pk);
+        }
+    } else {
+        console.error('Bootstrap not loaded');
+    }
+}
+</script>
+{% endblock %}

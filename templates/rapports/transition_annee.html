@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}Clôturer l'année scolaire{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="bi bi-calendar-check"></i> Clôturer l'année scolaire {{ annee.libelle }}</h1>
+</div>
+
+{% if annee.est_active %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card border-warning">
+            <div class="card-header bg-warning text-dark">
+                <i class="bi bi-exclamation-triangle"></i> Attention - Action irréversible
+            </div>
+            <div class="card-body">
+                <h5 class="mb-3">Cette action va automatiquement :</h5>
+                <ul class="mb-4">
+                    <li>Créer une <strong>nouvelle année scolaire</strong> ({{ annee.date_debut.year + 1 }}-{{ annee.date_debut.year + 2 }})</li>
+                    <li>Promouvoir les élèves ayant une moyenne ≥ 10/20 vers la <strong>classe supérieure</strong></li>
+                    <li>Maintenir les redoublants (moyenne < 10) dans leur <strong>même classe</strong></li>
+                    <li>Créer les <strong>matières</strong> pour les nouvelles classes</li>
+                    <li>Reporter les <strong>impayés</strong> des élèves promo vers la nouvelle année</li>
+                    <li>Copier les <strong>cycles de paiement</strong> vers la nouvelle année</li>
+                    <li>Copier les <strong>charges fixes</strong> vers la nouvelle année (non payées)</li>
+                    <li><strong>Désactiver</strong> cette année scolaire</li>
+                </ul>
+                
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> 
+                    <strong>Statut actuel :</strong> 
+                    {{ stats.total }} élèves | 
+                    {{ stats.promus }} promus | 
+                    {{ stats.redoublants }} redoublants | 
+                    {{ stats.sans_decision }} sans décision
+                </div>
+                
+                <form method="post" onsubmit="return confirm('Êtes-vous sûr de vouloir clore cette année scolaire ? Cette action est irréversible.')">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-warning btn-lg w-100">
+                        <i class="bi bi-check-circle"></i> Clôturer l'année et créer la suivante
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-book"></i> Classes actuelles
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    {% for inscription in stats.total|make_list %}
+                    {% if forloop.first %}
+                    {% endif %}
+                    {% endfor %}
+                    {% for inscription in request.user|make_list %}
+                    {% endfor %}
+                </ul>
+                <p class="text-muted small mt-3">
+                    <i class="bi bi-info-circle"></i> 
+                    Les classes seront automatiquement recréées avec les matières adaptées au niveau supérieur.
+                </p>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <i class="bi bi-question-circle"></i> Avant de continuer
+            </div>
+            <div class="card-body">
+                <ol class="small">
+                    <li>Assurez-vous d'avoir généré tous les bulletins</li>
+                    <li>Vérifiez les décisions de passage</li>
+                    <li>Faites une sauvegarde de la base de données</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="alert alert-info">
+    <i class="bi bi-info-circle"></i> Cette année scolaire est déjà close.
+</div>
+{% endif %}
+{% endblock %}
