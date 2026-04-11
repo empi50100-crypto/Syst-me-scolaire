@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% block title %}Liste des contrats{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-file-text"></i> Liste des contrats</h5>
+            <a href="{% url 'ressources_humaines:creer_contrat' %}" class="btn btn-light btn-sm">
+                <i class="bi bi-plus-circle"></i> Nouveau contrat
+            </a>
+        </div>
+        <div class="card-body">
+            <form method="get" class="mb-3">
+                <div class="row g-2">
+                    <div class="col-md-4">
+                        <select name="statut" class="form-select" onchange="this.form.submit()">
+                            <option value="">Tous les statuts</option>
+                            <option value="actif" {% if statut_filter == 'actif' %}selected{% endif %}>Actif</option>
+                            <option value="suspendu" {% if statut_filter == 'suspendu' %}selected{% endif %}>Suspendu</option>
+                            <option value="termine" {% if statut_filter == 'termine' %}selected{% endif %}>Terminé</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-outline-secondary">Filtrer</button>
+                    </div>
+                </div>
+            </form>
+            
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Employé</th>
+                        <th>Poste</th>
+                        <th>Type de contrat</th>
+                        <th>Date début</th>
+                        <th>Date fin</th>
+                        <th>Statut</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for contrat in contrats %}
+                    <tr>
+                        <td>{{ contrat.employe.utilisateur.get_full_name }}</td>
+                        <td>{{ contrat.poste.titre|default:"Non défini" }}</td>
+                        <td>{{ contrat.get_type_contrat_display|default:contrat.type_contrat }}</td>
+                        <td>{{ contrat.date_debut|date:"d/m/Y" }}</td>
+                        <td>{{ contrat.date_fin|date:"d/m/Y"|default:"Indéterminée" }}</td>
+                        <td>
+                            <span class="badge {% if contrat.statut == 'actif' %}bg-success{% elif contrat.statut == 'suspendu' %}bg-warning{% else %}bg-secondary{% endif %}">
+                                {{ contrat.get_statut_display|default:contrat.statut }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center">Aucun contrat enregistré</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

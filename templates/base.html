@@ -591,6 +591,8 @@
                 const link = e.target.closest('.nav-link[data-url]');
                 if (link) {
                     activateLink(link);
+                    // Force scroll after transition
+                    link.scrollIntoView({block: 'start', behavior: 'auto'});
                 }
             });
 

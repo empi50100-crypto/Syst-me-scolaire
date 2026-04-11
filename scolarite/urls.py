@@ -5,6 +5,7 @@ app_name = 'scolarite'
 
 urlpatterns = [
     path('', views.eleve_list, name='eleve_list'),
+    path('inscriptions/', views.inscription_list, name='inscription_list'),
     path('ajouter/', views.eleve_create, name='eleve_create'),
     path('<int:pk>/', views.eleve_detail, name='eleve_detail'),
     path('<int:pk>/modifier/', views.eleve_update, name='eleve_update'),

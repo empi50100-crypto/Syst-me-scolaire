@@ -115,7 +115,7 @@
                                 {% can_change request.user 'user_list' as can_manage %}
                                 
                                 {% if can_edit %}
-                                <a href="{% url 'authentification:user_edit' u.pk %}" class="btn btn-primary btn-action" title="Modifier">
+                                <a href="{% url 'authentification:user_update' u.pk %}" class="btn btn-primary btn-action" title="Modifier">
                                     <i class="bi bi-pencil"></i>
                                 </a>
                                 <button type="button" class="btn btn-info btn-action" onclick="document.getElementById('passwordModal{{ u.pk }}').style.display='flex'" title="Réinitialiser mot de passe">

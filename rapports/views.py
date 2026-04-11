@@ -13,7 +13,7 @@ from .models import Bulletin
 
 
 def calculer_total_frais_avec_eleves(annee):
-    from scolarite.models import Inscription
+    from scolarite.models import EleveInscription
     from enseignement.models import Classe
     from django.db.models import Q
     
@@ -24,7 +24,7 @@ def calculer_total_frais_avec_eleves(annee):
     
     for frais in frais_list:
         classes_concernees = frais.get_classes_concernees()
-        nb_eleves = Inscription.objects.filter(
+        nb_eleves = EleveInscription.objects.filter(
             annee_scolaire=annee,
             classe__in=classes_concernees
         ).count()
@@ -34,13 +34,11 @@ def calculer_total_frais_avec_eleves(annee):
 
 
 def calculer_moyenne_matiere(eleve, matiere, annee, cycle=None):
-    from scolarite.models import PeriodeCloture
-    
-    inscription = Inscription.objects.filter(eleve=eleve, annee_scolaire=annee).first()
+    inscription = EleveInscription.objects.filter(eleve=eleve, annee_scolaire=annee).first()
     classe = inscription.classe if inscription else None
     
-    p1_cloture = PeriodeCloture.objects.filter(classe=classe, periode=1).exists() if classe else False
-    p2_cloture = PeriodeCloture.objects.filter(classe=classe, periode=2).exists() if classe else False
+    p1_cloture = CloturePeriode.objects.filter(classe=classe, periode=1).exists() if classe else False
+    p2_cloture = CloturePeriode.objects.filter(classe=classe, periode=2).exists() if classe else False
     
     def get_periode_from_cycle(cycle_numero):
         if cycle_numero == 1:
@@ -83,14 +81,12 @@ def calculer_moyenne_matiere(eleve, matiere, annee, cycle=None):
 
 
 def calculer_note_conduite(eleve, classe, annee, cycle=None):
-    from scolarite.models import ConduiteConfig
-    
-    inscription = Inscription.objects.filter(eleve=eleve, annee_scolaire=annee, classe=classe).first()
+    inscription = EleveInscription.objects.filter(eleve=eleve, annee_scolaire=annee, classe=classe).first()
     if not inscription:
         return None
     
     note_base = 20
-    config = ConduiteConfig.objects.filter(
+    config = ConfigurationConduite.objects.filter(
         annee_scolaire=annee,
         niveau=classe.niveau
     ).first()
@@ -99,7 +95,7 @@ def calculer_note_conduite(eleve, classe, annee, cycle=None):
     
     periodes = [1, 2, 3]
     
-    disciplines = DisciplineEleve.objects.filter(
+    disciplines = SanctionRecompense.objects.filter(
         inscription=inscription,
         periode__in=periodes,
         statut_traitement='traite'
@@ -155,11 +151,11 @@ def bulletin_list(request):
     
     annee = AnneeScolaire.objects.filter(est_active=True).first()
     
-    cycles = CycleConfig.objects.filter(annee_scolaire=annee).order_by('numero') if annee else []
+    cycles = Cycle.objects.filter(annee_scolaire=annee).order_by('numero') if annee else []
     selected_cycle_pk = request.GET.get('cycle')
     selected_cycle = None
     if selected_cycle_pk:
-        selected_cycle = get_object_or_404(CycleConfig, pk=selected_cycle_pk)
+        selected_cycle = get_object_or_404(Cycle, pk=selected_cycle_pk)
     elif cycles.exists():
         selected_cycle = cycles.first()
     
@@ -174,7 +170,7 @@ def bulletin_list(request):
     inscriptions_data = []
     
     if not selected_classe and annee:
-        inscriptions = Inscription.objects.filter(
+        inscriptions = EleveInscription.objects.filter(
             annee_scolaire=annee
         ).select_related('eleve', 'classe').order_by('classe__nom', 'eleve__nom')
         
@@ -185,15 +181,13 @@ def bulletin_list(request):
                 Q(eleve__matricule__icontains=search)
             )
         
-        from scolarite.models import PeriodeCloture
-        
         classes_with_inscriptions = set(inscriptions.values_list('classe_id', flat=True))
         
         cloture_by_class = {}
         for classe_id in classes_with_inscriptions:
             cloture_by_class[classe_id] = {
-                'p1': PeriodeCloture.objects.filter(classe_id=classe_id, periode=1).exists(),
-                'p2': PeriodeCloture.objects.filter(classe_id=classe_id, periode=2).exists(),
+                'p1': CloturePeriode.objects.filter(classe_id=classe_id, periode=1).exists(),
+                'p2': CloturePeriode.objects.filter(classe_id=classe_id, periode=2).exists(),
             }
         
         def get_periode_from_cycle_for_class(cycle_numero, p1_cloture, p2_cloture):
@@ -254,16 +248,15 @@ def bulletin_list(request):
                     total_coef += matiere.coefficient
             
             if has_other_subject_notes:
-                from scolarite.models import ConduiteConfig
                 note_base = 20
-                config = ConduiteConfig.objects.filter(
+                config = ConfigurationConduite.objects.filter(
                     annee_scolaire=annee,
                     niveau=classe.niveau
                 ).first()
                 if config:
                     note_base = float(config.note_base)
                 
-                disciplines = DisciplineEleve.objects.filter(
+                disciplines = SanctionRecompense.objects.filter(
                     inscription=inscription,
                     periode__in=periodes if periodes else [1, 2, 3],
                     statut_traitement='traite'
@@ -286,7 +279,7 @@ def bulletin_list(request):
         
         inscriptions_data.sort(key=lambda x: x['moyenne_generale'] or 0, reverse=True)
     elif selected_classe:
-        inscriptions = Inscription.objects.filter(
+        inscriptions = EleveInscription.objects.filter(
             classe=selected_classe, 
             annee_scolaire=annee
         ).select_related('eleve')
@@ -298,10 +291,8 @@ def bulletin_list(request):
                 Q(eleve__matricule__icontains=search)
             )
         
-        from scolarite.models import PeriodeCloture
-        
-        p1_cloture = PeriodeCloture.objects.filter(classe=selected_classe, periode=1).exists()
-        p2_cloture = PeriodeCloture.objects.filter(classe=selected_classe, periode=2).exists()
+        p1_cloture = CloturePeriode.objects.filter(classe=selected_classe, periode=1).exists()
+        p2_cloture = CloturePeriode.objects.filter(classe=selected_classe, periode=2).exists()
         
         def get_periode_from_cycle(cycle_numero):
             if cycle_numero == 1:
@@ -354,16 +345,15 @@ def bulletin_list(request):
                     total_coef += matiere.coefficient
             
             if has_other_subject_notes:
-                from scolarite.models import ConduiteConfig
                 note_base = 20
-                config = ConduiteConfig.objects.filter(
+                config = ConfigurationConduite.objects.filter(
                     annee_scolaire=annee,
                     niveau=selected_classe.niveau
                 ).first()
                 if config:
                     note_base = float(config.note_base)
                 
-                disciplines = DisciplineEleve.objects.filter(
+                disciplines = SanctionRecompense.objects.filter(
                     inscription=inscription,
                     periode__in=periodes if periodes else [1, 2, 3],
                     statut_traitement='traite'
@@ -419,7 +409,7 @@ def rapport_academique(request):
     annee = AnneeScolaire.objects.filter(est_active=True).first()
     
     eleves_count = Eleve.objects.filter(statut='actif').count()
-    inscriptions_count = Inscription.objects.filter(annee_scolaire=annee).count() if annee else 0
+    inscriptions_count = EleveInscription.objects.filter(annee_scolaire=annee).count() if annee else 0
     
     classes_count = Classe.objects.filter(annee_scolaire=annee).count() if annee else 0
     
@@ -501,7 +491,7 @@ def transition_annee(request):
                     type_cycle_actif=annee_actuelle.type_cycle_actif
                 )
                 
-                CycleConfig.objects.filter(annee_scolaire=annee_actuelle).update(
+                Cycle.objects.filter(annee_scolaire=annee_actuelle).update(
                     annee_scolaire=nouvelle_annee
                 )
                 
@@ -523,7 +513,7 @@ def transition_annee(request):
                     
                     nouvelle_classe_map[classe.id] = nouvelle_classe
                 
-                inscriptions = Inscription.objects.filter(
+                inscriptions = EleveInscription.objects.filter(
                     annee_scolaire=annee_actuelle,
                     eleve__statut='actif'
                 )
@@ -533,7 +523,7 @@ def transition_annee(request):
                     nouvelle_classe = nouvelle_classe_map.get(ancienne_classe.id)
                     
                     if inscription.decision == 'Promu' and nouvelle_classe:
-                        Inscription.objects.create(
+                        EleveInscription.objects.create(
                             eleve=inscription.eleve,
                             classe=nouvelle_classe,
                             annee_scolaire=nouvelle_annee
@@ -549,7 +539,7 @@ def transition_annee(request):
                         )
                         
                     elif inscription.decision == 'Redouble' and nouvelle_classe:
-                        Inscription.objects.create(
+                        EleveInscription.objects.create(
                             eleve=inscription.eleve,
                             classe=ancienne_classe,
                             annee_scolaire=nouvelle_annee
@@ -584,8 +574,8 @@ def bulletins_par_classe(request, classe_pk, cycle_pk=None):
         return redirect('dashboard')
     classe = get_object_or_404(Classe, pk=classe_pk)
     annee = AnneeScolaire.objects.filter(est_active=True).first()
-    inscriptions = Inscription.objects.filter(classe=classe, annee_scolaire=annee) if annee else []
-    return render(request, 'rapports/bulletins.html', {
+    inscriptions = EleveInscription.objects.filter(classe=classe, annee_scolaire=annee) if annee else []
+    return render(request, 'rapports/bulletins_par_classe.html', {
         'classe': classe,
         'inscriptions': inscriptions,
         'annee': annee
@@ -597,7 +587,7 @@ def generer_bulletin(request, inscription_pk):
     if not request.user.has_module_permission('rapports', 'write'):
         messages.error(request, "Vous n'avez pas l'autorisation.")
         return redirect('dashboard')
-    inscription = get_object_or_404(Inscription, pk=inscription_pk)
+    inscription = get_object_or_404(EleveInscription, pk=inscription_pk)
     messages.success(request, 'Bulletin genere.')
     return redirect('rapports:bulletin_list')
 
@@ -608,3 +598,67 @@ def exporter_bulletin_pdf(request, bulletin_pk):
         messages.error(request, "Vous n'avez pas l'autorisation.")
         return redirect('dashboard')
     return HttpResponse("PDF non implemente")
+
+
+@login_required
+def fiches_notes_list(request):
+    if not request.user.has_module_permission('rapports', 'read'):
+        messages.error(request, "Vous n'avez pas l'autorisation de voir les fiches de notes.")
+        return redirect('dashboard')
+    
+    annee = AnneeScolaire.objects.filter(est_active=True).first()
+    fiches = FicheNote.objects.select_related('eleve', 'classe', 'matiere').filter(annee_scolaire=annee) if annee else FicheNote.objects.none()
+    
+    return render(request, 'rapports/fiches_notes_list.html', {'fiches': fiches, 'annee': annee})
+
+
+@login_required
+def statistiques_globales(request):
+    if not request.user.has_module_permission('rapports', 'read'):
+        messages.error(request, "Vous n'avez pas l'autorisation de voir les statistiques.")
+        return redirect('dashboard')
+    
+    annee = AnneeScolaire.objects.filter(est_active=True).first()
+    
+    eleves_count = Eleve.objects.filter(statut='actif').count()
+    classes_count = Classe.objects.filter(annee_scolaire=annee).count() if annee else 0
+    professeurs_count = ProfilProfesseur.objects.count()
+    
+    return render(request, 'rapports/statistiques.html', {
+        'eleves_count': eleves_count,
+        'classes_count': classes_count,
+        'professeurs_count': professeurs_count,
+        'annee': annee
+    })
+
+
+@login_required
+def fiches_notes_list(request):
+    if not request.user.has_module_permission('rapports', 'read'):
+        messages.error(request, "Vous n'avez pas l'autorisation de voir les fiches de notes.")
+        return redirect('dashboard')
+    
+    annee = AnneeScolaire.objects.filter(est_active=True).first()
+    fiches = FicheNote.objects.select_related('eleve', 'classe', 'matiere').filter(annee_scolaire=annee) if annee else FicheNote.objects.none()
+    
+    return render(request, 'rapports/fiches_notes_list.html', {'fiches': fiches, 'annee': annee})
+
+
+@login_required
+def statistiques_globales(request):
+    if not request.user.has_module_permission('rapports', 'read'):
+        messages.error(request, "Vous n'avez pas l'autorisation de voir les statistiques.")
+        return redirect('dashboard')
+    
+    annee = AnneeScolaire.objects.filter(est_active=True).first()
+    
+    eleves_count = Eleve.objects.filter(statut='actif').count()
+    classes_count = Classe.objects.filter(annee_scolaire=annee).count() if annee else 0
+    professeurs_count = ProfilProfesseur.objects.count()
+    
+    return render(request, 'rapports/statistiques.html', {
+        'eleves_count': eleves_count,
+        'classes_count': classes_count,
+        'professeurs_count': professeurs_count,
+        'annee': annee
+    })

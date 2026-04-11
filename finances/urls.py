@@ -9,6 +9,7 @@ urlpatterns = [
     path('annees/<int:pk>/modifier/', views.annee_edit, name='annee_edit'),
     path('annees/<int:pk>/supprimer/', views.annee_delete, name='annee_delete'),
     path('annees/<int:pk>/activer/', views.annee_activer, name='annee_activer'),
+    path('annees/<int:pk>/selectionner/', views.annee_activer, name='annee_selectionner'),
     
     path('frais/', views.frais_list, name='frais_list'),
     path('frais/ajouter/', views.frais_create, name='frais_create'),
@@ -33,4 +34,5 @@ urlpatterns = [
     path('factures/', views.facture_list, name='facture_list'),
     path('bourses/', views.bourse_list, name='bourse_list'),
     path('rapport-financier/', views.rapport_financier, name='rapport_financier'),
+    path('rappels/', views.rappel_list, name='rappel_list'),
 ]

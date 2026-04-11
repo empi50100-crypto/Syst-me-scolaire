@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}Détail du salaire{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="bi bi-cash-stack"></i> Détail du salaire</h5>
+        </div>
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h6>Informations employé</h6>
+                    <p><strong>Nom:</strong> {{ salaire.employe.utilisateur.get_full_name }}</p>
+                    <p><strong>Fonction:</strong> {{ salaire.employe.fonction|default:"Non défini" }}</p>
+                    <p><strong>Période:</strong> {{ salaire.mois }}/{{ salaire.annee }}</p>
+                </div>
+                <div class="col-md-6">
+                    <h6>Détails du salaire</h6>
+                    <p><strong>Salaire brut:</strong> {{ salaire.salaire_brut|default:salaire.employe.salaire_base }} FCFA</p>
+                    <p><strong>Retenues:</strong> {{ salaire.retenues|default:0 }} FCFA</p>
+                    <p><strong>Salaire net:</strong> <span class="text-success fw-bold">{{ salaire.salaire_net }} FCFA</span></p>
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <h6>Statut</h6>
+                <span class="badge {% if salaire.est_paye %}bg-success{% else %}bg-warning{% endif %}">
+                    {% if salaire.est_paye %}Payé{% else %}Non payé{% endif %}
+                </span>
+                {% if salaire.est_paye and salaire.date_versement %}
+                <p class="text-muted mt-2">Date de versement: {{ salaire.date_versement|date:"d/m/Y" }}</p>
+                {% endif %}
+            </div>
+            
+            <div class="d-flex gap-2">
+                <a href="{% url 'ressources_humaines:liste_salaires' %}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Retour
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

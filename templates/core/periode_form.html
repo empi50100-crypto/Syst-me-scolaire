@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Ajouter une période - SyGeS-AM{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h2>Ajouter une période d'évaluation</h2>
+    
+    {% if error %}
+    <div class="alert alert-danger">{{ error }}</div>
+    {% endif %}
+    
+    <form method="post" class="card p-4" style="max-width: 600px;">
+        {% csrf_token %}
+        
+        <div class="mb-3">
+            <label class="form-label">Année scolaire</label>
+            <select name="annee_scolaire" class="form-control" required>
+                {% for annee in annees %}
+                <option value="{{ annee.pk }}" data-type="{{ annee.type_cycle_actif }}" {% if annee_active and annee.pk == annee_active.pk %}selected{% endif %}>{{ annee.libelle }}</option>
+                {% endfor %}
+            </select>
+            <small class="text-muted">L'année scolaire active est pré-sélectionnée</small>
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">Type de période</label>
+            <select name="type_periode" class="form-control" required>
+                <option value="trimestre" {% if type_periode_par_defaut == 'trimestre' %}selected{% endif %}>Trimestre</option>
+                <option value="semestre" {% if type_periode_par_defaut == 'semestre' %}selected{% endif %}>Semestre</option>
+            </select>
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">Numéro</label>
+            <input type="number" name="numero" class="form-control" required min="1" value="1">
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">Date de début</label>
+            <input type="date" name="debut" class="form-control" required>
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">Date de fin</label>
+            <input type="date" name="fin" class="form-control" required>
+        </div>
+        
+        <button type="submit" class="btn btn-primary">Enregistrer</button>
+        <a href="/core/periodes/" class="btn btn-secondary">Annuler</a>
+    </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var anneeSelect = document.querySelector('select[name="annee_scolaire"]');
+    var typeSelect = document.querySelector('select[name="type_periode"]');
+    
+    if (anneeSelect && typeSelect) {
+        function updateType() {
+            var idx = anneeSelect.selectedIndex;
+            var selectedOption = anneeSelect.options[idx];
+            var typeActif = selectedOption.getAttribute('data-type');
+            if (typeActif) {
+                typeSelect.value = (typeActif === 'trimestriel') ? 'trimestre' : 'semestre';
+            }
+        }
+        
+        anneeSelect.addEventListener('change', updateType);
+        updateType(); // Au chargement
+    }
+});
+</script>
+{% endblock %}

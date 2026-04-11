@@ -391,4 +391,4 @@ def rapport_financier(request):
     if not request.user.has_module_permission('rapports', 'read'):
         messages.error(request, "Vous n'avez pas l'autorisation.")
         return redirect('dashboard')
-    return render(request, 'finances/rapport.html')
+    return render(request, 'finances/rapport_financier.html')

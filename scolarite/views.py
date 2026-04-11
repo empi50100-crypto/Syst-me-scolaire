@@ -463,7 +463,7 @@ def discipline_delete(request, pk):
         messages.success(request, 'Sanction/Récompense supprimée.')
         return redirect('scolarite:discipline_list')
     
-    return render(request, 'scolarite/discipline_confirm_delete.html', {'discipline': discipline})
+    return render(request, 'scolarite/discipline_delete.html', {'discipline': discipline})
 
 
 @login_required
@@ -588,20 +588,20 @@ def conduite_config_list(request):
 
 
 @login_required
-def conduite_config_edit(request, niveau_id):
+def conduite_config_edit(request, niveau):
     if not request.user.has_module_permission('discipline', 'write'):
         messages.error(request, "Vous n'avez pas l'autorisation de modifier la configuration.")
         return redirect('scolarite:conduite_config_list')
     
     annee = AnneeScolaire.objects.filter(est_active=True).first()
-    config = ConfigurationConduite.objects.filter(annee_scolaire=annee, niveau_id=niveau_id).first()
+    config = ConfigurationConduite.objects.filter(annee_scolaire=annee, niveau_id=niveau).first()
     
     if not config and annee:
         from core.models import NiveauScolaire
-        niveau = get_object_or_404(NiveauScolaire, pk=niveau_id)
+        niveau_obj = get_object_or_404(NiveauScolaire, pk=niveau)
         config = ConfigurationConduite.objects.create(
             annee_scolaire=annee,
-            niveau=niveau,
+            niveau=niveau_obj,
             note_base=20.00,
             cree_par=request.user
         )
@@ -615,7 +615,7 @@ def conduite_config_edit(request, niveau_id):
     
     return render(request, 'scolarite/conduite_config_form.html', {
         'config': config,
-        'niveau_id': niveau_id
+        'niveau_id': niveau
     })
 
 
@@ -764,3 +764,32 @@ def note_cloture_edit(request, classe_id):
         messages.success(request, 'Notes clôturées.')
     
     return redirect('scolarite:note_cloture_list')
+
+
+@login_required
+def inscription_list(request):
+    if not request.user.has_module_permission('eleve_list', 'read'):
+        messages.error(request, "Vous n'avez pas l'autorisation de voir les inscriptions.")
+        return redirect('dashboard')
+    
+    annee = AnneeScolaire.objects.filter(est_active=True).first()
+    inscriptions = EleveInscription.objects.select_related('eleve', 'classe', 'annee_scolaire').all()
+    
+    if annee:
+        inscriptions = inscriptions.filter(annee_scolaire=annee)
+    
+    search = request.GET.get('search', '')
+    if search:
+        inscriptions = inscriptions.filter(
+            Q(eleve__nom__icontains=search) |
+            Q(eleve__prenom__icontains=search) |
+            Q(eleve__matricule__icontains=search)
+        )
+    
+    inscriptions = inscriptions.order_by('-date_inscription')
+    
+    return render(request, 'scolarite/inscription_list.html', {
+        'inscriptions': inscriptions,
+        'annee': annee,
+        'search': search
+    })

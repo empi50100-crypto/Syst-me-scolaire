@@ -21,6 +21,9 @@ urlpatterns = [
     path('attributions/ajouter/', views.attribution_create_view, name='attribution_create'),
     
     path('salles/', views.salle_list_view, name='salle_list'),
+    path('examens/', views.examen_list, name='examen_list'),
+    path('contraintes/', views.contrainte_list, name='contrainte_list'),
+    path('emploi-du-temps/', views.emploi_du_temps, name='emploi_du_temps'),
     
     path('mes-classes/', views.mes_classes_view, name='mes_classes'),
     path('saisie-notes/', views.saisie_notes, name='saisie_notes'),

@@ -295,7 +295,7 @@ def saisie_notes(request):
     else:
         classes = Classe.objects.filter(annee_scolaire=annee)
         
-    return render(request, 'enseignement/saisie_notes_selection.html', {'classes': classes})
+    return render(request, 'enseignement/saisie_notes.html', {'classes': classes})
 
 
 @login_required
@@ -329,9 +329,45 @@ def saisie_notes_detail_view(request, classe_pk, matiere_pk):
         messages.success(request, "Notes enregistrées avec succès.")
         return redirect('enseignement:mes_classes')
         
-    return render(request, 'enseignement/saisie_notes_detail.html', {
+    return render(request, 'enseignement/saisie_notes.html', {
         'classe': classe,
         'matiere': matiere,
         'inscriptions': inscriptions,
         'periodes': periodes
     })
+
+
+@login_required
+def examen_list(request):
+    if not request.user.has_module_permission('examen_list', 'read'):
+        messages.error(request, "Vous n'avez pas l'autorisation de voir les examens.")
+        return redirect('dashboard')
+    
+    annee = AnneeScolaire.objects.filter(est_active=True).first()
+    examens = Examen.objects.select_related('classe', 'matiere').filter(annee_scolaire=annee) if annee else Examen.objects.none()
+    
+    return render(request, 'enseignement/examen_list.html', {'examens': examens, 'annee': annee})
+
+
+@login_required
+def contrainte_list(request):
+    if not request.user.has_module_permission('contrainte_list', 'read'):
+        messages.error(request, "Vous n'avez pas l'autorisation de voir les contraintes.")
+        return redirect('dashboard')
+    
+    annee = AnneeScolaire.objects.filter(est_active=True).first()
+    contraintes = ContrainteHoraire.objects.select_related('classe', 'professeur').filter(annee_scolaire=annee) if annee else ContrainteHoraire.objects.none()
+    
+    return render(request, 'enseignement/contrainte_list.html', {'contraintes': contraintes, 'annee': annee})
+
+
+@login_required
+def emploi_du_temps(request):
+    if not request.user.has_module_permission('emploi_du_temps', 'read'):
+        messages.error(request, "Vous n'avez pas l'autorisation de voir les emplois du temps.")
+        return redirect('dashboard')
+    
+    annee = AnneeScolaire.objects.filter(est_active=True).first()
+    classes = Classe.objects.filter(annee_scolaire=annee) if annee else []
+    
+    return render(request, 'enseignement/emploi_du_temps.html', {'classes': classes, 'annee': annee})

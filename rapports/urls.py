@@ -12,4 +12,6 @@ urlpatterns = [
     path('academique/', views.rapport_academique, name='rapport_academique'),
     path('financier/', views.rapport_financier, name='rapport_financier'),
     path('transition-annee/', views.transition_annee, name='transition_annee'),
+    path('fiches-notes/', views.fiches_notes_list, name='fiches_notes_list'),
+    path('statistiques/', views.statistiques_globales, name='statistiques_globales'),
 ]

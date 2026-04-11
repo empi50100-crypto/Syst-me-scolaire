@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Ajouter un niveau - SyGeS-AM{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h2>Ajouter un niveau scolaire</h2>
+    
+    {% if error %}
+    <div class="alert alert-danger">{{ error }}</div>
+    {% endif %}
+    
+    <form method="post" class="card p-4" style="max-width: 600px;">
+        {% csrf_token %}
+        
+        <div class="mb-3">
+            <label class="form-label">Niveau</label>
+            <select name="niveau" class="form-control" required>
+                <option value="">Sélectionner un niveau</option>
+                <option value="maternelle_1">Maternelle 1</option>
+                <option value="maternelle_2">Maternelle 2</option>
+                <option value="maternelle_3">Maternelle 3</option>
+                <option value="cp">Cours Préparatoire</option>
+                <option value="ce1">Cours Élémentaire 1</option>
+                <option value="ce2">Cours Élémentaire 2</option>
+                <option value="cm1">Cours Moyen 1</option>
+                <option value="cm2">Cours Moyen 2</option>
+                <option value="6e">Sixième</option>
+                <option value="5e">Cinquième</option>
+                <option value="4e">Quatrième</option>
+                <option value="3e">Troisième</option>
+                <option value="2nde">Seconde</option>
+                <option value="1re">Première</option>
+                <option value="tle">Terminale</option>
+            </select>
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">Libellé</label>
+            <input type="text" name="libelle" class="form-control" required placeholder="ex: 6ème">
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">Ordre d'affichage</label>
+            <input type="number" name="ordre" class="form-control" required min="1" value="1">
+        </div>
+        
+        <button type="submit" class="btn btn-primary">Enregistrer</button>
+        <a href="/core/niveaux/" class="btn btn-secondary">Annuler</a>
+    </form>
+</div>
+{% endblock %}

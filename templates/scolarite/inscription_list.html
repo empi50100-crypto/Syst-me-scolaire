@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}Liste des inscriptions{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-person-plus"></i> Liste des inscriptions</h5>
+            <a href="{% url 'scolarite:eleve_create' %}" class="btn btn-light btn-sm">
+                <i class="bi bi-plus-circle"></i> Nouvelle inscription
+            </a>
+        </div>
+        <div class="card-body">
+            <form method="get" class="mb-3">
+                <div class="input-group">
+                    <input type="text" name="search" class="form-control" placeholder="Rechercher un élève..." value="{{ search }}">
+                    <button type="submit" class="btn btn-outline-primary">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+            </form>
+            
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Élève</th>
+                        <th>Classe</th>
+                        <th>Année scolaire</th>
+                        <th>Date d'inscription</th>
+                        <th>Décision</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for inscription in inscriptions %}
+                    <tr>
+                        <td>{{ inscription.eleve.nom_complet }}</td>
+                        <td>{{ inscription.classe.nom }}</td>
+                        <td>{{ inscription.annee_scolaire }}</td>
+                        <td>{{ inscription.date_inscription|date:"d/m/Y" }}</td>
+                        <td>
+                            <span class="badge {% if inscription.decision == 'Promu' %}bg-success{% elif inscription.decision == 'Redouble' %}bg-warning{% else %}bg-secondary{% endif %}">
+                                {{ inscription.decision|default:"-" }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center">Aucune inscription trouvée</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

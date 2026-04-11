@@ -99,7 +99,7 @@ class PeriodeEvaluation(models.Model):
     class Meta:
         verbose_name = 'Période d\'évaluation'
         verbose_name_plural = 'Périodes d\'évaluation'
-        unique_together = ['annee_scolaire', 'type_periode', 'numero']
+        unique_together = []
         ordering = ['annee_scolaire', 'numero']
     
     def __str__(self):

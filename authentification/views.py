@@ -326,6 +326,20 @@ def user_approve(request, pk):
 
 
 @login_required
+def user_toggle_active(request, pk):
+    if not request.user.est_direction() and not request.user.est_superadmin():
+        messages.error(request, "Accès refusé.")
+        return redirect('authentification:user_list')
+    
+    user = get_object_or_404(Utilisateur, pk=pk)
+    user.is_active = not user.is_active
+    user.save()
+    status = 'activé' if user.is_active else 'désactivé'
+    messages.success(request, f'Utilisateur {user.get_full_name()} {status}.')
+    return redirect('authentification:user_list')
+
+
+@login_required
 def notification_list(request):
     notifications = request.user.notifications.all().order_by('-date_creation')[:50]
     return render(request, 'authentification/notification_list.html', {'notifications': notifications})

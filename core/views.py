@@ -87,10 +87,10 @@ def _get_superadmin_context(annee, today):
             annee=annee.date_fin.year
         ).aggregate(Sum('salaire_net'))['salaire_net__sum'] or 0
         
-        # Note: MembrePersonnel uses 'salaire_base' instead of 'salaire_mensuel' in latest architecture
-        masse_salariale_mensuelle = MembrePersonnel.objects.filter(est_actif=True).aggregate(
-            total=Sum('salaire_base')
-        )['total'] or 0
+        masse_salariale_mensuelle = Salaire.objects.filter(
+            employe__est_actif=True,
+            est_paye=True
+        ).aggregate(total=Sum('salaire_brut'))['total'] or 0
         
         total_encaissé = float(total_paiements) + float(autres_encaissements)
         total_charges = float(total_decaissement) + float(total_salaires)
@@ -356,3 +356,251 @@ def _get_professeur_context(request, annee, today):
         ).order_by('-date_eval')[:10]
         
     return context
+
+
+@login_required
+def cycle_list(request):
+    from .models import Cycle, AnneeScolaire
+    if not request.user.est_superadmin() and not request.user.est_direction():
+        return redirect('dashboard')
+    
+    annee = getattr(request, 'annee_active', None)
+    cycles = Cycle.objects.all()
+    if annee:
+        cycles = cycles.filter(annee_scolaire=annee)
+    
+    return render(request, 'core/cycle_list.html', {'cycles': cycles, 'annee': annee})
+
+
+@login_required
+def cycle_create(request):
+    from .models import Cycle, AnneeScolaire
+    if not request.user.est_superadmin() and not request.user.est_direction():
+        return redirect('dashboard')
+    
+    if request.method == 'POST':
+        annee_id = request.POST.get('annee_scolaire')
+        type_cycle = request.POST.get('type_cycle')
+        numero = request.POST.get('numero')
+        debut = request.POST.get('debut')
+        fin = request.POST.get('fin')
+        
+        annee = AnneeScolaire.objects.get(pk=annee_id) if annee_id else getattr(request, 'annee_active', None)
+        
+        Cycle.objects.create(
+            annee_scolaire=annee,
+            type_cycle=type_cycle,
+            numero=int(numero),
+            date_debut=debut,
+            date_fin=fin
+        )
+        return redirect('/core/cycles/')
+    
+    annees = AnneeScolaire.objects.all()
+    annee_active = getattr(request, 'annee_active', None)
+    type_cycle_par_defaut = annee_active.type_cycle_actif if annee_active else None
+    return render(request, 'core/cycle_form.html', {'annees': annees, 'annee_active': annee_active, 'type_cycle_par_defaut': type_cycle_par_defaut})
+
+
+@login_required
+def cycle_edit(request, pk):
+    from .models import Cycle, AnneeScolaire
+    if not request.user.est_superadmin() and not request.user.est_direction():
+        return redirect('dashboard')
+    
+    cycle = Cycle.objects.get(pk=pk)
+    
+    if request.method == 'POST':
+        cycle.type_cycle = request.POST.get('type_cycle')
+        cycle.numero = int(request.POST.get('numero'))
+        cycle.date_debut = request.POST.get('debut')
+        cycle.date_fin = request.POST.get('fin')
+        cycle.save()
+        return redirect('/core/cycles/')
+    
+    annees = AnneeScolaire.objects.all()
+    return render(request, 'core/cycle_edit.html', {'cycle': cycle, 'annees': annees})
+
+
+@login_required
+def cycle_delete(request, pk):
+    from .models import Cycle
+    if not request.user.est_superadmin() and not request.user.est_direction():
+        return redirect('dashboard')
+    
+    cycle = Cycle.objects.get(pk=pk)
+    cycle.delete()
+    return redirect('/core/cycles/')
+
+
+@login_required
+def niveau_list(request):
+    from .models import NiveauScolaire
+    if not request.user.est_superadmin() and not request.user.est_direction():
+        return redirect('dashboard')
+    
+    niveaux = NiveauScolaire.objects.all().order_by('ordre')
+    return render(request, 'core/niveau_list.html', {'niveaux': niveaux})
+
+
+@login_required
+def niveau_create(request):
+    from .models import NiveauScolaire
+    if not request.user.est_superadmin() and not request.user.est_direction():
+        return redirect('dashboard')
+    
+    if request.method == 'POST':
+        from .models import NiveauScolaire
+        niveau = request.POST.get('niveau')
+        libelle = request.POST.get('libelle')
+        ordre = request.POST.get('ordre')
+        
+        if NiveauScolaire.objects.filter(niveau=niveau).exists():
+            return render(request, 'core/niveau_form.html', {
+                'error': f'Le niveau "{niveau}" existe déjà. Choisissez un autre niveau.'
+            })
+        
+        NiveauScolaire.objects.create(
+            niveau=niveau,
+            libelle=libelle,
+            ordre=int(ordre) if ordre else 0
+        )
+        return redirect('/core/niveaux/')
+    
+    return render(request, 'core/niveau_form.html')
+
+
+@login_required
+def niveau_edit(request, pk):
+    from .models import NiveauScolaire
+    if not request.user.est_superadmin() and not request.user.est_direction():
+        return redirect('dashboard')
+    
+    niveau = NiveauScolaire.objects.get(pk=pk)
+    
+    if request.method == 'POST':
+        niveau.libelle = request.POST.get('libelle')
+        niveau.ordre = int(request.POST.get('ordre', 0))
+        niveau.save()
+        return redirect('/core/niveaux/')
+    
+    return render(request, 'core/niveau_edit.html', {'niveau': niveau})
+
+
+@login_required
+def niveau_delete(request, pk):
+    from .models import NiveauScolaire
+    if not request.user.est_superadmin() and not request.user.est_direction():
+        return redirect('dashboard')
+    
+    niveau = NiveauScolaire.objects.get(pk=pk)
+    niveau.delete()
+    return redirect('/core/niveaux/')
+
+
+@login_required
+def periode_list(request):
+    from .models import PeriodeEvaluation, AnneeScolaire
+    if not request.user.est_superadmin() and not request.user.est_direction():
+        return redirect('dashboard')
+    
+    annee = getattr(request, 'annee_active', None)
+    periodes = PeriodeEvaluation.objects.all()
+    if annee:
+        periodes = periodes.filter(annee_scolaire=annee)
+    
+    return render(request, 'core/periode_list.html', {'periodes': periodes, 'annee': annee})
+
+
+@login_required
+def periode_create(request):
+    from .models import PeriodeEvaluation, AnneeScolaire
+    if not request.user.est_superadmin() and not request.user.est_direction():
+        return redirect('dashboard')
+    
+    annees = AnneeScolaire.objects.all()
+    annee_active = getattr(request, 'annee_active', None)
+    
+    if request.method == 'POST':
+        annee_id = request.POST.get('annee_scolaire')
+        type_periode = request.POST.get('type_periode')
+        numero = request.POST.get('numero')
+        debut = request.POST.get('debut')
+        fin = request.POST.get('fin')
+        
+        annee = AnneeScolaire.objects.get(pk=annee_id) if annee_id else annee_active
+        
+        # Plus de vérification de doublon - on peut avoir plusieurs périodes par semestre
+        
+        PeriodeEvaluation.objects.create(
+            annee_scolaire=annee,
+            type_periode=type_periode,
+            numero=int(numero),
+            debut=debut,
+            fin=fin
+        )
+        return redirect('/core/periodes/')
+    
+    annees = AnneeScolaire.objects.all()
+    annee_active = getattr(request, 'annee_active', None)
+    
+    type_periode_par_defaut = 'trimestre'
+    if annee_active and annee_active.type_cycle_actif:
+        if annee_active.type_cycle_actif == 'trimestriel':
+            type_periode_par_defaut = 'trimestre'
+        else:
+            type_periode_par_defaut = 'semestre'
+    
+    return render(request, 'core/periode_form.html', {
+        'annees': annees, 
+        'annee_active': annee_active,
+        'type_periode_par_defaut': type_periode_par_defaut
+    })
+
+
+@login_required
+def periode_edit(request, pk):
+    from .models import PeriodeEvaluation, AnneeScolaire
+    if not request.user.est_superadmin() and not request.user.est_direction():
+        return redirect('dashboard')
+    
+    periode = PeriodeEvaluation.objects.get(pk=pk)
+    annees = AnneeScolaire.objects.all()
+    
+    if request.method == 'POST':
+        type_periode = request.POST.get('type_periode')
+        numero = int(request.POST.get('numero'))
+        
+        # Check for duplicate
+        existe = PeriodeEvaluation.objects.filter(
+            annee_scolaire=periode.annee_scolaire,
+            type_periode=type_periode,
+            numero=numero
+        ).exclude(pk=pk).exists()
+        
+        if existe:
+            return render(request, 'core/periode_edit.html', {
+                'periode': periode,
+                'annees': annees,
+                'error': f'Une période avec {type_periode} {numero} existe déjà.'
+            })
+        
+        periode.type_periode = type_periode
+        periode.numero = numero
+        periode.debut = request.POST.get('debut')
+        periode.fin = request.POST.get('fin')
+        periode.save()
+        return redirect('/core/periodes/')
+    
+    return render(request, 'core/periode_edit.html', {'periode': periode, 'annees': annees})
+
+
+@login_required
+def periode_delete(request, pk):
+    from .models import PeriodeEvaluation
+    if not request.user.est_superadmin() and not request.user.est_direction():
+        return redirect('dashboard')
+    
+    periode = PeriodeEvaluation.objects.get(pk=pk)
+    periode.delete()
+    return redirect('/core/periodes/')

@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Modifier une période - SyGeS-AM{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h2>Modifier une période d'évaluation</h2>
+    
+    {% if error %}
+    <div class="alert alert-danger">{{ error }}</div>
+    {% endif %}
+    
+    <form method="post" class="card p-4" style="max-width: 600px;">
+        {% csrf_token %}
+        
+        <div class="mb-3">
+            <label class="form-label">Type de période</label>
+            <select name="type_periode" class="form-control" required>
+                <option value="trimestre" {% if periode.type_periode == 'trimestre' %}selected{% endif %}>Trimestre</option>
+                <option value="semestre" {% if periode.type_periode == 'semestre' %}selected{% endif %}>Semestre</option>
+            </select>
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">Numéro</label>
+            <input type="number" name="numero" class="form-control" value="{{ periode.numero }}" required min="1">
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">Date de début</label>
+            <input type="date" name="debut" class="form-control" value="{{ periode.debut|date:'Y-m-d' }}" required>
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">Date de fin</label>
+            <input type="date" name="fin" class="form-control" value="{{ periode.fin|date:'Y-m-d' }}" required>
+        </div>
+        
+        <button type="submit" class="btn btn-primary">Enregistrer</button>
+        <a href="/core/periodes/" class="btn btn-secondary">Annuler</a>
+    </form>
+</div>
+{% endblock %}

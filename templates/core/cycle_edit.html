@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Modifier un cycle - SyGeS-AM{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h2>Modifier un cycle pédagogique</h2>
+    
+    <form method="post" class="card p-4" style="max-width: 600px;">
+        {% csrf_token %}
+        
+        <div class="mb-3">
+            <label class="form-label">Type de cycle</label>
+            <select name="type_cycle" class="form-control" required>
+                <option value="trimestriel" {% if cycle.type_cycle == 'trimestriel' %}selected{% endif %}>Trimestriel</option>
+                <option value="semestriel" {% if cycle.type_cycle == 'semestriel' %}selected{% endif %}>Semestriel</option>
+            </select>
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">Numéro</label>
+            <input type="number" name="numero" class="form-control" value="{{ cycle.numero }}" required min="1">
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">Date de début</label>
+            <input type="date" name="debut" class="form-control" value="{{ cycle.date_debut|date:'Y-m-d' }}" required>
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">Date de fin</label>
+            <input type="date" name="fin" class="form-control" value="{{ cycle.date_fin|date:'Y-m-d' }}" required>
+        </div>
+        
+        <button type="submit" class="btn btn-primary">Enregistrer</button>
+        <a href="/core/cycles/" class="btn btn-secondary">Annuler</a>
+    </form>
+</div>
+{% endblock %}

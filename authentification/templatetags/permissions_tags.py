@@ -42,11 +42,7 @@ def get_user_services(Utilisateur):
     """Retourne les services avec leurs modules pour l'utilisateur"""
     if not Utilisateur.is_authenticated:
         return []
-    try:
-        return Utilisateur.get_services_with_modules()
-    except Exception as e:
-        print(f"Error in get_user_services: {e}")
-        return []
+    return Utilisateur.get_services_with_modules()
 
 @register.filter
 def get_module_url(module_code):
