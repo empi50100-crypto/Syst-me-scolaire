@@ -2,7 +2,7 @@ from rest_framework import viewsets, permissions, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
-from accounts.models import User
+from authentification.models import User
 from eleves.models import Eleve, Inscription
 from academics.models import Classe, Matiere, Professeur, Enseignement, Evaluation
 from finances.models import AnneeScolaire, FraisScolaire, Paiement, Salaire

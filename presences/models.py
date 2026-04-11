@@ -63,7 +63,7 @@ class SeanceCours(models.Model):
     statut = models.CharField(max_length=20, choices=Statut.choices, default=Statut.EN_COURS)
     annee_scolaire = models.ForeignKey('finances.AnneeScolaire', on_delete=models.CASCADE, related_name='seances')
     notes = models.TextField(blank=True)
-    creee_par = models.ForeignKey('accounts.User', on_delete=models.SET_NULL, null=True)
+    creee_par = models.ForeignKey('authentification.User', on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     

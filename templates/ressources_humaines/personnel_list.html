@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+{% block title %}Personnel - Ressources Humaines{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-people"></i> Personnel de l'établissement</h1>
+    <a href="{% url 'ressources_humaines:creer_personnel' %}" class="btn btn-primary">
+        <i class="bi bi-person-plus"></i> Nouveau membre
+    </a>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card stat-card primary h-100">
+            <div class="card-body">
+                <h5>Total Personnel Actif</h5>
+                <h2>{{ total_actif|default:0 }} <small>personnes</small></h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stat-card success h-100">
+            <div class="card-body">
+                <h5>Enseignants</h5>
+                <h2>{{ nb_enseignants|default:0 }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stat-card warning h-100">
+            <div class="card-body">
+                <h5>Personnel Administratif</h5>
+                <h2>{{ nb_administratifs|default:0 }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <select name="fonction" class="form-select">
+                    <option value="">Toutes les fonctions</option>
+                    <option value="direction" {% if fonction_filter == 'direction' %}selected{% endif %}>Direction</option>
+                    <option value="secretaire" {% if fonction_filter == 'secretaire' %}selected{% endif %}>Secrétariat</option>
+                    <option value="comptable" {% if fonction_filter == 'comptable' %}selected{% endif %}>Comptabilité</option>
+                    <option value="professeur" {% if fonction_filter == 'professeur' %}selected{% endif %}>Enseignant</option>
+                    <option value="surveillance" {% if fonction_filter == 'surveillance' %}selected{% endif %}>Surveillance</option>
+                    <option value="agent_securite" {% if fonction_filter == 'agent_securite' %}selected{% endif %}>Agent de Sécurité</option>
+                    <option value="chauffeur" {% if fonction_filter == 'chauffeur' %}selected{% endif %}>Chauffeur</option>
+                    <option value="menage" {% if fonction_filter == 'menage' %}selected{% endif %}>Agent d'entretien</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary">Filtrer</button>
+                <a href="{% url 'ressources_humaines:liste_personnel' %}" class="btn btn-secondary">Réinitialiser</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Utilisateur</th>
+                        <th>Fonction</th>
+                        <th>Téléphone</th>
+                        <th>Poste</th>
+                        <th>Date Embauche</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in personnel %}
+                    <tr class="{% if not p.est_actif %}text-muted{% endif %}">
+                        <td>
+                            <strong>{{ p.utilisateur.get_full_name|default:p.utilisateur.username }}</strong>
+                        </td>
+                        <td>
+                            <span class="badge bg-{% if p.fonction == 'direction' %}danger{% elif p.fonction == 'comptable' %}success{% elif p.fonction == 'professeur' %}primary{% else %}secondary{% endif %}">
+                                {{ p.get_fonction_display }}
+                            </span>
+                        </td>
+                        <td>{{ p.telephone|default:"-" }}</td>
+                        <td>{{ p.poste.titre|default:"-" }}</td>
+                        <td>{{ p.date_embauche|date:"d/m/Y"|default:"-" }}</td>
+                        <td>
+                            {% if p.est_actif %}
+                                <span class="badge bg-success">Actif</span>
+                            {% else %}
+                                <span class="badge bg-danger">Inactif</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'ressources_humaines:modifier_personnel' p.pk %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <a href="{% url 'ressources_humaines:supprimer_personnel' p.pk %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Supprimer ce membre ?')">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted">Aucun membre du personnel enregistré</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        {% if personnel.has_other_page %}
+        <nav>
+            <ul class="pagination justify-content-center">
+                {% if personnel.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page=1">Première</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ personnel.previous_page_number }}">Précédente</a></li>
+                {% endif %}
+                <li class="page-item active"><span class="page-link">Page {{ personnel.number }} sur {{ personnel.paginator.num_pages }}</span></li>
+                {% if personnel.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ personnel.next_page_number }}">Suivante</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ personnel.paginator.num_pages }}">Dernière</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

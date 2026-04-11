@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% block title %}Salaires - Ressources Humaines{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-cash-stack"></i> Gestion des Salaires</h1>
+    <a href="{% url 'ressources_humaines:creer_salaire' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Nouveau salaire
+    </a>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card stat-card success h-100">
+            <div class="card-body">
+                <h5>Masse Salariale Totale</h5>
+                <h2>{{ total_net|floatformat:0 }} <small>FCFA</small></h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stat-card primary h-100">
+            <div class="card-body">
+                <h5>Salariés Payés</h5>
+                <h2>{{ nb_payes|default:0 }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stat-card warning h-100">
+            <div class="card-body">
+                <h5>En Attente</h5>
+                <h2>{{ nb_en_attente|default:0 }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <select name="annee" class="form-select">
+                    <option value="">Toutes les années</option>
+                    {% for annee in annees %}
+                    <option value="{{ annee }}" {% if annee_filter == annee|stringformat:"s" %}selected{% endif %}>{{ annee }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary">Filtrer</button>
+                <a href="{% url 'ressources_humaines:liste_salaires' %}" class="btn btn-secondary">Réinitialiser</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Employé</th>
+                        <th>Fonction</th>
+                        <th>Période</th>
+                        <th>Salaire Brut</th>
+                        <th>Retenues</th>
+                        <th>Salaire Net</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in salaires %}
+                    <tr>
+                        <td><strong>{{ s.employe.utilisateur.get_full_name|default:s.employe.utilisateur.username }}</strong></td>
+                        <td>{{ s.employe.get_fonction_display }}</td>
+                        <td>{{ s.get_mois_display }} {{ s.annee }}</td>
+                        <td class="text-end">{{ s.salaire_brut|floatformat:0 }} FCA</td>
+                        <td class="text-end text-danger">-{{ s.retenue_cnps|add:s.retenue_irpp|add:s.autres_retenues|floatformat:0 }} FCA</td>
+                        <td class="text-end fw-bold text-success">{{ s.salaire_net|floatformat:0 }} FCA</td>
+                        <td>
+                            {% if s.est_paye %}
+                                <span class="badge bg-success">Payé</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">En attente</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'ressources_humaines:detail_salaire' s.pk %}" class="btn btn-sm btn-outline-info">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center text-muted">Aucun salaire enregistré</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

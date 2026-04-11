@@ -8,12 +8,17 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.home, name='home'),
     path('dashboard/', views.dashboard, name='dashboard'),
-    path('accounts/', include('accounts.urls')),
+    path('authentification/', include('authentification.urls')),
     path('eleves/', include('eleves.urls')),
     path('academics/', include('academics.urls', namespace='academics')),
     path('presences/', include('presences.urls')),
     path('finances/', include('finances.urls', namespace='finances')),
     path('rapports/', include('rapports.urls')),
+    path('ressources-humaines/', include('ressources_humaines.urls', namespace='ressources_humaines')),
+    path('api/auth/', include('authentification.api_urls')),
+    path('api/eleves/', include('eleves.api_urls')),
+    path('api/academics/', include('academics.api_urls')),
+    path('api/finances/', include('finances.api_urls')),
     path('api/', include('rapports.api_urls')),
 ]
 

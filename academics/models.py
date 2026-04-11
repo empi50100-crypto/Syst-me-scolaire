@@ -62,7 +62,7 @@ class Examen(models.Model):
     note_sur = models.DecimalField(max_digits=5, decimal_places=2, default=20)
     coefficient = models.PositiveIntegerField(default=1)
     lieu = models.ForeignKey(Salle, on_delete=models.SET_NULL, null=True, blank=True)
-    surveillant = models.ForeignKey('accounts.User', on_delete=models.SET_NULL, null=True, blank=True)
+    surveillant = models.ForeignKey('authentification.User', on_delete=models.SET_NULL, null=True, blank=True)
     instructions = models.TextField(blank=True)
     est_publie = models.BooleanField(default=False, verbose_name="Résultats publiés")
     date_publication = models.DateTimeField(null=True, blank=True)
@@ -128,7 +128,7 @@ class ContrainteHoraire(models.Model):
     date_fin = models.DateField(null=True, blank=True, help_text="Pour les contraintes temporaires")
     
     statut = models.CharField(max_length=20, choices=Statut.choices, default=Statut.APPROUVE)
-    demande_approuver = models.ForeignKey('accounts.DemandeApprobation', on_delete=models.SET_NULL, null=True, blank=True, related_name='contraintes_approuvees')
+    demande_approuver = models.ForeignKey('authentification.DemandeApprobation', on_delete=models.SET_NULL, null=True, blank=True, related_name='contraintes_approuvees')
     
     class Meta:
         verbose_name = 'Contrainte horaire'
@@ -294,7 +294,7 @@ class Professeur(models.Model):
         CONGE = 'conge', 'En congé'
         PARTI = 'parti', 'Parti'
     
-    user = models.OneToOneField('accounts.User', on_delete=models.CASCADE, null=True, blank=True, related_name='professeur')
+    user = models.OneToOneField('authentification.User', on_delete=models.CASCADE, null=True, blank=True, related_name='professeur')
     nom = models.CharField(max_length=100)
     prenom = models.CharField(max_length=100)
     email = models.EmailField(blank=True)

@@ -139,7 +139,7 @@ class Paiement(models.Model):
     montant = models.DecimalField(max_digits=10, decimal_places=2)
     mode_paiement = models.CharField(max_length=20, choices=ModePaiement.choices)
     reference = models.CharField(max_length=50, blank=True)
-    personnel = models.ForeignKey('accounts.User', on_delete=models.SET_NULL, null=True)
+    personnel = models.ForeignKey('authentification.User', on_delete=models.SET_NULL, null=True)
     observations = models.TextField(blank=True)
     
     class Meta:
@@ -158,7 +158,7 @@ class EcoleCompte(models.Model):
     montant = models.DecimalField(max_digits=12, decimal_places=2)
     beneficiaire = models.CharField(max_length=200, blank=True)
     motif = models.TextField()
-    personnel = models.ForeignKey('accounts.User', on_delete=models.SET_NULL, null=True)
+    personnel = models.ForeignKey('authentification.User', on_delete=models.SET_NULL, null=True)
     
     class Meta:
         verbose_name = 'Opération de caisse'
@@ -215,7 +215,7 @@ class ChargeOperationnelle(models.Model):
     montant = models.DecimalField(max_digits=12, decimal_places=2)
     fournisseur = models.CharField(max_length=200, blank=True)
     reference = models.CharField(max_length=100, blank=True, help_text="Numéro de facture, reçu, etc.")
-    personnel = models.ForeignKey('accounts.User', on_delete=models.SET_NULL, null=True)
+    personnel = models.ForeignKey('authentification.User', on_delete=models.SET_NULL, null=True)
     est_payee = models.BooleanField(default=True)
     date_paiement = models.DateField(null=True, blank=True)
     
@@ -250,7 +250,7 @@ class Personnel(models.Model):
     salaire_mensuel = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Salaire mensuel (FCFA)")
     date_embauche = models.DateField(null=True, blank=True)
     est_actif = models.BooleanField(default=True)
-    compte_utilisateur = models.OneToOneField('accounts.User', on_delete=models.SET_NULL, null=True, blank=True, related_name='dossier_personnel')
+    compte_utilisateur = models.OneToOneField('authentification.User', on_delete=models.SET_NULL, null=True, blank=True, related_name='dossier_personnel')
     observations = models.TextField(blank=True)
     
     class Meta:
@@ -334,7 +334,7 @@ class Facture(models.Model):
     montant_total = models.DecimalField(max_digits=12, decimal_places=2)
     montant_paye = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     statut = models.CharField(max_length=20, choices=StatutFacture.choices, default=StatutFacture.EN_ATTENTE)
-    personnel = models.ForeignKey('accounts.User', on_delete=models.SET_NULL, null=True)
+    personnel = models.ForeignKey('authentification.User', on_delete=models.SET_NULL, null=True)
     observations = models.TextField(blank=True)
     
     class Meta:
@@ -452,7 +452,7 @@ class RapportFinancier(models.Model):
     details_recettes = models.JSONField(default=dict, blank=True)
     details_depenses = models.JSONField(default=dict, blank=True)
     date_generation = models.DateField(auto_now_add=True)
-    genere_par = models.ForeignKey('accounts.User', on_delete=models.SET_NULL, null=True)
+    genere_par = models.ForeignKey('authentification.User', on_delete=models.SET_NULL, null=True)
     
     class Meta:
         verbose_name = 'Rapport financier'

@@ -1,6 +1,6 @@
 from django import forms
 from .models import AnneeScolaire, FraisScolaire, Paiement, EcoleCompte, Salaire, CycleConfig, ChargeFixe, ChargeOperationnelle, Personnel
-from accounts.models import User
+from authentification.models import User
 
 
 class AnneeScolaireForm(forms.ModelForm):

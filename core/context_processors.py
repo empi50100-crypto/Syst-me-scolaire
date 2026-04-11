@@ -7,7 +7,7 @@ def annee_scolaire_actuelle(request):
 
 def notification_count(request):
     if request.user.is_authenticated:
-        from accounts.models import Notification, Message
+        from authentification.models import Notification, Message
         unread_notifications = Notification.objects.filter(destinataire=request.user, est_lu=False).count()
         unread_messages = Message.objects.filter(
             destinataire=request.user,

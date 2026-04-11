@@ -29,12 +29,14 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_filters',
     'corsheaders',
-    'accounts',
+    'authentification',
     'eleves',
     'academics',
     'presences',
     'finances',
     'rapports',
+    'ressources_humaines',
+    'core',
 ]
 
 MIDDLEWARE = [
@@ -82,8 +84,12 @@ WSGI_APPLICATION = 'core.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'gestion_scolaire',
+        'USER': 'postgres',
+        'PASSWORD': 'AMP50100',
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
 
@@ -112,7 +118,7 @@ LOGIN_URL = 'accounts:login'
 LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'accounts:login'
 
-AUTH_USER_MODEL = 'accounts.User'
+AUTH_USER_MODEL = 'authentification.User'
 
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',

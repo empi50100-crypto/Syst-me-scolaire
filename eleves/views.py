@@ -15,7 +15,7 @@ from eleves.models import (
 from eleves.forms import EleveForm, DocumentFormSet
 from finances.models import AnneeScolaire
 from academics.models import Classe
-from accounts.models import DemandeApprobation, Notification, User
+from authentification.models import DemandeApprobation, Notification, User
 
 
 def log_audit(user, action, model_type, obj, details, request):

@@ -313,7 +313,7 @@ def demarrer_seance(request, seance_id):
         return redirect('presences:mes_seances')
     
     from academics.models import Enseignement, Professeur
-    from accounts.models import Notification
+    from authentification.models import Notification
     
     today = date.today()
     maintenant = datetime.now().time()
@@ -338,7 +338,7 @@ def demarrer_seance(request, seance_id):
             creee_par=request.user
         )
         
-        from accounts.models import User
+        from authentification.models import User
         users_direction = User.objects.filter(
             Q(role__in=[User.Role.DIRECTION, User.Role.SUPERADMIN]) | Q(role=User.Role.SURVEILLANCE)
         )
@@ -366,7 +366,7 @@ def terminer_seance(request, seance_id):
         messages.error(request, "Vous n'avez pas l'autorisation de terminer une séance.")
         return redirect('presences:mes_seances')
     
-    from accounts.models import Notification
+    from authentification.models import Notification
     from django.db.models import Q
     
     maintenant = datetime.now()
@@ -383,7 +383,7 @@ def terminer_seance(request, seance_id):
         seance.notes = request.POST.get('notes', '')
         seance.save()
         
-        from accounts.models import User
+        from authentification.models import User
         users_direction = User.objects.filter(
             Q(role__in=[User.Role.DIRECTION, User.Role.SUPERADMIN]) | Q(role=User.Role.SURVEILLANCE)
         )

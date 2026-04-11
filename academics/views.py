@@ -8,7 +8,7 @@ from django.core.paginator import Paginator
 from datetime import datetime, date
 from academics.models import Classe, Matiere, Enseignement, Evaluation, FicheNote, Salle, CoefficientMatiere, Examen, ContrainteHoraire, Professeur
 from academics.forms import ClasseForm, MatiereForm, EnseignementForm, EvaluationForm, SalleForm, CoefficientMatiereForm, ExamenForm, ContrainteHoraireForm
-from accounts.models import DemandeApprobation, Notification, User
+from authentification.models import DemandeApprobation, Notification, User
 
 
 def is_direction_or_secretaire(user):
@@ -2541,7 +2541,7 @@ def contrainte_list_view(request):
 
 @login_required
 def contrainte_create_view(request):
-    from accounts.models import DemandeApprobation, User
+    from authentification.models import DemandeApprobation, User
     
     is_direction = request.user.is_direction() or request.user.is_superadmin()
     
@@ -2591,7 +2591,7 @@ def contrainte_create_view(request):
                 demande.save()
                 
                 approbateurs = User.objects.filter(role__in=[User.Role.SUPERADMIN, User.Role.DIRECTION], is_active=True)
-                from accounts.models import Notification
+                from authentification.models import Notification
                 for approbateur in approbateurs:
                     Notification.creer_notification(
                         destinataire=approbateur,

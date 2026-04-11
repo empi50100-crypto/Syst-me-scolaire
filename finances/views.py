@@ -36,7 +36,7 @@ from finances.forms import (
     AnneeScolaireForm, FraisScolaireForm, PaiementForm, EcoleCompteForm, SalaireForm,
     CycleConfigForm, ChargeFixeForm, ChargeOperationnelleForm, PersonnelForm
 )
-from accounts.models import User
+from authentification.models import User
 
 
 @login_required
@@ -273,7 +273,7 @@ def salaire_create(request):
             form.initial['retenues'] = 0
             source = request.GET.get('source', 'system')
     
-    from accounts.models import User
+    from authentification.models import User
     system_users = User.objects.filter(
         is_active=True,
         role__in=['professeur', 'secretaire', 'comptable', 'surveillance', 'direction', 'agent_securite', 'chauffeur', 'responsable_stock']
@@ -346,7 +346,7 @@ def personnel_create(request):
         messages.error(request, "Vous n'avez pas l'autorisation.")
         return redirect('dashboard')
     
-    from accounts.models import User
+    from authentification.models import User
     system_users = User.objects.filter(is_active=True).order_by('first_name', 'last_name')
     
     if request.method == 'POST':

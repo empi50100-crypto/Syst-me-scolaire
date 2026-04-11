@@ -17,6 +17,13 @@
 13. [Phase 11 : Administration](#13-phase-11--administration)
 14. [Flux de Travail Récapitulatifs](#14-flux-de-travail-récapitulatifs)
 15. [Dépannage](#15-dépannage)
+16. [API REST](#16-api-rest)
+17. [Export de Données](#17-export-de-données)
+18. [Notifications par Email](#18-notifications-par-email)
+19. [Sauvegardes](#19-sauvegardes)
+20. [Ressources Humaines - Congés et Absences](#20-ressources-humaines---congés-et-absences)
+21. [Tableau de Bord Avancé](#21-tableau-de-bord-avancé)
+22. [Sécurités et Bonnes Pratiques](#22-sécurités-et-bonnes-pratiques)
 
 ---
 
@@ -56,10 +63,26 @@
 |------|-------------|-------------------------|
 | **Super Administrateur** | Administrateur système | Accès total, Django Admin, configuration |
 | **Direction** | Responsable établissement | Gestion complète sauf Admin Django |
-| **Secrétaire** | Gestion quotidienne | Élèves, classes, présence, secrétariat |
+| **Secrétaire** | Gestion quotidienne | Scolarité, classes, présence, secrétariat |
 | **Comptable** | Gestion financière | Finances, salaires, paiements |
 | **Professeur** | Enseignant | Ses classes, notes, présences |
 | **Surveillance** | Contrôle | Présences, suivi, ponctualité |
+
+### 2.2 Architecture des Services
+Le système est organisé en 10 services principaux :
+
+| # | Service | Description | Modules clés |
+|---|---------|-------------|--------------|
+| 1 | **Scolarité** | Gestion des élèves | Élèves, Inscriptions, Discipline, Documents |
+| 2 | **Enseignement** | Organisation académique | Classes, Matières, Professeurs, Examens |
+| 3 | **Espace Enseignant** | Interface professeur | Mes Classes, Emploi du temps, Saisie notes |
+| 4 | **Présences** | Suivi des présences | Appel, Statistiques, Rapports retards |
+| 5 | **Communication** | Notifications et messages | Notifications, Messages |
+| 6 | **Finances** | Gestion financière | Frais, Paiements, Caisse, Charges |
+| 7 | **Ressources Humaines** | Personnel | Personnel, Salaires, Postes, Contrats |
+| 8 | **Rapports** | Bulletins et statistiques | Bulletins, Fiches de notes, Rapports |
+| 9 | **Configuration** | Paramétrage | Années scolaires, Salles |
+| 10 | **Administration** | Gestion système | Utilisateurs, Permissions, Approbations |
 
 ### 2.2 Tableau des Accès par Module
 
@@ -1012,12 +1035,274 @@ Un compte désactivé ne peut plus se connecter.
 | Messages | Alt + 3 |
 | Mon Profil | Alt + 4 |
 
-### Astuces
+---
 
-1. **Changer de thème** : Cliquer sur l'icône lune/soleil dans la barre supérieure
-2. **Navigation rapide** : Utiliser le menu lateral - les sections s'ouvrent automatiquement
-3. **Année scolaire** : Toujours vérifier que la bonne année est sélectionnée
-4. **Sauvegarde** : Les données sont sauvegardées automatiquement
+## 16. API REST
+
+### 16.1 Introduction
+Le système dispose d'une API REST complète pour permettre l'intégration avec des applications mobiles ou d'autres systèmes.
+
+**URL de base** : `http://127.0.0.1:8000/api/`
+
+### 16.2 Authentification
+L'API utilise l'authentification JWT (JSON Web Tokens).
+
+**Connexion** :
+```
+POST /api/auth/login/
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "votre_mot_de_passe"
+}
+```
+
+**Réponse** :
+```json
+{
+  "access": "eyJ0eXAiOiJKV1QiLCJhb...",
+  "refresh": "eyJ0eXAiOiJKV1QiLCJhb...",
+  "user": {
+    "id": 1,
+    "username": "admin",
+    "email": "admin@ecole.com",
+    "role": "superadmin"
+  }
+}
+```
+
+### 16.3 Utilisation du Token
+Toutes les requêtes API doivent inclure le token dans l'en-tête :
+```
+Authorization: Bearer <votre_token>
+```
+
+### 16.4 Endpoints Principaux
+
+#### Authentification
+| Endpoint | Méthode | Description |
+|----------|---------|-------------|
+| `/api/auth/login/` | POST | Connexion |
+| `/api/auth/token/refresh/` | POST | Rafraîchir token |
+| `/api/auth/users/` | GET/POST | Utilisateurs |
+| `/api/auth/users/me/` | GET | Profil utilisateur |
+| `/api/auth/notifications/` | GET/POST | Notifications |
+| `/api/auth/messages/` | GET/POST | Messages |
+| `/api/auth/services/` | GET | Services |
+| `/api/auth/modules/` | GET | Modules |
+
+#### Élèves
+| Endpoint | Méthode | Description |
+|----------|---------|-------------|
+| `/api/eleves/eleves/` | GET/POST | Liste/Créer élèves |
+| `/api/eleves/eleves/{id}/` | GET/PUT/DELETE | Détail/Modifier/Supprimer |
+| `/api/eleves/parents/` | GET/POST | Parents/Tuteurs |
+| `/api/eleves/inscriptions/` | GET/POST | Inscriptions |
+| `/api/eleves/disciplines/` | GET/POST | Discipline |
+
+#### Enseignement
+| Endpoint | Méthode | Description |
+|----------|---------|-------------|
+| `/api/academics/classes/` | GET/POST | Classes |
+| `/api/academics/matieres/` | GET/POST | Matières |
+| `/api/academics/evaluations/` | GET/POST | Évaluations |
+| `/api/academics/examen/` | GET/POST | Examens |
+
+#### Finances
+| Endpoint | Méthode | Description |
+|----------|---------|-------------|
+| `/api/finances/annees-scolaires/` | GET/POST | Années scolaires |
+| `/api/finances/frais/` | GET/POST | Frais scolaires |
+| `/api/finances/paiements/` | GET/POST | Paiements |
+| `/api/finances/salaires/` | GET/POST | Salaires |
+
+### 16.5 Exemple avec cURL
+```bash
+# Connexion
+curl -X POST http://127.0.0.1:8000/api/auth/login/ \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"password"}'
+
+# Liste des élèves (avec token)
+curl -X GET http://127.0.0.1:8000/api/eleves/eleves/ \
+  -H "Authorization: Bearer <votre_token>"
+```
+
+---
+
+## 17. Export de Données
+
+### 17.1 Export Excel
+Le système permet d'exporter les données sous format Excel.
+
+**Chemins d'export** :
+- **Élèves** : Scolarité → Élèves → Bouton Exporter
+- **Paiements** : Finances → Paiements → Exporter
+- **Personnel** : Ressources Humaines → Personnel → Exporter
+
+**Format** : Fichier .xlsx avec mise en forme professionnelle
+- En-têtes colorés
+- Largeurs de colonnes ajustées
+- Données triées
+
+### 17.2 Export PDF
+Génération de documents PDF pour :
+- **Bulletins** : Rapports → Bulletins
+- **Factures** : Finances → Factures
+- **Reçus** : Finances → Paiements → Imprimer reçu
+
+### 17.3 Personnalisation
+Les exports peuvent être filtrés par :
+- Période (date début/fin)
+- Classe
+- Statut
+
+---
+
+## 18. Notifications par Email
+
+### 18.1 Configuration
+Les emails automatiques nécessitent la configuration SMTP dans `settings.py` :
+
+```python
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'votre_email@gmail.com'
+EMAIL_HOST_PASSWORD = 'votre_mot_de_passe'
+DEFAULT_FROM_EMAIL = 'noreply@ecole.com'
+```
+
+### 18.2 Types de Notifications Automatiques
+| Type | Déclencheur | Destinataires |
+|------|-------------|---------------|
+| Confirmation inscription | Nouvel élève inscrit | Parent/Tuteur |
+| Paiement reçu | Enregistrement paiement | Parent |
+| Rappel paiement | Échéance proche | Parent |
+| Bulletin disponible | Génération bulletin | Parent/Élève |
+
+### 18.3 Envoi Manuel
+1. Aller dans **Communication** → **Notifications**
+2. Créer une nouvelle notification
+3. Sélectionner les destinataires
+4. Envoyer
+
+---
+
+## 19. Sauvegardes
+
+### 19.1 Sauvegarde Manuelle
+```bash
+python manage.py backup
+```
+
+Options :
+```bash
+# Sauvegarde avec fichiers médias
+python manage.py backup --media
+
+# Sauvegarde avec fichiers statiques
+python manage.py backup --static
+
+# Sauvegarde complète avec nettoyage
+python manage.py backup --media --static --clean 30
+```
+
+### 19.2 Fichiers de Sauvegarde
+Les sauvegardes sont stockées dans le dossier `backups/` :
+- `db_20260411_103045.sql.gz` - Base de données
+- `media_20260411_103045.tar.gz` - Fichiers médias
+
+### 19.3 Restauration
+```bash
+# Lister les sauvegardes
+python manage.py backup
+
+# La restauration se fait manuellement via pg_restore pour PostgreSQL
+```
+
+### 19.4 Planification (Avancé)
+Pour une sauvegarde automatique quotidienne, ajouter au planificateur de tâches (cron) :
+```bash
+0 2 * * * cd /chemin/projet && python manage.py backup --media
+```
+
+---
+
+## 20. Ressources Humaines - Congés et Absences
+
+### 20.1 Types de Congés
+**Chemin** : Admin Django → Ressources Humaines → Types de congés
+
+**Types disponibles** :
+- Congé annuel (jours payées)
+- Congé maladie
+- Congé exceptionnel
+- Congé sans solde
+
+### 20.2 Demande de Congé
+1. Se connecter en tant que membre du personnel
+2. Les demandes de congés se font via Admin Django
+3. Ou via l'interface dédiée (si développée)
+
+### 20.3 Gestion des Absences
+**Chemin** : Admin Django → Ressources Humaines → Absences
+
+**Types d'absences** :
+- Maladie
+- Accident
+- Famille
+- Autre
+
+### 20.4 Soldes de Congés
+Le système suit les soldes de congés par année et par employé.
+
+---
+
+## 21. Tableau de Bord Avancé
+
+### 21.1 Statistiques par Rôle
+
+| Métrique | Super Admin | Direction | Comptable | Professeur |
+|---------|-------------|-----------|-----------|------------|
+| Total élèves | ✓ | ✓ | - | - |
+| Classes/Effectifs | ✓ | ✓ | - | - |
+| Revenus/Charges | ✓ | ✓ | ✓ | - |
+| Taux présence | ✓ | ✓ | - | ✓ |
+| Notes moyennes | ✓ | ✓ | - | ✓ |
+
+### 21.2 Indicateurs en Temps Réel
+- Élèves actifs
+- Paiements du jour
+- Absences du jour
+- Prochaines séances
+
+---
+
+## 22. Sécurités et Bonnes Pratiques
+
+### 22.1 Gestion des Mot de Passe
+- Minimum 8 caractères
+- Changer régulièrement
+- Ne pas réutiliser
+
+### 22.2 2FA (Authentification à Deux Facteurs)
+**Activation recommandée pour** :
+- Direction
+- Comptable
+- Super Admin
+
+### 22.3 Permissions
+- Vérifier régulièrement les accès
+- Supprimer les utilisateurs inactifs
+- Limiter les droits au minimum nécessaire
+
+### 22.4 Sauvegardes
+- Sauvegarde quotidienne recommandée
+- Vérifier la restauration régulièrement
+- Stocker les sauvegardes sur un serveur distant
 
 ---
 
@@ -1034,4 +1319,4 @@ Pour toute assistance technique :
 
 *Document généré pour le Système de Gestion Scolaire SyGeS-AM*
 *Dernière mise à jour : Avril 2026*
-*Version : 2.0*
+*Version : 3.0*

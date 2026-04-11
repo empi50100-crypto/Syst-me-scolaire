@@ -8,14 +8,14 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('academics', '0019_alter_enseignement_unique_together'),
-        ('accounts', '0016_alter_demandeapprobation_type_objet'),
+        ('authentification', '0016_alter_demandeapprobation_type_objet'),
     ]
 
     operations = [
         migrations.AddField(
             model_name='contraintehoraire',
             name='demande_approuver',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='contraintes_approuvees', to='accounts.demandeapprobation'),
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='contraintes_approuvees', to='authentification.demandeapprobation'),
         ),
         migrations.AddField(
             model_name='contraintehoraire',

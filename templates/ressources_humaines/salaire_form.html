@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block title %}{% if salaire %}Modifier{% else %}Nouveau{% endif %} Salaire{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-cash-stack"></i> {% if salaire %}Modifier{% else %}Enregistrer{% endif %} salaire</h1>
+    <a href="{% url 'ressources_humaines:liste_salaires' %}" class="btn btn-secondary">
+        <i class="bi bi-arrow-left"></i> Retour
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post" class="row g-3">
+            {% csrf_token %}
+            
+            <div class="col-md-6">
+                <label class="form-label">Employé *</label>
+                {{ form.employe }}
+            </div>
+            
+            <div class="col-md-3">
+                <label class="form-label">Mois *</label>
+                {{ form.mois }}
+            </div>
+            
+            <div class="col-md-3">
+                <label class="form-label">Année *</label>
+                {{ form.annee }}
+            </div>
+            
+            <div class="col-md-4">
+                <label class="form-label">Salaire brut *</label>
+                {{ form.salaire_brut }}
+            </div>
+            
+            <div class="col-md-4">
+                <label class="form-label">Retenue CNPS</label>
+                {{ form.retenue_cnps }}
+            </div>
+            
+            <div class="col-md-4">
+                <label class="form-label">Retenue IRPP</label>
+                {{ form.retenue_irpp }}
+            </div>
+            
+            <div class="col-md-6">
+                <label class="form-label">Autres retenues</label>
+                {{ form.autres_retenues }}
+            </div>
+            
+            <div class="col-md-6">
+                <label class="form-label">Date de versement</label>
+                {{ form.date_versement }}
+            </div>
+            
+            <div class="col-md-6">
+                <div class="form-check">
+                    {{ form.est_paye }}
+                    <label class="form-check-label">Payé</label>
+                </div>
+            </div>
+            
+            <div class="col-12">
+                <label class="form-label">Notes</label>
+                {{ form.notes }}
+            </div>
+            
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-save"></i> Enregistrer
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

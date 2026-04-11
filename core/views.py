@@ -42,7 +42,7 @@ def _get_superadmin_context(annee, today):
     from academics.models import Classe
     from finances.models import Paiement, FraisScolaire, EcoleCompte, Salaire, AnneeScolaire, Personnel
     from presences.models import Presence
-    from accounts.models import User
+    from authentification.models import User
     from django.db.models import Q
     
     if not annee:
@@ -237,7 +237,7 @@ def _get_comptable_context(annee, today):
     from finances.models import Paiement, FraisScolaire, EcoleCompte, Salaire, AnneeScolaire, Personnel
     from eleves.models import Eleve, Inscription
     from academics.models import Classe
-    from accounts.models import User
+    from authentification.models import User
     from django.db.models import Sum, Q
     
     context = {
