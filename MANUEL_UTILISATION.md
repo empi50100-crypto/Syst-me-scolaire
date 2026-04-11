@@ -168,7 +168,7 @@
 ### 3.4 Consulter le journal d'audit
 **Pourquoi** : Pour tracer toutes les actions des utilisateurs.
 
-**Cheminement** : **Core** → **Journal d'audit** (ou via Admin Django)
+**Cheminement** : **Authentification** → **Journal d'audit**
 
 ** Fonctionnalités** :
 - Voir qui a fait quelle action
@@ -588,7 +588,7 @@ Onglet Informations familiales :
 
 | Rôle | Accès |
 |------|-------|
-| **Super Administrateur** | Tout le système + Admin Django |
+| **Super Administrateur** | Tout le système (interface web complète) |
 | **Direction** | Configuration, Rapports, RH, Validation |
 | **Secrétaire** | Inscriptions, Classes, Élèves |
 | **Comptable** | Finances, Caisse, Salaires |
