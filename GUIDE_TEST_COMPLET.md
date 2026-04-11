@@ -7,7 +7,7 @@
 
 ## PRÉREQUIS AVANT TOUT TEST
 
-### 1. Lancer le serveur Django
+### 1. Lancer le serveur
 1. Ouvrir un terminal dans le dossier `gestion_ecole`
 2. Exécuter : `python manage.py runserver`
 3. Ouvrir votre navigateur à : **http://127.0.0.1:8000/**
@@ -47,36 +47,42 @@
 
 ## ÉTAPE 2 : CONFIGURATION DE L'ANNÉE SCOLAIRE
 
-### 2.1 Créer une année scolaire
-1. Dans le menu latéral, chercher **Core** ou **Configuration**
-2. Cliquer sur **Années scolaires** (ou ** YEARS**)
-3. Cliquer sur le bouton **[Ajouter une année scolaire]**
-4. Remplir le formulaire :
-   - **Libellé** : `2025-2026` (saisir cette valeur)
-   - **Date de début** : `2025-09-01` (cliquer et sélectionner la date)
-   - **Date de fin** : `2026-07-31` (cliquer et sélectionner la date)
-   - **Est active** : ☑ Cocher cette case
-4. Cliquer sur **[Enregistrer]**
-5. Vous revenez à la liste avec l'année créée
+> L'interface web est accessible via le menu latéral. NE PAS utiliser l'administration Django (/admin/).
 
-### 2.2 Créer des cycles scolaires
-1. Dans le menu latéral, cliquer sur **Cycles**
+### 2.1 Créer une année scolaire
+1. Dans le **menu latéral** (à gauche de l'écran), chercher le groupe **Core** ou **Configuration**
+2. Cliquer sur le petit triangle ▶ à côté de **Core** pour déplier les modules
+3. Cliquer sur **Années scolaires**
+4. Cliquer sur le bouton **[Ajouter une année scolaire]**
+5. Remplir le formulaire :
+   - **Libellé** : `2025-2026` (saisir cette valeur)
+   - **Date de début** : `2025-09-01` (cliquer sur le champ et sélectionner la date)
+   - **Date de fin** : `2026-07-31` (cliquer sur le champ et sélectionner la date)
+   - **Est active** : ☑ Cocher cette case
+6. Cliquer sur **[Enregistrer]**
+7. Vous revenez à la liste avec l'année créée
+
+### 2.2 Créer des cycles pédagogiques
+1. Dans le menu **Core**, cliquer sur **Cycles** (ou **Types de cycle**)
 2. Cliquer sur **[Ajouter un cycle]**
 3. Remplir :
-   - **Nom** : `Primaire` (saisir)
-   - **Code** : `primaire` (saisir)
+   - **Année scolaire** : sélectionner `2025-2026`
+   - **Type de cycle** : sélectionner `Trimestriel` ou `Semestriel`
+   - **Numéro** : `1` (saisir)
+   - **Date de début** : `2025-09-01`
+   - **Date de fin** : `2025-12-31`
 4. Cliquer sur **[Enregistrer]**
-5. Répéter pour créer : `Maternelle`, `Collège`, `Lycée`
+5. Répéter pour créer les autres périodes
 
 ### 2.3 Créer des niveaux scolaires
-1. Cliquer sur **Niveaux scolaires** dans le menu
+1. Dans le menu **Core**, cliquer sur **Niveaux scolaires**
 2. Cliquer sur **[Ajouter un niveau]**
 3. Remplir :
-   - **Nom** : `6ème` (saisir)
+   - **Niveau** : sélectionner une valeur (ex: `6e` pour 6ème)
+   - **Libellé** : `6ème` (saisir)
    - **Ordre** : `1` (saisir un nombre)
-   - **Cycle** : sélectionner `Primaire` dans la liste déroulante
 4. Cliquer sur **[Enregistrer]**
-5. Répéter pour : `5ème` (ordre 2), `4ème` (ordre 3), `3ème` (ordre 4)
+5. Répéter pour créer : `5ème` (ordre 2), `4ème` (ordre 3), etc.
 
 ### 2.4 Créer des périodes d'évaluation
 1. Cliquer sur **Périodes d'évaluation** (ou **Périodes**)
