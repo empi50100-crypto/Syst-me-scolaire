@@ -1,0 +1,190 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+{% block title %}Feuille de Notes - {{ classe.nom }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1><i class="bi bi-grid-3x3"></i> Feuille de Notes</h1>
+        <p class="text-muted mb-0">
+            <strong>{{ classe.nom }}</strong> | 
+            Année: {{ annee_scolaire_actuelle.libelle|default:"-" }}
+            {% if selected_cycle %}
+            | {{ selected_cycle.libelle }}
+            {% endif %}
+        </p>
+    </div>
+    <div>
+        <a href="{% url 'enseignement:statistiques_classe' classe.pk %}" class="btn btn-outline-info">
+            <i class="bi bi-bar-chart"></i> Statistiques
+        </a>
+        <a href="{% url 'enseignement:bulletin_classe' classe.pk %}" class="btn btn-outline-success">
+            <i class="bi bi-file-earmark-bar-graph"></i> Bulletins
+        </a>
+        <button onclick="window.print()" class="btn btn-primary">
+            <i class="bi bi-printer"></i> Imprimer
+        </button>
+    </div>
+</div>
+
+{% if cycles %}
+<div class="card mb-4">
+    <div class="card-body pb-2">
+        <form method="get" class="row g-3 mb-0">
+            <div class="col-md-4">
+                <label class="form-label fw-bold">Période / Cycle</label>
+                <select name="cycle" class="form-select" onchange="this.form.submit()">
+                    <option value="">Toutes les périodes</option>
+                    {% for cycle in cycles %}
+                    <option value="{{ cycle.pk }}" {% if selected_cycle.pk == cycle.pk %}selected{% endif %}>
+                        {{ cycle.libelle }} ({{ cycle.date_debut|date:"d/m/Y" }} - {{ cycle.date_fin|date:"d/m/Y" }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+{% if eleves_data %}
+<div class="card mb-4">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-bordered table-sm align-middle mb-0" id="feuilleTable">
+                <thead class="table-dark">
+                    <tr>
+                        <th class="text-center sticky-col sticky-col-left" style="z-index: 10; min-width: 50px;">#</th>
+                        <th class="sticky-col sticky-col-left" style="z-index: 10; min-width: 180px;">Matricule / Nom</th>
+                        {% for matiere in matieres %}
+                        <th class="text-center" style="min-width: 80px; writing-mode: vertical-rl; text-orientation: mixed; max-width: 80px;">
+                            <div style="transform: rotate(180deg);">{{ matiere.nom }}</div>
+                            <small class="d-block" style="transform: rotate(180deg);">Coef. {{ matiere.coefficient }}</small>
+                        </th>
+                        {% endfor %}
+                        <th class="text-center bg-success text-white" style="min-width: 70px;">Moy. /20</th>
+                        <th class="text-center bg-success text-white" style="min-width: 70px;">Moy×Coef</th>
+                        <th class="text-center bg-warning" style="min-width: 50px;">Rang</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in eleves_data %}
+                    <tr>
+                        <td class="text-center sticky-col sticky-col-left">{{ forloop.counter }}</td>
+                        <td class="sticky-col sticky-col-left">
+                            <strong>{{ item.eleve.matricule }}</strong><br>
+                            <small>{{ item.eleve.nom }} {{ item.eleve.prenom }}</small>
+                        </td>
+                        {% for matiere in matieres %}
+                        {% with item.notes|get_item:matiere.pk as note_data %}
+                        <td class="text-center {% if note_data.moyenne_sur_20 >= 10 %}table-success{% elif note_data.moyenne_sur_20 and note_data.moyenne_sur_20 >= 5 %}table-warning{% elif note_data.moyenne_sur_20 %}table-danger{% endif %}">
+                            {% if note_data.moyenne_sur_20 %}
+                                <span class="fw-bold">{{ note_data.moyenne_sur_20|floatformat:1 }}</span>
+                                <br><small class="text-muted">{{ note_data.count }} notes</small>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        {% endwith %}
+                        {% endfor %}
+                        <td class="text-center bg-success-subtle fw-bold">
+                            {% if item.moyenne_generale %}
+                                {{ item.moyenne_generale|floatformat:2 }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td class="text-center bg-success-subtle fw-bold">
+                            {% if item.total_moy_coef %}
+                                {{ item.total_moy_coef|floatformat:2 }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td class="text-center bg-warning-subtle fw-bold">{{ item.rang }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot class="table-secondary">
+                    <tr>
+                        <td colspan="2" class="fw-bold text-end">TOTAUX / MOYENNE CLASSE</td>
+                        {% for matiere in matieres %}
+                        <td class="text-center">-</td>
+                        {% endfor %}
+                        <td class="text-center fw-bold">
+                            {% with eleves_data|avg_moyenne_generale as avg_class %}
+                            {{ avg_class|floatformat:2 }}
+                            {% endwith %}
+                        </td>
+                        <td class="text-center fw-bold">{{ eleves_data.0.total_moy_coef|default:"0"|floatformat:2 }}</td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card border-start border-primary border-4">
+            <div class="card-body text-center py-3">
+                <h6 class="text-muted mb-1">EFFECTIF</h6>
+                <h2 class="mb-0 text-primary">{{ eleves_data|length }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-start border-secondary border-4">
+            <div class="card-body text-center py-3">
+                <h6 class="text-muted mb-1">MATIÈRES</h6>
+                <h2 class="mb-0 text-secondary">{{ matieres|length }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-start border-success border-4">
+            <div class="card-body text-center py-3">
+                <h6 class="text-muted mb-1">COEFFICIENT TOTAL</h6>
+                <h2 class="mb-0 text-success">{{ total_coef }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-start border-warning border-4">
+            <div class="card-body text-center py-3">
+                <h6 class="text-muted mb-1">MOYENNE GÉNÉRALE</h6>
+                <h2 class="mb-0 text-warning">
+                    {% with eleves_data|avg_moyenne_generale as avg %}
+                    {{ avg|floatformat:2 }}
+                    {% endwith %}
+                </h2>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="alert alert-info text-center">
+    <i class="bi bi-people" style="font-size: 2rem;"></i>
+    <p class="mt-2 mb-0">Aucun élève trouvé dans cette classe.</p>
+</div>
+{% endif %}
+
+<style>
+.sticky-col { position: sticky; left: 0; background: white; }
+.sticky-col-left { z-index: 5 !important; }
+thead .sticky-col { background: #212529; color: white; }
+tfoot .sticky-col { background: #e9ecef; }
+
+@media print {
+    .navbar, .sidebar, .btn, form, .card:not(.table-responsive .card) { display: none !important; }
+    .main-content { margin: 0 !important; padding: 5px !important; }
+    .table { font-size: 9px; }
+    .table td, .table th { padding: 2px !important; white-space: nowrap; }
+    body { font-size: 9px; }
+    h1 { font-size: 14px; }
+    .sticky-col { position: relative !important; }
+    .card { box-shadow: none !important; border: 1px solid #ccc !important; }
+}
+</style>
+{% endblock %}

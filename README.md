@@ -1,120 +1,71 @@
-# Système de Gestion Scolaire - Django
+# Système de Gestion Scolaire SyGeS-AM (V2)
 
-## Structure du Projet
+Système de gestion d'établissement scolaire complet (Maternelle, Primaire, Secondaire, Supérieur) développé avec **Django 5.0** et **PostgreSQL**.
+
+## 🚀 Fonctionnalités Clés
+
+- **Authentification Sécurisée** : Rôles personnalisés, 2FA (TOTP), Journal d'audit complet.
+- **Scolarité** : Inscriptions, Dossiers médicaux, Suivi disciplinaire (Sanctions/Récompenses).
+- **Enseignement** : Classes, Matières, Profils Professeurs, Attributions, Examens et Notes.
+- **Présences** : Appels numériques par séance, statistiques d'assiduité.
+- **Finances** : Frais scolaires, Paiements, Opérations de caisse, Charges et Salaires.
+- **Rapports** : Génération de bulletins PDF et rapports financiers.
+- **API REST** : Architecture prête pour mobile/SPA avec Django REST Framework.
+
+## 📁 Structure du Projet (Refonte V2)
 
 ```
 gestion_ecole/
-├── core/                  # Configuration Django principale
-│   ├── settings.py        # Paramètres de l'application
-│   ├── urls.py            # URLs principales
-│   ├── middleware.py      # Middleware personnalisé
-│   └── context_processors.py
-├── accounts/              # Gestion des utilisateurs
-│   ├── models.py          # User personnalisé + logs
-│   ├── views.py           # Login/Logout/Profile
-│   └── urls.py
-├── eleves/                # Gestion des élèves
-│   ├── models.py          # Eleve, Inscription
-│   ├── views.py           # CRUD élèves
-│   └── forms.py
-├── academics/             # Gestion académique
-│   ├── models.py          # Classe, Matiere, Professeur, Evaluation
-│   ├── views.py           # Saisie notes, attributions
-│   └── forms.py
-├── presences/             # Gestion des présences
-│   ├── models.py          # Presence, Appel
-│   ├── views.py           # Appel, statistiques
-│   └── forms.py
-├── finances/             # Gestion financière
-│   ├── models.py          # AnneeScolaire, Frais, Paiement, Salaire
-│   ├── views.py           # Paiements, salaires, rappels
-│   └── forms.py
-├── rapports/             # Rapports et bulletins
-│   ├── models.py          # Bulletin
-│   ├── views.py           # Génération PDF
-│   └── forms.py
-├── templates/             # Templates HTML Bootstrap
+├── core/                  # Configuration principale, Années scolaires, Cycles
+├── authentification/      # Utilisateurs, Rôles, 2FA, Audit (Ancien accounts)
+├── scolarite/             # Élèves, Inscriptions, Discipline (Ancien eleves)
+├── enseignement/          # Classes, Matières, Notes, Examens (Ancien academics)
+├── ressources_humaines/   # Personnel, Salaires, Contrats (Nouveau)
+├── presences/             # Appels, Séances de cours
+├── finances/              # Frais, Paiements, Caisse, Charges
+├── rapports/              # Bulletins PDF, Statistiques
+├── templates/             # Templates HTML (Bootstrap 5)
 └── manage.py
 ```
 
-## Installation
+## 🛠️ Installation Rapide
 
 ### 1. Prérequis
 - Python 3.11+
-- SQL Server Express (optionnel, sinon SQLite)
+- PostgreSQL 15+
 - pip
 
-### 2. Créer l'environnement virtuel
+### 2. Environnement Virtuel
 ```bash
-cd gestion_ecole
 python -m venv venv
 .\venv\Scripts\activate
-```
-
-### 3. Installer les dépendances
-```bash
 pip install -r requirements.txt
 ```
 
-### 4. Configuration de la base de données
+### 3. Configuration Base de Données
+1. Créer une base PostgreSQL nommée `gestion_scolaire`.
+2. Mettre à jour les identifiants dans `core/settings.py`.
 
-#### Option A: SQLite (développement rapide)
-Aucune configuration nécessaire, fonctionne par défaut.
-
-#### Option B: SQL Server Express
-1. Installer SQL Server Express
-2. Activer l'authentification SQL
-3. Créer la base de données `GestionEcole`
-4. Modifier `.env` avec vos identifiants
-5. Modifier `settings.py` (voir `SQL_SERVER_CONFIG.py`)
-
-### 5. Appliquer les migrations
+### 4. Initialisation
 ```bash
 python manage.py makemigrations
 python manage.py migrate
-```
-
-### 6. Créer un super utilisateur
-```bash
+python manage.py init_modules
 python manage.py createsuperuser
 ```
 
-### 7. Lancer le serveur
+### 5. Lancer le serveur
 ```bash
 python manage.py runserver
 ```
 
-## Utilisation
+## 📚 Documentation Complète
 
-1. Accéder à `http://localhost:8000/admin/` pour l'administration
-2. Créer une année scolaire active
-3. Créer les utilisateurs avec leurs rôles
-4. Configurer les classes, matières, frais
-5. Insrire les élèves
+- [Architecture Détaillée](ARCHITECTURE.md)
+- [Guide d'Installation Réseau](GUIDE_INSTALLATION.md)
+- [Manuel d'Utilisation](MANUEL_UTILISATION.md)
+- [Guide Complet de Test](GUIDE_TEST_COMPLET.md)
 
-## Rôles disponibles
-
-| Rôle | Droits |
-|------|--------|
-| Direction | Accès total |
-| Secrétariat | Élèves, classes, bulletins |
-| Comptabilité | Finances, paiements, salaires |
-| Professeur | Ses classes, notes, présences |
-| Surveillance | Présences uniquement |
-
-## Commandes utiles
-
-```bash
-# Développement
-python manage.py runserver
-
-# Migrations
-python manage.py makemigrations
-python manage.py migrate
-
-# Créer superuser
-python manage.py createsuperuser
-
-# Collecter les fichiers statiques
-python manage.py collectstatic
-```
+---
+*Dernière mise à jour : 11 Avril 2026*
+*Version : 2.0*

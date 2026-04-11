@@ -1,6 +1,6 @@
 import re
 
-with open('eleves/views.py', 'r', encoding='utf-8') as f:
+with open('scolarite/views.py', 'r', encoding='utf-8') as f:
     content = f.read()
 
 # Find and fix all patterns where 4 spaces should be 8 spaces
@@ -44,7 +44,7 @@ while i < len(lines):
 
 content = '\n'.join(fixed_lines)
 
-with open('eleves/views.py', 'w', encoding='utf-8') as f:
+with open('scolarite/views.py', 'w', encoding='utf-8') as f:
     f.write(content)
 
 print("Fixed indentation patterns")

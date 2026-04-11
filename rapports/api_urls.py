@@ -5,20 +5,20 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 from .viewsets import (
-    UserViewSet, EleveViewSet, InscriptionViewSet,
-    ClasseViewSet, MatiereViewSet, ProfesseurViewSet,
-    EnseignementViewSet, EvaluationViewSet, AnneeScolaireViewSet,
+    UtilisateurViewSet, EleveViewSet, EleveInscriptionViewSet,
+    ClasseViewSet, MatiereViewSet, ProfilProfesseurViewSet,
+    AttributionViewSet, EvaluationViewSet, AnneeScolaireViewSet,
     FraisScolaireViewSet, PaiementViewSet, PresenceViewSet, SalaireViewSet
 )
 
 router = DefaultRouter()
-router.register(r'users', UserViewSet)
+router.register(r'users', UtilisateurViewSet)
 router.register(r'eleves', EleveViewSet)
-router.register(r'inscriptions', InscriptionViewSet)
+router.register(r'inscriptions', EleveInscriptionViewSet)
 router.register(r'classes', ClasseViewSet)
 router.register(r'matieres', MatiereViewSet)
-router.register(r'professeurs', ProfesseurViewSet)
-router.register(r'enseignements', EnseignementViewSet)
+router.register(r'professeurs', ProfilProfesseurViewSet)
+router.register(r'enseignements', AttributionViewSet)
 router.register(r'evaluations', EvaluationViewSet)
 router.register(r'annees', AnneeScolaireViewSet)
 router.register(r'frais', FraisScolaireViewSet)

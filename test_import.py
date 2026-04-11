@@ -6,7 +6,7 @@ django.setup()
 
 # Try to import the form
 try:
-    from academics.forms importProfesseurForm
+    from enseignement.forms importProfesseurForm
     print("Import OK")
 except ImportError as e:
     print(f"ImportError: {e}")

@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+{% block title %}{% if permission %}Modifier{% else %}Nouvelle{% endif %} Permission Utilisateur{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-person-check"></i> {% if permission %}Modifier{% else %}Nouvelle{% endif %} Permission Utilisateur</h1>
+    <a href="{% url 'authentification:permission_utilisateur_list' %}" class="btn btn-secondary">
+        <i class="bi bi-arrow-left"></i> Retour
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    {% if not permission %}
+                    <div class="mb-3">
+                        <label class="form-label">Utilisateur</label>
+                        <select name="utilisateur" class="form-select" required>
+                            <option value="">Sélectionner un utilisateur</option>
+                            {% for user in users %}
+                            <option value="{{ user.pk }}">{{ user.get_full_name|default:user.username }} ({{ user.get_role_display }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Module</label>
+                        <select name="module" class="form-select" required>
+                            <option value="">Sélectionner un module</option>
+                            {% for module in modules %}
+                            <option value="{{ module.pk }}">{{ module.service.nom }} - {{ module.nom }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% else %}
+                    <div class="mb-3">
+                        <label class="form-label">Utilisateur</label>
+                        <input type="text" class="form-control" value="{{ permission.utilisateur.get_full_name|default:permission.utilisateur.username }}" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Module</label>
+                        <input type="text" class="form-control" value="{{ permission.module.nom }} ({{ permission.module.service.nom }})" readonly>
+                    </div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <label class="form-label">Actions autorisées</label>
+                        <div class="border rounded p-3">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" name="actions" value="read" id="action_read" {% if 'read' in permission.actions %}checked{% endif %}>
+                                <label class="form-check-label" for="action_read">Lecture</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" name="actions" value="write" id="action_write" {% if 'write' in permission.actions %}checked{% endif %}>
+                                <label class="form-check-label" for="action_write">Écriture</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" name="actions" value="update" id="action_update" {% if 'update' in permission.actions %}checked{% endif %}>
+                                <label class="form-check-label" for="action_update">Mise à jour</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" name="actions" value="delete" id="action_delete" {% if 'delete' in permission.actions %}checked{% endif %}>
+                                <label class="form-check-label" for="action_delete">Suppression</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Niveau d'accès</label>
+                        <select name="niveau" class="form-select">
+                            <option value="lecture" {% if permission.niveau == 'lecture' %}selected{% endif %}>Lecture seule</option>
+                            <option value="standard" {% if permission.niveau == 'standard' %}selected{% endif %}>Standard</option>
+                            <option value="avance" {% if permission.niveau == 'avance' %}selected{% endif %}>Avancé</option>
+                            <option value="admin" {% if permission.niveau == 'admin' %}selected{% endif %}>Administrateur</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="est_temporaire" id="est_temporaire" {% if permission.est_temporaire %}checked{% endif %}>
+                            <label class="form-check-label" for="est_temporaire">Permission temporaire</label>
+                        </div>
+                    </div>
+
+                    <div class="row temporaires-fields" {% if not permission.est_temporaire %}style="display:none"{% endif %}>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Date de début</label>
+                            <input type="date" name="date_debut" class="form-control" value="{{ permission.date_debut|date:'Y-m-d'|default:'' }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Date de fin</label>
+                            <input type="date" name="date_fin" class="form-control" value="{{ permission.date_fin|date:'Y-m-d'|default:'' }}">
+                        </div>
+                    </div>
+
+                    {% if permission %}
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="est_actif" id="est_actif" {% if permission.est_actif %}checked{% endif %}>
+                            <label class="form-check-label" for="est_actif">Permission active</label>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Enregistrer
+                        </button>
+                        <a href="{% url 'authentification:permission_utilisateur_list' %}" class="btn btn-secondary">Annuler</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">Informations</h6>
+            </div>
+            <div class="card-body">
+                <p class="small text-muted mb-2">
+                    <strong>Lecture</strong> : Permet de consulter les données<br>
+                    <strong>Écriture</strong> : Permet de créer de nouvelles données<br>
+                    <strong>Mise à jour</strong> : Permet de modifier les données existantes<br>
+                    <strong>Suppression</strong> : Permet de supprimer des données
+                </p>
+                <hr>
+                <p class="small text-muted mb-0">
+                    Les permissions temporaires expirent automatiquement à la date de fin.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('est_temporaire').addEventListener('change', function() {
+    const fields = document.querySelector('.temporaires-fields');
+    fields.style.display = this.checked ? 'flex' : 'none';
+});
+</script>
+{% endblock %}

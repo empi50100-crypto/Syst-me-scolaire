@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
-from eleves.models import Eleve
+from scolarite.models import Eleve
 from finances.models import Paiement, Personnel
 from core.export_utils import export_eleves, export_paiements, export_personnel
 

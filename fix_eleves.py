@@ -1,6 +1,6 @@
 import re
 
-with open('eleves/views.py', 'r', encoding='utf-8') as f:
+with open('scolarite/views.py', 'r', encoding='utf-8') as f:
     content = f.read()
 
 # Replace all instances of the pattern with proper indentation
@@ -24,7 +24,7 @@ for i, line in enumerate(lines):
 
 content = '\n'.join(fixed)
 
-with open('eleves/views.py', 'w', encoding='utf-8') as f:
+with open('scolarite/views.py', 'w', encoding='utf-8') as f:
     f.write(content)
 
 print("Fixed")

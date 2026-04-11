@@ -328,7 +328,7 @@
 
         <div class="navbar-nav ms-auto d-flex align-items-center gap-2">
             <!-- Notifications -->
-            <a class="nav-icon-btn position-relative" href="{% url 'accounts:notification_list' %}" title="Notifications">
+            <a class="nav-icon-btn position-relative" href="{% url 'authentification:notification_list' %}" title="Notifications">
                 <i class="bi bi-bell"></i>
                 {% if unread_notifications_count %}
                 <span class="nav-badge">{{ unread_notifications_count }}</span>
@@ -336,7 +336,7 @@
             </a>
 
             <!-- Messages -->
-            <a class="nav-icon-btn position-relative" href="{% url 'accounts:chat_inbox' %}" title="Messages">
+            <a class="nav-icon-btn position-relative" href="{% url 'authentification:chat_inbox' %}" title="Messages">
                 <i class="bi bi-chat-dots"></i>
                 {% if unread_messages_count %}
                 <span class="nav-badge" style="background: #10b981;">{{ unread_messages_count }}</span>
@@ -377,9 +377,9 @@
                     <li><span class="dropdown-item-text fw-bold">{{ user.get_full_name|default:user.username }}</span></li>
                     <li><span class="dropdown-item-text text-muted small">{{ user.get_role_display }}</span></li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item" href="{% url 'accounts:profile' %}"><i class="bi bi-person"></i> Mon profil</a></li>
+                    <li><a class="dropdown-item" href="{% url 'authentification:profile' %}"><i class="bi bi-person"></i> Mon profil</a></li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item text-danger" href="{% url 'accounts:logout' %}"><i class="bi bi-box-arrow-right"></i> Déconnexion</a></li>
+                    <li><a class="dropdown-item text-danger" href="{% url 'authentification:logout' %}"><i class="bi bi-box-arrow-right"></i> Déconnexion</a></li>
                 </ul>
             </div>
         </div>
@@ -401,31 +401,31 @@
                     <span class="arrow">▶</span>
                 </div>
                 <div class="group-body">
-                    <a href="{% url 'eleves:eleve_list' %}" class="nav-link" data-url="/eleves/">
+                    <a href="{% url 'scolarite:eleve_list' %}" class="nav-link" data-url="/scolarite/">
                         <i class="bi bi-person-badge"></i> Élèves
                     </a>
-                    <a href="{% url 'eleves:dossiers_medical' %}" class="nav-link" data-url="/eleves/dossiers-medicaux/">
+                    <a href="{% url 'scolarite:dossiers_medical' %}" class="nav-link" data-url="/scolarite/dossiers-medicaux/">
                         <i class="bi bi-heart-pulse"></i> Dossiers médicaux
                     </a>
-                    <a href="{% url 'eleves:documents_eleve' %}" class="nav-link" data-url="/eleves/documents/">
+                    <a href="{% url 'scolarite:documents_eleve' %}" class="nav-link" data-url="/scolarite/documents/">
                         <i class="bi bi-file-earmark"></i> Documents
                     </a>
                     {% if user.is_surveillance or user.is_direction or user.is_superadmin %}
-                    <a href="{% url 'eleves:discipline_list' %}" class="nav-link" data-url="/eleves/discipline/">
+                    <a href="{% url 'scolarite:discipline_list' %}" class="nav-link" data-url="/scolarite/discipline/">
                         <i class="bi bi-shield-exclamation"></i> Discipline
                     </a>
-                    <a href="{% url 'eleves:conduite_config_list' %}" class="nav-link" data-url="/eleves/conduite/config/">
+                    <a href="{% url 'scolarite:conduite_config_list' %}" class="nav-link" data-url="/scolarite/conduite/config/">
                         <i class="bi bi-gear"></i> Config. Conduite
                     </a>
                     {% elif user.is_professeur %}
-                    <a href="{% url 'eleves:discipline_list' %}" class="nav-link" data-url="/eleves/discipline/">
+                    <a href="{% url 'scolarite:discipline_list' %}" class="nav-link" data-url="/scolarite/discipline/">
                         <i class="bi bi-shield-exclamation"></i> Discipline
                     </a>
                     {% endif %}
                 </div>
             </div>
             {% endif %}
-                    <a href="{% url 'academics:fiche_notes_list' %}" class="nav-link" data-url="/academics/fiches-notes/">
+                    <a href="{% url 'enseignement:fiche_notes_list' %}" class="nav-link" data-url="/enseignement/fiches-notes/">
                         <i class="bi bi-file-text"></i> Fiches de Notes
                     </a>
                     <a href="{% url 'rapports:bulletin_list' %}" class="nav-link" data-url="/rapports/bulletins/">
@@ -443,25 +443,25 @@
                     <span class="arrow">▶</span>
                 </div>
                 <div class="group-body">
-                    <a href="{% url 'academics:classe_list' %}" class="nav-link" data-url="/academics/classes/">
+                    <a href="{% url 'enseignement:classe_list' %}" class="nav-link" data-url="/enseignement/classes/">
                         <i class="bi bi-tag"></i> Classes
                     </a>
-                    <a href="{% url 'academics:professeur_list' %}" class="nav-link" data-url="/academics/professeurs/">
+                    <a href="{% url 'enseignement:professeur_list' %}" class="nav-link" data-url="/enseignement/professeurs/">
                         <i class="bi bi-person-workspace"></i> Professeurs
                     </a>
-                    <a href="{% url 'academics:matiere_list' %}" class="nav-link" data-url="/academics/matieres/">
+                    <a href="{% url 'enseignement:matiere_list' %}" class="nav-link" data-url="/enseignement/matieres/">
                         <i class="bi bi-book"></i> Matières
                     </a>
-                    <a href="{% url 'academics:salle_list' %}" class="nav-link" data-url="/academics/salles/">
+                    <a href="{% url 'enseignement:salle_list' %}" class="nav-link" data-url="/enseignement/salles/">
                         <i class="bi bi-door-open"></i> Salles
                     </a>
-                    <a href="{% url 'academics:examen_list' %}" class="nav-link" data-url="/academics/examens/">
+                    <a href="{% url 'enseignement:examen_list' %}" class="nav-link" data-url="/enseignement/examens/">
                         <i class="bi bi-clipboard-check"></i> Examens
                     </a>
-                    <a href="{% url 'academics:contrainte_list' %}" class="nav-link" data-url="/academics/contraintes/">
+                    <a href="{% url 'enseignement:contrainte_list' %}" class="nav-link" data-url="/enseignement/contraintes/">
                         <i class="bi bi-clock"></i> Contraintes horaires
                     </a>
-                    <a href="{% url 'academics:attribution_list' %}" class="nav-link" data-url="/academics/attributions/">
+                    <a href="{% url 'enseignement:attribution_list' %}" class="nav-link" data-url="/enseignement/attributions/">
                         <i class="bi bi-diagram-3"></i> Attributions
                     </a>
                 </div>
@@ -476,16 +476,16 @@
                     <span class="arrow">▶</span>
                 </div>
                 <div class="group-body">
-                    <a href="{% url 'academics:mes_classes' %}" class="nav-link" data-url="/academics/mes-classes/">
+                    <a href="{% url 'enseignement:mes_classes' %}" class="nav-link" data-url="/enseignement/mes-classes/">
                         <i class="bi bi-collection"></i> Mes Classes
                     </a>
-                    <a href="{% url 'academics:emploi_du_temps' %}" class="nav-link" data-url="/academics/emploi-du-temps/">
+                    <a href="{% url 'enseignement:emploi_du_temps' %}" class="nav-link" data-url="/enseignement/emploi-du-temps/">
                         <i class="bi bi-calendar-week"></i> Emploi du temps
                     </a>
                     <a href="{% url 'presences:mes_seances' %}" class="nav-link" data-url="/presences/mes-seances/">
                         <i class="bi bi-clock-history"></i> Mes Séances
                     </a>
-                    <a href="{% url 'academics:saisie_notes' %}" class="nav-link" data-url="/academics/saisie-notes/">
+                    <a href="{% url 'enseignement:saisie_notes' %}" class="nav-link" data-url="/enseignement/saisie-notes/">
                         <i class="bi bi-pencil-square"></i> Saisie Notes
                     </a>
                 </div>
@@ -585,11 +585,11 @@
                     <a href="{% url 'finances:annee_list' %}" class="nav-link" data-url="/finances/annees/">
                         <i class="bi bi-calendar-event"></i> Années scolaires
                     </a>
-                    <a href="{% url 'accounts:user_list' %}" class="nav-link" data-url="/accounts/users/">
+                    <a href="{% url 'authentification:user_list' %}" class="nav-link" data-url="/authentification/users/">
                         <i class="bi bi-person-badge"></i> Utilisateurs
                     </a>
                     {% if user.is_direction or user.is_superadmin %}
-                    <a href="{% url 'accounts:locked_accounts' %}" class="nav-link" data-url="/accounts/comptes-bloques/">
+                    <a href="{% url 'authentification:locked_accounts' %}" class="nav-link" data-url="/authentification/comptes-bloques/">
                         <i class="bi bi-lock-fill"></i> Comptes bloqués
                     </a>
                     {% endif %}
@@ -602,7 +602,7 @@
                     <a href="{% url 'rapports:rapport_academique' %}" class="nav-link" data-url="/rapports/academique/">
                         <i class="bi bi-bar-chart"></i> Rapports
                     </a>
-                    <a href="{% url 'accounts:demande_list' %}" class="nav-link" data-url="/accounts/demandes/">
+                    <a href="{% url 'authentification:demande_list' %}" class="nav-link" data-url="/authentification/demandes/">
                         <i class="bi bi-shield-check"></i> Approbations
                     </a>
                     {% endif %}
@@ -617,10 +617,10 @@
                     <span class="arrow">▶</span>
                 </div>
                 <div class="group-body">
-                    <a href="{% url 'accounts:notification_list' %}" class="nav-link" data-url="/accounts/notifications/">
+                    <a href="{% url 'authentification:notification_list' %}" class="nav-link" data-url="/authentification/notifications/">
                         <i class="bi bi-bell"></i> Notifications
                     </a>
-                    <a href="{% url 'accounts:chat_inbox' %}" class="nav-link" data-url="/accounts/chat/">
+                    <a href="{% url 'authentification:chat_inbox' %}" class="nav-link" data-url="/authentification/chat/">
                         <i class="bi bi-chat-square"></i> Messages
                     </a>
                 </div>

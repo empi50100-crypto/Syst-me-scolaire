@@ -55,7 +55,7 @@ def fix_file(filepath):
 # Corriger tous les fichiers
 fix_file('finances/views.py')
 fix_file('rapports/views.py')
-fix_file('academics/views.py')
-fix_file('eleves/views.py')
+fix_file('enseignement/views.py')
+fix_file('scolarite/views.py')
 
 print("\nTerminé!")

@@ -1,13 +1,15 @@
 from rest_framework import viewsets, permissions
 from django_filters.rest_framework import DjangoFilterBackend
+from core.models import AnneeScolaire
 from finances.models import (
-    AnneeScolaire, FraisScolaire, Paiement, EcoleCompte, Salaire,
-    ChargeFixe, ChargeOperationnelle, Personnel, Facture, BourseRemise
+    FraisScolaire, Paiement, OperationCaisse,
+    ChargeFixe, ChargeOperationnelle, Facture, BourseRemise
 )
+from ressources_humaines.models import MembrePersonnel, Salaire
 from finances.serializers import (
     AnneeScolaireSerializer, FraisScolaireSerializer, PaiementSerializer,
-    EcoleCompteSerializer, SalaireSerializer, ChargeFixeSerializer,
-    ChargeOperationnelleSerializer, PersonnelSerializer, FactureSerializer,
+    OperationCaisseSerializer, SalaireSerializer, ChargeFixeSerializer,
+    ChargeOperationnelleSerializer, MembrePersonnelSerializer, FactureSerializer,
     BourseRemiseSerializer
 )
 
@@ -34,9 +36,9 @@ class PaiementViewSet(viewsets.ModelViewSet):
     filterset_fields = ['eleve', 'annee_scolaire', 'mode_paiement']
 
 
-class EcoleCompteViewSet(viewsets.ModelViewSet):
-    queryset = EcoleCompte.objects.all()
-    serializer_class = EcoleCompteSerializer
+class OperationCaisseViewSet(viewsets.ModelViewSet):
+    queryset = OperationCaisse.objects.all()
+    serializer_class = OperationCaisseSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['type_operation', 'date_operation']
@@ -62,9 +64,9 @@ class ChargeOperationnelleViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
 
-class PersonnelViewSet(viewsets.ModelViewSet):
-    queryset = Personnel.objects.all()
-    serializer_class = PersonnelSerializer
+class MembrePersonnelViewSet(viewsets.ModelViewSet):
+    queryset = MembrePersonnel.objects.all()
+    serializer_class = MembrePersonnelSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['fonction', 'est_actif']

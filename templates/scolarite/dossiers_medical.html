@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block title %}Dossiers médicaux - SyGeS-AM{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Accueil</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'scolarite:eleve_list' %}">Élèves</a></li>
+                <li class="breadcrumb-item active">Dossiers médicaux</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-heart-pulse"></i> Dossiers médicaux</h1>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-6">
+                <input type="text" name="search" class="form-control" placeholder="Rechercher un élève..." value="{{ search }}">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-outline-primary w-100">
+                    <i class="bi bi-search"></i> Rechercher
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card border-success">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="bi bi-check-circle"></i> Dossiers existants ({{ eleves_avec_dossier.count }})</h5>
+            </div>
+            <div class="card-body">
+                {% if eleves_avec_dossier %}
+                <div class="list-group">
+                    {% for eleve in eleves_avec_dossier %}
+                    <a href="{% url 'scolarite:dossier_medical_edit' eleve.pk %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <span>
+                            <i class="bi bi-person"></i> {{ eleve.nom_complet }}
+                            {% if eleve.dossier_medical.groupe_sanguin %}
+                            <span class="badge bg-danger ms-2">{{ eleve.dossier_medical.groupe_sanguin }}</span>
+                            {% endif %}
+                        </span>
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted text-center mb-0">Aucun dossier</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card border-warning">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Dossiers à créer ({{ eleves_sans_dossier.count }})</h5>
+            </div>
+            <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                {% if eleves_sans_dossier %}
+                <div class="list-group">
+                    {% for eleve in eleves_sans_dossier %}
+                    <a href="{% url 'scolarite:dossier_medical_edit' eleve.pk %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-person"></i> {{ eleve.nom_complet }}</span>
+                        <span class="badge bg-warning text-dark">Créer</span>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted text-center mb-0">Tous les élèves ont un dossier</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -7,7 +7,7 @@ from django.contrib.auth import get_user_model
 import getpass
 import os
 
-User = get_user_model()
+Utilisateur = get_user_model()
 
 
 class Command(BaseCommand):
@@ -32,7 +32,7 @@ class Command(BaseCommand):
     
     def handle(self, *args, **options):
         # Vérifier si un super admin existe déjà
-        if User.objects.filter(role='superadmin').exists():
+        if Utilisateur.objects.filter(role='superadmin').exists():
             raise CommandError(
                 "❌ Un super administrateur existe déjà dans le système!\n"
                 "Pour des raisons de sécurité, la création de super admins "
@@ -63,15 +63,15 @@ class Command(BaseCommand):
                 raise CommandError("❌ Le mot de passe doit contenir au moins 8 caractères")
         
         # Vérifier que le username n'existe pas
-        if User.objects.filter(username=username).exists():
+        if Utilisateur.objects.filter(username=username).exists():
             raise CommandError(f"❌ Le nom d'utilisateur '{username}' existe déjà")
         
         # Créer le super admin
-        user = User.objects.create_superuser(
+        Utilisateur = Utilisateur.objects.create_superuser(
             username=username,
             email=email,
             password=password,
-            role=User.Role.SUPERADMIN
+            role=Utilisateur.Role.SUPERADMIN
         )
         
         self.stdout.write(self.style.SUCCESS("\n" + "=" * 50))

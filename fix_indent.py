@@ -1,6 +1,6 @@
 import re
 
-with open('academics/views.py', 'r', encoding='utf-8') as f:
+with open('enseignement/views.py', 'r', encoding='utf-8') as f:
     content = f.read()
 
 # Fix all patterns where a line with 4 spaces should be inside an if statement
@@ -44,7 +44,7 @@ content = re.sub(
     content
 )
 
-with open('academics/views.py', 'w', encoding='utf-8') as f:
+with open('enseignement/views.py', 'w', encoding='utf-8') as f:
     f.write(content)
 
 print("Fixed patterns")

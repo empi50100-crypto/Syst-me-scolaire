@@ -1,6 +1,6 @@
 import re
 
-with open('eleves/views.py', 'r', encoding='utf-8') as f:
+with open('scolarite/views.py', 'r', encoding='utf-8') as f:
     lines = f.readlines()
 
 # Find all problematic patterns

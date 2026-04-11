@@ -34,13 +34,13 @@ def rebuild_file(filepath):
     
     print(f"  Phase 1 terminée: {len(new_lines)} lignes")
 
-# Traiter le fichier accounts/views.py en premier
-rebuild_file('accounts/views.py')
+# Traiter le fichier authentification/views.py en premier
+rebuild_file('authentification/views.py')
 
 # Vérifier la syntaxe
 import subprocess
 result = subprocess.run(
-    ['python', '-c', 'import ast; ast.parse(open("accounts/views.py").read())'],
+    ['python', '-c', 'import ast; ast.parse(open("authentification/views.py").read())'],
     capture_output=True, text=True, cwd='.'
 )
 print(f"\nVérification syntaxe: {result.returncode == 0}")

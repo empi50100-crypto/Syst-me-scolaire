@@ -1,12 +1,12 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from datetime import datetime
-from eleves.models import Eleve
+from scolarite.models import Eleve
 
 
-def log_audit(user, action, model, obj=None, details='', request=None):
+def log_audit(utilisateur, action, model, obj=None, details='', request=None):
     """Helper function to create audit log entries"""
-    from accounts.models import AuditLog
+    from authentification.models import JournalAudit
     
     object_repr = str(obj) if obj else ''
     object_id = obj.pk if obj and hasattr(obj, 'pk') else None
@@ -23,8 +23,8 @@ def log_audit(user, action, model, obj=None, details='', request=None):
     if hasattr(request, 'annee_active') and request.annee_active:
         annee_scolaire = request.annee_active.libelle
     
-    return AuditLog.objects.create(
-        user=user,
+    return JournalAudit.objects.create(
+        utilisateur=utilisateur,
         action=action,
         model=model,
         object_id=object_id,
@@ -35,7 +35,7 @@ def log_audit(user, action, model, obj=None, details='', request=None):
     )
 
 
-class AuditLog(models.Model):
+class JournalAudit(models.Model):
     class Action(models.TextChoices):
         CREATE = 'create', 'Création'
         UPDATE = 'update', 'Modification'
@@ -44,7 +44,7 @@ class AuditLog(models.Model):
         LOGIN = 'login', 'Connexion'
         LOGOUT = 'logout', 'Déconnexion'
     
-    user = models.ForeignKey('User', on_delete=models.SET_NULL, null=True, related_name='audit_logs')
+    utilisateur = models.ForeignKey('Utilisateur', on_delete=models.SET_NULL, null=True, related_name='audit_logs')
     action = models.CharField(max_length=20, choices=Action.choices)
     model = models.CharField(max_length=50, verbose_name="Modèle")
     object_id = models.PositiveIntegerField(null=True, blank=True)
@@ -60,7 +60,7 @@ class AuditLog(models.Model):
         ordering = ['-created_at']
     
     def __str__(self):
-        return f"{self.user} - {self.get_action_display()} {self.model} - {self.created_at}"
+        return f"{self.utilisateur} - {self.get_action_display()} {self.model} - {self.created_at}"
 
 
 class Service(models.Model):
@@ -137,13 +137,13 @@ class Permission(models.Model):
     def __str__(self):
         return f"{self.module.nom} - {self.role}: {', '.join(self.actions)}"
     
-    def can_be_modified_by(self, user):
+    def can_be_modified_by(self, Utilisateur):
         """Vérifie si l'utilisateur peut modifier cette permission"""
-        if user.is_superadmin():
+        if Utilisateur.est_superadmin():
             return True
-        if user.is_direction() and not self.require_approval:
+        if Utilisateur.est_direction() and not self.require_approval:
             return True
-        if self.require_approval and user.role in self.approbateurs:
+        if self.require_approval and Utilisateur.role in self.approbateurs:
             return True
         return False
 
@@ -169,8 +169,8 @@ class PermissionModification(models.Model):
     niveau_apres = models.CharField(max_length=20, blank=True, verbose_name="Niveau après")
     type_modification = models.CharField(max_length=20, choices=TypeModification.choices, verbose_name="Type de modification")
     motif = models.TextField(verbose_name="Motif de la modification")
-    demandeur = models.ForeignKey('User', on_delete=models.CASCADE, related_name='permission_demandes', verbose_name="Demandeur")
-    approbateur = models.ForeignKey('User', on_delete=models.SET_NULL, null=True, blank=True, related_name='permission_approuvees', verbose_name="Approuvé par")
+    demandeur = models.ForeignKey('Utilisateur', on_delete=models.CASCADE, related_name='permission_demandes', verbose_name="Demandeur")
+    approbateur = models.ForeignKey('Utilisateur', on_delete=models.SET_NULL, null=True, blank=True, related_name='permission_approuvees', verbose_name="Approuvé par")
     statut = models.CharField(max_length=20, choices=Statut.choices, default=Statut.EN_ATTENTE, verbose_name="Statut")
     date_decision = models.DateTimeField(null=True, blank=True, verbose_name="Date de décision")
     commentaire = models.TextField(blank=True, verbose_name="Commentaire de l'approbateur")
@@ -217,7 +217,7 @@ class PermissionModification(models.Model):
             )
 
 
-class PermissionUtilisateur(models.Model):
+class PermissionPersonnalisee(models.Model):
     """Permissions personnalisées par utilisateur"""
     class NiveauPermission(models.TextChoices):
         AUCUN = 'aucun', 'Aucun accès'
@@ -225,7 +225,7 @@ class PermissionUtilisateur(models.Model):
         ECRITURE = 'write', 'Écriture'
         COMPLET = 'complet', 'Complet'
     
-    utilisateur = models.ForeignKey('User', on_delete=models.CASCADE, related_name='permissions_modules', verbose_name="Utilisateur")
+    utilisateur = models.ForeignKey('Utilisateur', on_delete=models.CASCADE, related_name='permissions_modules', verbose_name="Utilisateur")
     module = models.ForeignKey(Module, on_delete=models.CASCADE, verbose_name="Module")
     actions = models.JSONField(default=list, verbose_name="Actions autorisées")
     niveau = models.CharField(max_length=20, choices=NiveauPermission.choices, default=NiveauPermission.LECTURE, verbose_name="Niveau")
@@ -233,12 +233,12 @@ class PermissionUtilisateur(models.Model):
     date_fin = models.DateField(null=True, blank=True, verbose_name="Date de fin")
     est_temporaire = models.BooleanField(default=False, verbose_name="Permission temporaire")
     est_actif = models.BooleanField(default=True, verbose_name="Actif")
-    created_by = models.ForeignKey('User', on_delete=models.SET_NULL, null=True, blank=True, related_name='permissions_crees', verbose_name="Créé par")
+    created_by = models.ForeignKey('Utilisateur', on_delete=models.SET_NULL, null=True, blank=True, related_name='permissions_crees', verbose_name="Créé par")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
     
     class Meta:
-        verbose_name = 'Permission utilisateur'
-        verbose_name_plural = 'Permissions utilisateurs'
+        verbose_name = 'Permission personnalisée'
+        verbose_name_plural = 'Permissions personnalisées'
         unique_together = ['utilisateur', 'module']
     
     def __str__(self):
@@ -257,8 +257,8 @@ class PermissionUtilisateur(models.Model):
         return True
 
 
-class ModulePermission(models.Model):
-    """Permissions personnalisées par utilisateur"""
+class ProfilPermission(models.Model):
+    """Profils de permissions réutilisables"""
     nom = models.CharField(max_length=100, verbose_name="Nom du profil de permissions")
     description = models.TextField(blank=True, verbose_name="Description")
     modules = models.ManyToManyField(Module, related_name='profils', verbose_name="Modules autorisés")
@@ -291,7 +291,7 @@ class Groupe(models.Model):
         return self.get_nom_display()
 
 
-class User(AbstractUser):
+class Utilisateur(AbstractUser):
     class Role(models.TextChoices):
         SUPERADMIN = 'superadmin', 'Super Administrateur'
         DIRECTION = 'direction', 'Direction générale'
@@ -306,11 +306,7 @@ class User(AbstractUser):
     role = models.CharField(max_length=25, choices=Role.choices)
     telephone = models.CharField(max_length=20, blank=True)
     adresse = models.TextField(blank=True, verbose_name="Adresse")
-    eleve = models.OneToOneField(Eleve, on_delete=models.SET_NULL, null=True, blank=True, related_name='compte_parent')
-    is_approved = models.BooleanField(default=False, verbose_name="Compte approuvé")
-    salaire_base = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name="Salaire de base (FCFA)")
-    date_embauche = models.DateField(null=True, blank=True, verbose_name="Date d'embauche")
-    matiere = models.ForeignKey('academics.Matiere', on_delete=models.SET_NULL, null=True, blank=True, related_name='professeurs', verbose_name="Matière (pour enseignements)")
+    est_approuve = models.BooleanField(default=False, verbose_name="Compte approuvé")
     
     totp_secret = models.CharField(max_length=32, blank=True, verbose_name="Secret TOTP")
     is_2fa_enabled = models.BooleanField(default=False, verbose_name="Authentification 2FA activée")
@@ -318,7 +314,7 @@ class User(AbstractUser):
     
     backup_codes = models.JSONField(default=list, blank=True, verbose_name="Codes de secours")
     
-    modules_permissions = models.ManyToManyField('ModulePermission', blank=True, related_name='utilisateurs', verbose_name="Permissions modules")
+    profils_permissions = models.ManyToManyField('ProfilPermission', blank=True, related_name='utilisateurs', verbose_name="Profils de permissions")
     
     class Meta:
         verbose_name = 'Utilisateur'
@@ -327,31 +323,31 @@ class User(AbstractUser):
     def __str__(self):
         return self.get_full_name() if self.get_full_name() else self.username
     
-    def is_superadmin(self):
+    def est_superadmin(self):
         return self.role == self.Role.SUPERADMIN or self.is_superuser
     
-    def is_direction(self):
+    def est_direction(self):
         return self.role == self.Role.DIRECTION
     
-    def is_secretaire(self):
+    def est_secretaire(self):
         return self.role == self.Role.SECRETARIAT
     
-    def is_comptable(self):
+    def est_comptable(self):
         return self.role == self.Role.COMPTABILITE
     
-    def is_professeur(self):
+    def est_professeur(self):
         return self.role == self.Role.PROFESSEUR
     
-    def is_surveillance(self):
+    def est_surveillance(self):
         return self.role == self.Role.SURVEILLANCE
     
     def has_module_permission(self, module_code, action='read'):
         """Vérifie si l'utilisateur a la permission pour un module"""
-        from accounts.models import Module, Permission, PermissionUtilisateur
+        from authentification.models import Module, Permission, PermissionPersonnalisee
         
         # Superadmin et direction ont tous les droits par défaut
-        if self.is_superadmin() or self.is_direction():
-            perm_disabled = PermissionUtilisateur.objects.filter(
+        if self.est_superadmin() or self.est_direction():
+            perm_disabled = PermissionPersonnalisee.objects.filter(
                 utilisateur=self,
                 module__code=module_code,
                 est_actif=False
@@ -361,7 +357,7 @@ class User(AbstractUser):
             return True
         
         # Vérifier les permissions personnalisées par utilisateur (actives)
-        perm_user = PermissionUtilisateur.objects.filter(
+        perm_user = PermissionPersonnalisee.objects.filter(
             utilisateur=self,
             module__code=module_code,
             est_actif=True
@@ -373,8 +369,8 @@ class User(AbstractUser):
             else:
                 return False
         
-        # Vérifier si explicitement désactivé (PermissionUtilisateur avec est_actif=False)
-        perm_disabled = PermissionUtilisateur.objects.filter(
+        # Vérifier si explicitement désactivé (PermissionPersonnalisee avec est_actif=False)
+        perm_disabled = PermissionPersonnalisee.objects.filter(
             utilisateur=self,
             module__code=module_code,
             est_actif=False
@@ -388,8 +384,8 @@ class User(AbstractUser):
             return True
         
         # Vérifier permissions via profils
-        if self.modules_permissions.exists():
-            for profil in self.modules_permissions.all():
+        if self.profils_permissions.exists():
+            for profil in self.profils_permissions.all():
                 if profil.modules.filter(code=module_code).exists():
                     return True
         
@@ -487,8 +483,8 @@ class Notification(models.Model):
         SECURITE = 'securite', 'Alerte sécurité'
         AUTRE = 'autre', 'Autre'
     
-    destinataire = models.ForeignKey('User', on_delete=models.CASCADE, related_name='notifications')
-    expediteur = models.ForeignKey('User', on_delete=models.SET_NULL, null=True, blank=True, related_name='notifications_envoyees')
+    destinataire = models.ForeignKey('Utilisateur', on_delete=models.CASCADE, related_name='notifications')
+    expediteur = models.ForeignKey('Utilisateur', on_delete=models.SET_NULL, null=True, blank=True, related_name='notifications_envoyees')
     type_notification = models.CharField(max_length=30, choices=TypeNotification.choices)
     titre = models.CharField(max_length=200)
     message = models.TextField()
@@ -522,8 +518,8 @@ class Message(models.Model):
         GROUPE = 'groupe', 'Message de groupe'
         SERVICE = 'service', 'Message au service'
     
-    auteur = models.ForeignKey('User', on_delete=models.CASCADE, related_name='messages_envoyes')
-    destinataire = models.ForeignKey('User', on_delete=models.CASCADE, related_name='messages_recus', null=True, blank=True)
+    auteur = models.ForeignKey('Utilisateur', on_delete=models.CASCADE, related_name='messages_envoyes')
+    destinataire = models.ForeignKey('Utilisateur', on_delete=models.CASCADE, related_name='messages_recus', null=True, blank=True)
     type_message = models.CharField(max_length=20, choices=TypeMessage.choices, default=TypeMessage.INDIVIDUEL)
     service = models.CharField(max_length=20, blank=True, choices=[
         ('direction', 'Direction générale'),
@@ -547,10 +543,10 @@ class Message(models.Model):
         return f"{self.sujet} - {self.auteur} -> {self.destinataire}"
     
     @classmethod
-    def get_conversations_list(cls, user):
+    def get_conversations_list(cls, Utilisateur):
         from django.db.models import Max
-        sent = cls.objects.filter(auteur=user).values('destinataire').annotate(last_msg=Max('date_envoi'))
-        received = cls.objects.filter(destinataire=user).values('auteur').annotate(last_msg=Max('date_envoi'))
+        sent = cls.objects.filter(auteur=Utilisateur).values('destinataire').annotate(last_msg=Max('date_envoi'))
+        received = cls.objects.filter(destinataire=Utilisateur).values('auteur').annotate(last_msg=Max('date_envoi'))
         user_ids = set()
         for item in list(sent) + list(received):
             if 'destinataire' in item:
@@ -558,7 +554,7 @@ class Message(models.Model):
             if 'auteur' in item:
                 user_ids.add(item['auteur'])
         user_ids.discard(None)
-        return User.objects.filter(pk__in=user_ids).order_by('first_name', 'username')
+        return Utilisateur.objects.filter(pk__in=user_ids).order_by('first_name', 'username')
     
     @classmethod
     def get_conversation(cls, user1, user2):
@@ -578,7 +574,7 @@ class RoleQuota(models.Model):
         verbose_name_plural = "Quotas par rôle"
 
     def __str__(self):
-        role_display = dict(User.Role.choices).get(self.role, self.role)
+        role_display = dict(Utilisateur.Role.choices).get(self.role, self.role)
         return f"{role_display}: {self.max_users}"
 
     @classmethod
@@ -588,7 +584,7 @@ class RoleQuota(models.Model):
 
     @classmethod
     def get_current_count(cls, role):
-        return User.objects.filter(role=role, is_active=True).count()
+        return Utilisateur.objects.filter(role=role, is_active=True).count()
 
     @classmethod
     def can_create_user(cls, role):
@@ -598,156 +594,50 @@ class RoleQuota(models.Model):
         return cls.get_current_count(role) < limit
 
 
-class LoginAttempt(models.Model):
-    username = models.CharField(max_length=150, verbose_name="Nom d'utilisateur")
-    ip_address = models.GenericIPAddressField(null=True, verbose_name="Adresse IP")
-    user_agent = models.TextField(blank=True, verbose_name="Navigateur")
-    attempts = models.PositiveIntegerField(default=1, verbose_name="Tentatives du cycle")
-    lock_count = models.PositiveIntegerField(default=0, verbose_name="Nombre de blocages")
-    locked_until = models.DateTimeField(null=True, blank=True, verbose_name="Bloqué jusqu'à")
-    last_attempt = models.DateTimeField(auto_now=True, verbose_name="Dernière tentative")
+class TentativeConnexion(models.Model):
+    username = models.CharField(max_length=255)
+    ip_address = models.GenericIPAddressField()
+    attempts = models.PositiveIntegerField(default=0)
+    lock_count = models.PositiveIntegerField(default=0)
+    locked_until = models.DateTimeField(null=True, blank=True)
     
     class Meta:
-        verbose_name = "Tentative de connexion"
-        verbose_name_plural = "Tentatives de connexion"
-    
-    def __str__(self):
-        return f"{self.username} - {self.attempts} tentatives"
-    
+        verbose_name = 'Tentative de connexion'
+        verbose_name_plural = 'Tentatives de connexion'
+        unique_together = ['username', 'ip_address']
+
     @classmethod
-    def get_lockout_duration(cls, lock_count):
-        durations = {1: 5, 2: 10, 3: 20, 4: 30}
-        return durations.get(lock_count, 60)
-    
-    @classmethod
-    def record_failure(cls, username, ip_address=None, user_agent=None):
+    def record_failure(cls, username, ip_address):
         from django.utils import timezone
-        from accounts.models import User, Notification
         
-        attempt = cls.objects.filter(username=username).first()
+        obj, created = cls.objects.get_or_create(
+            username=username,
+            ip_address=ip_address
+        )
+        obj.attempts += 1
         
-        if attempt and attempt.locked_until and attempt.locked_until > timezone.now():
-            return attempt
+        if obj.attempts >= 5:
+            obj.lock_count += 1
+            obj.locked_until = timezone.now() + timezone.timedelta(minutes=15 * obj.lock_count)
+            obj.attempts = 0
         
-        if attempt:
-            if attempt.locked_until and attempt.locked_until <= timezone.now():
-                attempt.locked_until = None
-                attempt.attempts = 0
-            attempt.attempts += 1
-        else:
-            attempt = cls(username=username, attempts=1, lock_count=0, ip_address=ip_address, user_agent=user_agent)
-        
-        attempt.ip_address = ip_address
-        attempt.user_agent = user_agent
-        
-        if attempt.attempts >= 5:
-            attempt.lock_count += 1
-            duration = cls.get_lockout_duration(attempt.lock_count)
-            attempt.locked_until = timezone.now() + timezone.timedelta(minutes=duration)
-            
-            user = User.objects.filter(username=username).first()
-            if user:
-                admins = User.objects.filter(
-                    role__in=[User.Role.DIRECTION, User.Role.SUPERADMIN],
-                    is_active=True
-                )
-                for admin in admins:
-                    Notification.creer_notification(
-                        destinataire=admin,
-                        type_notification=Notification.TypeNotification.SECURITE,
-                        titre="Compte temporairement bloqué",
-                        message=f"L'utilisateur '{username}' a été bloqué (blocage n°{attempt.lock_count}) après {attempt.attempts} tentatives échouées. Durée: {duration} minutes.",
-                        lien='/accounts/users/'
-                    )
-        
-        attempt.save()
-        return attempt
-    
+        obj.save()
+        return obj
+
     @classmethod
     def reset_attempts(cls, username):
         cls.objects.filter(username=username).delete()
-    
-    @classmethod
-    def unlock(cls, username):
-        cls.objects.filter(username=username).update(locked_until=None, attempts=0, lock_count=0)
-    
-    @classmethod
-    def is_locked(cls, username):
-        from django.utils import timezone
-        attempt = cls.objects.filter(username=username).first()
-        if not attempt:
-            return False
-        if attempt.locked_until and attempt.locked_until > timezone.now():
-            return True
-        return False
-    
-    @classmethod
-    def get_remaining_time(cls, username):
-        from django.utils import timezone
-        attempt = cls.objects.filter(username=username).first()
-        if attempt and attempt.locked_until:
-            remaining = attempt.locked_until - timezone.now()
-            if remaining.total_seconds() > 0:
-                return int(remaining.total_seconds() / 60)
-        return 0
 
 
-class PasswordResetCode(models.Model):
-    user = models.ForeignKey('User', on_delete=models.CASCADE, related_name='reset_codes')
-    code = models.CharField(max_length=8, unique=True, verbose_name="Code")
-    expires_at = models.DateTimeField(verbose_name="Expire le")
-    used = models.BooleanField(default=False, verbose_name="Utilisé")
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Créé le")
+class CodeReinitialisation(models.Model):
+    utilisateur = models.ForeignKey(Utilisateur, on_delete=models.CASCADE)
+    code = models.CharField(max_length=6)
+    expires_at = models.DateTimeField()
+    used = models.BooleanField(default=False)
     
     class Meta:
-        verbose_name = "Code de réinitialisation"
-        verbose_name_plural = "Codes de réinitialisation"
-    
-    def __str__(self):
-        return f"Code pour {self.user.username}"
-    
-    @classmethod
-    def generate_code(cls):
-        import random
-        return ''.join([str(random.randint(0, 9)) for _ in range(8)])
-    
-    @classmethod
-    def create_reset(cls, user):
-        from django.utils import timezone
-        from django.core.mail import send_mail
-        from django.conf import settings
-        
-        cls.objects.filter(user=user, used=False).delete()
-        
-        code = cls.generate_code()
-        reset = cls.objects.create(
-            user=user,
-            code=code,
-            expires_at=timezone.now() + timezone.timedelta(minutes=30)
-        )
-        
-        try:
-            send_mail(
-                subject='Code de réinitialisation - Système Scolaire',
-                message=f'Bonjour {user.get_full_name() or user.username},\n\nVotre code de réinitialisation est: {code}\n\nCe code expire dans 30 minutes.\n\nSystème de Gestion Scolaire',
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[user.email],
-                fail_silently=False,
-            )
-        except Exception as e:
-            print(f"ERREUR EMAIL: {e}")
-        
-        return reset
-    
-    @classmethod
-    def verify_code(cls, user, code):
-        from django.utils import timezone
-        reset = cls.objects.filter(user=user, code=code, used=False).first()
-        if not reset:
-            return False, "Code invalide"
-        if reset.expires_at < timezone.now():
-            return False, "Code expiré"
-        return True, ""
+        verbose_name = 'Code de réinitialisation'
+        verbose_name_plural = 'Codes de réinitialisation'
 
 
 class DemandeApprobation(models.Model):
@@ -779,8 +669,8 @@ class DemandeApprobation(models.Model):
         APPROUVE = 'approuve', 'Approuvé'
         REJETE = 'rejete', 'Rejeté'
     
-    demandeur = models.ForeignKey('User', on_delete=models.CASCADE, related_name='demandes_soumises')
-    approbateur = models.ForeignKey('User', on_delete=models.SET_NULL, null=True, blank=True, related_name='demandes_approuvees')
+    demandeur = models.ForeignKey('Utilisateur', on_delete=models.CASCADE, related_name='demandes_soumises')
+    approbateur = models.ForeignKey('Utilisateur', on_delete=models.SET_NULL, null=True, blank=True, related_name='demandes_approuvees')
     type_action = models.CharField(max_length=20, choices=TypeAction.choices)
     type_objet = models.CharField(max_length=20, choices=TypeObjet.choices)
     objet_id = models.PositiveIntegerField(null=True, blank=True)
@@ -805,7 +695,7 @@ class DemandeApprobation(models.Model):
 
 def creer_demande_approbation(demandeur, type_action, type_objet, objet_repr, details, objet_id=None, details_avant='', details_apos='', motif=''):
     """Helper function to create an approval request and notify approvers"""
-    from accounts.models import Notification, User
+    from authentification.models import Notification, Utilisateur
     
     demande = DemandeApprobation.objects.create(
         demandeur=demandeur,
@@ -819,7 +709,7 @@ def creer_demande_approbation(demandeur, type_action, type_objet, objet_repr, de
         motif=motif
     )
     
-    approbateurs = User.objects.filter(role__in=[User.Role.SUPERADMIN, User.Role.DIRECTION], is_active=True)
+    approbateurs = Utilisateur.objects.filter(role__in=[Utilisateur.Role.SUPERADMIN, Utilisateur.Role.DIRECTION], is_active=True)
     
     for approbateur in approbateurs:
         Notification.creer_notification(
@@ -828,7 +718,7 @@ def creer_demande_approbation(demandeur, type_action, type_objet, objet_repr, de
             titre=f"Demande d'approbation - {type_objet}",
             message=f"Nouvelle demande de {type_action} {type_objet} de la part de {demandeur.get_full_name() or demandeur.username}.\n\n{details}",
             expediteur=demandeur,
-            lien=f'/accounts/demandes/'
+            lien=f'/authentification/demandes/'
         )
     
     return demande

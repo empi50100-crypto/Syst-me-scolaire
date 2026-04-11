@@ -51,7 +51,7 @@ class SessionTimeoutMiddleware:
                     from django.contrib.auth import logout
                     from django.shortcuts import redirect
                     logout(request)
-                    return redirect('accounts:login')
+                    return redirect('authentification:login')
             
             request.session['last_activity'] = now.isoformat()
             request.session.modified = True

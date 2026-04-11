@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from authentification.models import User, Notification, Message, Service, Module, Permission
+from authentification.models import Utilisateur, Notification, Message, Service, Module, Permission
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -7,7 +7,7 @@ class UserSerializer(serializers.ModelSerializer):
     nom_complet = serializers.SerializerMethodField()
     
     class Meta:
-        model = User
+        model = Utilisateur
         fields = ['id', 'username', 'email', 'first_name', 'last_name', 'role', 'role_display', 
                   'nom_complet', 'telephone', 'is_active', 'is_2fa_enabled', 'date_joined']
     

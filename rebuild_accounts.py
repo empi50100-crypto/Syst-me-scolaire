@@ -1,7 +1,7 @@
-"""Script pour reconstruire les fonctions manquantes dans accounts/views.py"""
+"""Script pour reconstruire les fonctions manquantes dans authentification/views.py"""
 import re
 
-with open('accounts/views.py', 'r', encoding='utf-8') as f:
+with open('authentification/views.py', 'r', encoding='utf-8') as f:
     content = f.read()
 
 lines = content.split('\n')
@@ -26,9 +26,9 @@ while i < len(lines):
     # Si on a des décorateurs en attente et la ligne suivante est du code
     if pending_decorators and stripped:
         # Chercher le type de code pour deviner le nom de la fonction
-        if stripped.startswith('return render(request, \'accounts/'):
+        if stripped.startswith('return render(request, \'authentification/'):
             # Extraire le nom du template
-            match = re.search(r'\'accounts/(\w+)\.html\'', stripped)
+            match = re.search(r'\'authentification/(\w+)\.html\'', stripped)
             if match:
                 func_name = match.group(1)
                 if func_name in ['profile']:
@@ -43,8 +43,8 @@ while i < len(lines):
                     pending_func_name = func_name
             else:
                 pending_func_name = 'view_func'
-        elif stripped.startswith('return redirect(\'accounts:'):
-            match = re.search(r'\'accounts:(\w+)\'', stripped)
+        elif stripped.startswith('return redirect(\'authentification:'):
+            match = re.search(r'\'authentification:(\w+)\'', stripped)
             if match:
                 pending_func_name = match.group(1)
             else:
@@ -91,7 +91,7 @@ while i < len(lines):
 
 content_fixed = '\n'.join(new_lines)
 
-with open('accounts/views.py', 'w', encoding='utf-8') as f:
+with open('authentification/views.py', 'w', encoding='utf-8') as f:
     f.write(content_fixed)
 
-print("Fichier accounts/views.py reconstruit")
+print("Fichier authentification/views.py reconstruit")

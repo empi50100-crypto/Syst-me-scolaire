@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% block title %}Notifications{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-bell"></i> Notifications</h1>
+    <a href="{% url 'authentification:notification_mark_all_read' %}" class="btn btn-outline-primary">
+        <i class="bi bi-check-all"></i> Tout marquer comme lu
+    </a>
+</div>
+
+<div class="mb-3">
+    <div class="btn-group" role="group">
+        <a href="?filter=all" class="btn btn-sm btn-{% if filter_type == 'all' or not filter_type %}primary{% else %}outline-primary{% endif %}">
+            Toutes
+        </a>
+        <a href="?filter=unread" class="btn btn-sm btn-{% if filter_type == 'unread' %}primary{% else %}outline-primary{% endif %}">
+            Non lues
+        </a>
+        <a href="?filter=read" class="btn btn-sm btn-{% if filter_type == 'read' %}primary{% else %}outline-primary{% endif %}">
+            Lues
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="list-group">
+            {% for notif in notifications %}
+            <a href="{% url 'authentification:notification_detail' notif.pk %}" class="list-group-item list-group-item-action {% if not notif.est_lu %}unread-notif{% endif %}">
+                <div class="d-flex w-100 justify-content-between align-items-start">
+                    <div class="mb-1">
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            {% if not notif.est_lu %}
+                            <span class="badge bg-primary rounded-pill">Nouveau</span>
+                            {% endif %}
+                            <small class="text-muted">{{ notif.date_creation|date:"d/m/Y H:i" }}</small>
+                        </div>
+                        <h6 class="mb-1">{{ notif.titre }}</h5>
+                        <p class="mb-1 text-muted" style="font-size: 0.9rem;">{{ notif.message|truncatechars:100 }}</p>
+                        {% if notif.expediteur %}
+                        <small class="text-muted">De: {{ notif.expediteur.get_full_name }}</small>
+                        {% endif %}
+                    </div>
+                    <i class="bi bi-{% if notif.est_lu %}check-circle{% else %}circle{% endif %} text-{% if notif.est_lu %}muted{% else %}primary{% endif %}"></i>
+                </div>
+            </a>
+            {% empty %}
+            <div class="text-center text-muted py-4">
+                <i class="bi bi-bell-slash display-4"></i>
+                <p class="mt-2">Aucune notification</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.unread-notif {
+    border-left: 3px solid #6366f1 !important;
+}
+</style>
+{% endblock %}

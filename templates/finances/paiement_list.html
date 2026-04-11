@@ -88,7 +88,7 @@
                     <tr>
                         <td>{{ p.date_paiement|date:"d/m/Y" }}</td>
                         <td>
-                            <a href="{% url 'eleves:eleve_detail' p.eleve.pk %}">
+                            <a href="{% url 'scolarite:eleve_detail' p.eleve.pk %}">
                                 {{ p.eleve.nom_complet }}
                             </a>
                         </td>
@@ -105,7 +105,7 @@
                             <a href="{% url 'finances:recu_paiement' p.pk %}" class="btn btn-sm btn-primary" title="Imprimer reçu" target="_blank">
                                 <i class="bi bi-printer"></i>
                             </a>
-                            <a href="{% url 'eleves:eleve_detail' p.eleve.pk %}" class="btn btn-sm btn-outline-primary" title="Voir profil">
+                            <a href="{% url 'scolarite:eleve_detail' p.eleve.pk %}" class="btn btn-sm btn-outline-primary" title="Voir profil">
                                 <i class="bi bi-person"></i>
                             </a>
                             <a href="{% url 'finances:etat_compte_eleve' p.eleve.pk %}" class="btn btn-sm btn-outline-success" title="État de compte">

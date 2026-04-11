@@ -3,7 +3,7 @@ from django.dispatch import receiver
 
 
 # List of models to exclude from audit
-EXCLUDED_MODELS = ['logentry', 'session', 'migrations', 'auditlog', 'user']
+EXCLUDED_MODELS = ['logentry', 'session', 'migrations', 'JournalAudit', 'Utilisateur']
 
 
 @receiver(post_save)
@@ -21,7 +21,7 @@ def audit_save(sender, instance, created, **kwargs):
     instance._audit_in_progress = True
     
     try:
-        from accounts.models import AuditLog
+        from authentification.models import JournalAudit
         from finances.models import AnneeScolaire
         
         # Get annee_scolaire
@@ -32,8 +32,8 @@ def audit_save(sender, instance, created, **kwargs):
         except:
             pass
         
-        AuditLog.objects.create(
-            user=None,  # Will be None for admin actions
+        JournalAudit.objects.create(
+            Utilisateur=None,  # Will be None for admin actions
             action='create' if created else 'update',
             model=f"{sender._meta.app_label}.{sender._meta.model_name}",
             object_repr=str(instance)[:255],
@@ -61,7 +61,7 @@ def audit_delete(sender, instance, **kwargs):
     instance._audit_in_progress = True
     
     try:
-        from accounts.models import AuditLog
+        from authentification.models import JournalAudit
         from finances.models import AnneeScolaire
         
         # Get annee_scolaire
@@ -72,8 +72,8 @@ def audit_delete(sender, instance, **kwargs):
         except:
             pass
         
-        AuditLog.objects.create(
-            user=None,
+        JournalAudit.objects.create(
+            Utilisateur=None,
             action='delete',
             model=f"{sender._meta.app_label}.{sender._meta.model_name}",
             object_repr=str(instance)[:255],

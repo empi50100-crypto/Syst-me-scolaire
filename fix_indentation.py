@@ -1,8 +1,8 @@
-"""Corriger les erreurs d'indentation dans accounts/views.py"""
+"""Corriger les erreurs d'indentation dans authentification/views.py"""
 import re
 
 # Lire le fichier
-with open('accounts/views.py', 'r', encoding='utf-8') as f:
+with open('authentification/views.py', 'r', encoding='utf-8') as f:
     content = f.read()
 
 # Pattern pour trouver et corriger:
@@ -66,7 +66,7 @@ while i < len(lines):
 
 content_new = '\n'.join(new_lines)
 
-with open('accounts/views.py', 'w', encoding='utf-8') as f:
+with open('authentification/views.py', 'w', encoding='utf-8') as f:
     f.write(content_new)
 
-print("Fichier accounts/views.py corrigé")
+print("Fichier authentification/views.py corrigé")

@@ -1,0 +1,246 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block title %}Gestion de l'Emploi du Temps{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="bi bi-calendar-week"></i> Gestion de l'Emploi du Temps</h1>
+    {% if annee %}
+    <p class="text-muted">Année scolaire: {{ annee }}</p>
+    {% endif %}
+    {% if user.is_direction or user.is_superadmin %}
+    <a href="{% url 'enseignement:reinitialiser_emploi_temps' %}" class="btn btn-warning" onclick="return confirm('Êtes-vous sûr de vouloir réinitialiser l\'emploi du temps? Tous les horaires seront effacés.');">
+        <i class="bi bi-arrow-counterclockwise"></i> Réinitialiser l'emploi du temps
+    </a>
+    {% endif %}
+</div>
+
+{% if messages %}
+<div class="messages">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-plus-circle"></i> Ajouter un horaire</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="ajouter">
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Professeur</label>
+                        <select name="professeur" class="form-select" required>
+                            <option value="">-- Sélectionner --</option>
+                            {% for prof in professeurs %}
+                            <option value="{{ prof.pk }}">{{ prof.nom }} {{ prof.prenom }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Classe</label>
+                        <select name="classe" id="id_classe" class="form-select" required onchange="filterMatieres()">
+                            <option value="">-- Sélectionner --</option>
+                            {% for c in classes %}
+                            <option value="{{ c.pk }}">{{ c.nom }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Matière</label>
+                        <select name="matiere" id="id_matiere" class="form-select" required>
+                            <option value="">-- Choisir une classe d'abord --</option>
+                            {% for c in classes %}
+                                {% for m in c.matieres.all %}
+                                <option value="{{ m.pk }}" data-classe="{{ c.pk }}" class="matiere-option" style="display:none;">{{ m.nom }} ({{ c.nom }})</option>
+                                {% endfor %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Jour</label>
+                        <select name="jour" class="form-select" required>
+                            <option value="">-- Sélectionner --</option>
+                            {% for j in jours %}
+                            <option value="{{ j }}">{{ j|capfirst }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <label class="form-label">Heure début</label>
+                            <input type="time" name="heure_debut" class="form-control" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Heure fin</label>
+                            <input type="time" name="heure_fin" class="form-control" required>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-check-circle"></i> Ajouter
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0"><i class="bi bi-table"></i> Grille Horaire</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm timetable-grid">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="text-center" style="min-width: 80px;">Horaire</th>
+                                {% for jour in jours %}
+                                <th class="text-center" style="min-width: 120px;">{{ jour|capfirst }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if time_slots %}
+                                {% for hour in time_slots %}
+                                <tr>
+                                    <td class="fw-bold text-center align-middle bg-light" style="min-width: 80px;">{{ hour }}</td>
+                                    {% for jour in jours %}
+                                    <td class="text-center align-middle" style="min-height: 80px;">
+                                        {% with slot=schedule_grid|get_item:jour %}
+                                        {% with slot_data=slot|get_item:hour %}
+                                        {% if slot_data %}
+                                            {% for item in slot_data %}
+                                            <div class="timetable-cell mb-1 p-2 rounded" 
+                                                 style="background-color: #e3f2fd; font-size: 0.75rem;">
+                                                <strong>{{ item.ens.classe.nom }}</strong><br>
+                                                <span class="text-muted">{{ item.ens.matiere.nom }}</span><br>
+                                                <span class="text-primary">{{ item.heure_debut }}-{{ item.heure_fin }}</span><br>
+                                                <span class="small">{{ item.ens.professeur.prenom|slice:":1" }}. {{ item.ens.professeur.nom }}</span>
+                                                <form method="post" class="d-inline">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="action" value="supprimer">
+                                                    <input type="hidden" name="ens_id" value="{{ item.ens.pk }}">
+                                                    <input type="hidden" name="jour" value="{{ item.jour }}">
+                                                    <input type="hidden" name="heure_debut" value="{{ item.heure_debut }}">
+                                                    <input type="hidden" name="heure_fin" value="{{ item.heure_fin }}">
+                                                    <button type="submit" class="btn btn-sm btn-danger py-0 px-1" 
+                                                            onclick="return confirm('Supprimer cet horaire?')">
+                                                        <i class="bi bi-x"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                            {% endfor %}
+                                        {% endif %}
+                                        {% endwith %}
+                                        {% endwith %}
+                                    </td>
+                                    {% endfor %}
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted p-4">
+                                        Aucun horaire enregistré. Utilisez le formulaire ci-dessus pour ajouter des horaires.
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-info text-white">
+        <h5 class="mb-0"><i class="bi bi-people"></i> Emploi du temps par enseignant</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            {% for prof, ens_list in schedule_by_prof.items %}
+            <div class="col-md-4 mb-3">
+                <div class="card h-100">
+                    <div class="card-header py-2 bg-light">
+                        <strong>{{ prof.prenom }} {{ prof.nom }}</strong>
+                    </div>
+                    <div class="card-body py-2">
+                        {% for item in ens_list %}
+                        <div class="d-flex justify-content-between align-items-center border-bottom py-1">
+                            <div>
+                                <small class="text-muted">{{ item.jour|capfirst }} {{ item.heure_debut }}-{{ item.heure_fin }}</small><br>
+                                <strong>{{ item.classe.nom }}</strong> - {{ item.matiere.nom }}
+                            </div>
+                            <form method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="supprimer">
+                                <input type="hidden" name="ens_id" value="{{ item.pk }}">
+                                <input type="hidden" name="jour" value="{{ item.jour }}">
+                                <input type="hidden" name="heure_debut" value="{{ item.heure_debut }}">
+                                <input type="hidden" name="heure_fin" value="{{ item.heure_fin }}">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" 
+                                        onclick="return confirm('Supprimer?')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<style>
+.timetable-grid th, .timetable-grid td {
+    vertical-align: top;
+    background-color: #fff;
+}
+.timetable-cell {
+    position: relative;
+}
+.timetable-cell .btn {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+}
+</style>
+
+<script>
+function filterMatieres() {
+    var classeId = document.getElementById('id_classe').value;
+    var matiereSelect = document.getElementById('id_matiere');
+    var options = matiereSelect.querySelectorAll('.matiere-option');
+    
+    matiereSelect.value = '';
+    
+    options.forEach(function(option) {
+        if (option.dataset.classe === classeId || classeId === '') {
+            option.style.display = '';
+        } else {
+            option.style.display = 'none';
+        }
+    });
+    
+    matiereSelect.options[0].text = classeId ? '-- Sélectionner --' : '-- Choisir une classe d\'abord --';
+}
+</script>
+{% endblock %}

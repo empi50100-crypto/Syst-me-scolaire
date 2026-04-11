@@ -1,0 +1,305 @@
+{% extends 'base.html' %}
+{% block title %}Bulletin de Notes - {{ eleve.nom }} {{ eleve.prenom }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1><i class="bi bi-file-earmark-bargraph"></i> Bulletin de Notes</h1>
+        <p class="text-muted mb-0">
+            <strong>{{ eleve.nom }} {{ eleve.prenom }}</strong> | 
+            {{ eleve.matricule }} | 
+            <span class="badge bg-primary">{{ classe }}</span> | 
+            Année: {{ annee.libelle }}
+        </p>
+    </div>
+    <div>
+        <button onclick="window.print()" class="btn btn-primary">
+            <i class="bi bi-printer"></i> Imprimer
+        </button>
+        <a href="{% url 'enseignement:fiche_notes_list' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Retour
+        </a>
+    </div>
+</div>
+
+{% if moyenne_generale %}
+<div class="row mb-4 g-3">
+    <div class="col-md-3">
+        <div class="card border-start border-success border-4 h-100" style="min-height: 120px;">
+            <div class="card-body text-center py-3 d-flex flex-column justify-content-center">
+                <h6 class="text-muted mb-1">MOYENNE GÉNÉRALE ANNUELLE</h6>
+                <h2 class="mb-0 {% if moyenne_generale >= 10 %}text-success{% elif moyenne_generale >= 5 %}text-warning{% else %}text-danger{% endif %}">
+                    {{ moyenne_generale|floatformat:2 }}/20
+                </h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-start border-primary border-4 h-100" style="min-height: 120px;">
+            <div class="card-body text-center py-3 d-flex flex-column justify-content-center">
+                <h6 class="text-muted mb-1">TOTAL COEFF.</h6>
+                <h2 class="mb-0 text-primary">{{ grand_total_coef }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-start border-warning border-4 h-100" style="min-height: 120px;">
+            <div class="card-body text-center py-3 d-flex flex-column justify-content-center">
+                <h6 class="text-muted mb-1">TOTAL PTS × COEF</h6>
+                <h2 class="mb-0 text-warning">{{ grand_total_moy_coef|floatformat:2 }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-start border-info border-4 h-100" style="min-height: 120px;">
+            <div class="card-body text-center py-3 d-flex flex-column justify-content-center">
+                <h6 class="text-muted mb-1">MENTION</h6>
+                <h2 class="mb-0 
+                    {% if moyenne_generale >= 16 %}text-success
+                    {% elif moyenne_generale >= 14 %}text-success
+                    {% elif moyenne_generale >= 12 %}text-primary
+                    {% elif moyenne_generale >= 10 %}text-warning
+                    {% else %}text-danger{% endif %}">
+                    {% if moyenne_generale >= 16 %}EXCELLENT
+                    {% elif moyenne_generale >= 14 %}TRÈS BIEN
+                    {% elif moyenne_generale >= 12 %}BIEN
+                    {% elif moyenne_generale >= 10 %}PASSABLE
+                    {% else %}INSUFFISANT{% endif %}
+                </h2>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if recap_data %}
+<div class="card mb-4">
+    <div class="card-header bg-dark text-white">
+        <h5 class="mb-0"><i class="bi bi-table"></i> Récapitulatif Annuel par Matière</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-bordered table-sm align-middle mb-0">
+                <thead class="table-secondary">
+                    <tr>
+                        <th class="text-center" style="width:5%">#</th>
+                        <th style="width:30%">Matières</th>
+                        <th class="text-center" style="width:8%">Coef.</th>
+                        <th class="text-center" style="width:12%">Moy. /20</th>
+                        <th class="text-center" style="width:15%">Moy. × Coef</th>
+                        <th class="text-center" style="width:10%">Rang</th>
+                        <th class="text-center" style="width:5%">Détail</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% regroup recap_data by matiere as matiere_list %}
+                    {% for matiere in matiere_list %}
+                    <tr>
+                        <td class="text-center">{{ forloop.counter }}</td>
+                        <td><strong>{{ matiere.grouper.nom }}</strong></td>
+                        <td class="text-center">
+                            <span class="badge bg-dark">{{ matiere.grouper.coefficient }}</span>
+                        </td>
+                        {% with matiere.list|length as nb_cycles %}
+                        {% with matiere.list as items %}
+                        {% with items.0 as first %}
+                        <td class="text-center">
+                            {% if first.moyenne_sur_20 %}
+                                <span class="badge {% if first.moyenne_sur_20 >= 10 %}bg-success{% elif first.moyenne_sur_20 >= 5 %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+                                    {{ first.moyenne_sur_20|floatformat:2 }}
+                                </span>
+                                {% if nb_cycles > 1 %}
+                                <br><small class="text-muted">({{ nb_cycles }} cycles)</small>
+                                {% endif %}
+                            {% else %}
+                                <span class="badge bg-secondary">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center fw-bold">
+                            {% if first.moyenne_coef %}
+                                {{ first.moyenne_coef|floatformat:2 }}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if first.rang %}
+                                {{ first.rang }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        {% endwith %}
+                        {% endwith %}
+                        {% endwith %}
+                        <td class="text-center">
+                            <a href="{% url 'enseignement:fiche_note_eleve' eleve.pk %}" class="btn btn-sm btn-outline-primary" title="Détail">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% for item in cycles_data %}
+{% if item.matieres_data %}
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+            <i class="bi bi-calendar-event"></i> {{ item.cycle.libelle }}
+            <small>({{ item.cycle.date_debut|date:"d/m/Y" }} - {{ item.cycle.date_fin|date:"d/m/Y" }})</small>
+        </h5>
+        <span class="badge bg-light text-dark fs-6">
+            Moyenne Cycle: 
+            <strong>
+                {% if item.moyenne_cycle %}
+                    {{ item.moyenne_cycle|floatformat:2 }}/20
+                {% else %}
+                    -
+                {% endif %}
+            </strong>
+        </span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-bordered table-sm align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th rowspan="2" class="align-middle">Matières</th>
+                        <th rowspan="2" class="text-center align-middle">Coef.</th>
+                        <th colspan="4" class="text-center">Calcul de la Moyenne</th>
+                        <th rowspan="2" class="text-center align-middle">Moy. /20</th>
+                        <th rowspan="2" class="text-center align-middle">Moy. × Coef</th>
+                        <th rowspan="2" class="text-center align-middle">Rang</th>
+                        <th rowspan="2" class="text-center align-middle">Détail</th>
+                    </tr>
+                    <tr>
+                        <th class="text-center">Interro.</th>
+                        <th class="text-center">Mini Dev.</th>
+                        <th class="text-center">Devoir</th>
+                        <th class="text-center">Examen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for matiere_item in item.matieres_data %}
+                    {% if matiere_item.is_conduite %}
+                    <tr class="table-warning">
+                        <td><strong>🚗 Conduite</strong></td>
+                        <td class="text-center"><span class="badge bg-dark">1</span></td>
+                        <td class="text-center" colspan="4">-</td>
+                        <td class="text-center">
+                            <span class="badge {% if matiere_item.moyenne_sur_20 >= 10 %}bg-success{% elif matiere_item.moyenne_sur_20 >= 5 %}bg-warning text-dark{% else %}bg-danger{% endif %} fs-6">
+                                {{ matiere_item.moyenne_sur_20 }}/20
+                            </span>
+                        </td>
+                        <td class="text-center">{{ matiere_item.moyenne_coef|floatformat:2 }}</td>
+                        <td class="text-center">-</td>
+                        <td class="text-center">-</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td><strong>{{ matiere_item.matiere.nom }}</strong></td>
+                        <td class="text-center">
+                            <span class="badge bg-dark">{{ matiere_item.coefficient }}</span>
+                        </td>
+                        <td class="text-center">
+                            {% if matiere_item.interrogation_avg %}
+                                <span class="badge bg-info">{{ matiere_item.grouped_evals.interrogation|length }} notes</span>
+                                <br><small class="text-muted">Moy: {{ matiere_item.interrogation_avg|floatformat:1 }}</small>
+                            {% else %}<span class="text-muted">-</span>{% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if matiere_item.mini_devoir_avg %}
+                                <span class="badge bg-secondary">{{ matiere_item.grouped_evals.mini_devoir|length }} notes</span>
+                                <br><small class="text-muted">Moy: {{ matiere_item.mini_devoir_avg|floatformat:1 }}</small>
+                            {% else %}<span class="text-muted">-</span>{% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if matiere_item.devoir_avg %}
+                                <span class="badge bg-primary">{{ matiere_item.grouped_evals.devoir|length }} notes</span>
+                                <br><small class="text-muted">Moy: {{ matiere_item.devoir_avg|floatformat:1 }}</small>
+                            {% else %}<span class="text-muted">-</span>{% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if matiere_item.examen_avg %}
+                                <span class="badge bg-info">{{ matiere_item.grouped_evals.examen|length }} notes</span>
+                                <br><small class="text-muted">Moy: {{ matiere_item.examen_avg|floatformat:1 }}</small>
+                            {% else %}<span class="text-muted">-</span>{% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if matiere_item.moyenne_sur_20 %}
+                                <span class="badge {% if matiere_item.moyenne_sur_20 >= 10 %}bg-success{% elif matiere_item.moyenne_sur_20 >= 5 %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+                                    {{ matiere_item.moyenne_sur_20|floatformat:2 }}
+                                </span>
+                            {% else %}
+                                <span class="badge bg-secondary">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center fw-bold">
+                            {% if matiere_item.moyenne_coef %}
+                                {{ matiere_item.moyenne_coef|floatformat:2 }}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if matiere_item.fiche and matiere_item.fiche.rang %}
+                                {{ matiere_item.fiche.rang }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <a href="{% url 'enseignement:fiche_note_detail' eleve.pk item.cycle.pk matiere_item.matiere.pk %}" class="btn btn-sm btn-outline-primary" title="Détail">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endif %}
+                    {% endfor %}
+                </tbody>
+                <tfoot class="table-light">
+                    <tr>
+                        <td class="fw-bold">TOTAUX {{ item.cycle.libelle|upper }}</td>
+                        <td class="text-center fw-bold">{{ item.total_coef }}</td>
+                        <td colspan="4"></td>
+                        <td class="text-center fw-bold">
+                            {% if item.moyenne_cycle %}
+                                {{ item.moyenne_cycle|floatformat:2 }}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center fw-bold">{{ item.total_moy_coef|floatformat:2 }}</td>
+                        <td colspan="2"></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endfor %}
+
+{% if not cycles_data %}
+<div class="alert alert-info text-center">
+    <i class="bi bi-info-circle"></i> Aucun cycle configuré pour cette année scolaire.
+</div>
+{% endif %}
+
+<style>
+@media print {
+    .navbar, .sidebar, .btn { display: none !important; }
+    .main-content { margin: 0 !important; padding: 10px !important; }
+    .card { break-inside: avoid; margin-bottom: 15px !important; box-shadow: none !important; border: 1px solid #ccc !important; }
+    .table { font-size: 10px; }
+    body { font-size: 10px; }
+    h1 { font-size: 14px; }
+}
+</style>
+{% endblock %}

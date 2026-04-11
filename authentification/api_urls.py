@@ -7,7 +7,7 @@ from .api_views import (
 )
 
 router = DefaultRouter()
-router.register(r'users', UserViewSet, basename='user')
+router.register(r'users', UserViewSet, basename='Utilisateur')
 router.register(r'notifications', NotificationViewSet, basename='notification')
 router.register(r'messages', MessageViewSet, basename='message')
 router.register(r'services', ServiceViewSet, basename='service')

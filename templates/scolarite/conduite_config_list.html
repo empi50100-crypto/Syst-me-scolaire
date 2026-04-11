@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% load custom %}
+
+{% block title %}Configuration Conduite - SyGeS-AM{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Accueil</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'scolarite:discipline_list' %}">Discipline</a></li>
+                <li class="breadcrumb-item active">Configuration Conduite</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-gear"></i> Configuration de la Conduite</h1>
+    <span class="badge bg-primary">Année: {{ annee_scolaire.libelle|default:"Non définie" }}</span>
+</div>
+
+<div class="alert alert-info">
+    <i class="bi bi-info-circle"></i> 
+    La note de conduite de base est définie par niveau et reste la même pour toute l'année (tous trimestres/semestres).
+    Cliquez sur un niveau pour modifier sa note.
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Niveau</th>
+                        <th>Note de base</th>
+                        <th>Créé par</th>
+                        <th>Dernière modification</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for niveau_label, niveau_value in niveaux %}
+                    <tr>
+                        <td><strong>{{ niveau_value }}</strong></td>
+                        <td>
+                            {% with configs|filter_niveau:niveau_value as config %}
+                                {% if config %}
+                                    <span class="badge bg-success">{{ config.note_base }}/20</span>
+                                {% else %}
+                                    <span class="text-muted">Non configuré (20/20 par défaut)</span>
+                                {% endif %}
+                            {% endwith %}
+                        </td>
+                        <td>
+                            {% with configs|filter_niveau:niveau_value as config %}
+                                {{ config.cree_par|default:"-" }}
+                            {% endwith %}
+                        </td>
+                        <td>
+                            {% with configs|filter_niveau:niveau_value as config %}
+                                {{ config.date_creation|default:"-" }}
+                            {% endwith %}
+                        </td>
+                        <td>
+                            <a href="{% url 'scolarite:conduite_config_edit' niveau_value %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-pencil"></i> Configurer
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

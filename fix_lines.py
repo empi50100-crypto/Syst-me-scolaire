@@ -1,7 +1,7 @@
-"""Corriger systematiquement academics/views.py"""
+"""Corriger systematiquement enseignement/views.py"""
 import re
 
-with open('academics/views.py', 'r', encoding='utf-8') as f:
+with open('enseignement/views.py', 'r', encoding='utf-8') as f:
     content = f.read()
 
 # Corriger les lignes fusionnees
@@ -13,7 +13,7 @@ content = re.sub(r'^        return redirect\(', '            return redirect(', 
 # Corriger les messages.error mal indentés
 content = re.sub(r'^        messages\.error\(', '            messages.error(', content, flags=re.MULTILINE)
 
-with open('academics/views.py', 'w', encoding='utf-8') as f:
+with open('enseignement/views.py', 'w', encoding='utf-8') as f:
     f.write(content)
 
 print("Corrige")

@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.paginator import Paginator
+from django.db.models import Sum
 from .models import MembrePersonnel, Salaire, FichePoste, ContratEmploye
 from .forms import MembrePersonnelForm, SalaireForm, FichePosteForm, ContratEmployeForm
 
@@ -31,7 +32,8 @@ def liste_personnel(request):
 def creer_personnel(request):
     if request.method == 'POST':
         form = MembrePersonnelForm(request.POST)
-        if form.save():
+        if form.is_valid():
+            form.save()
             messages.success(request, 'Membre du personnel créé avec succès.')
             return redirect('ressources_humaines:liste_personnel')
     else:
@@ -44,7 +46,8 @@ def modifier_personnel(request, pk):
     personnel = get_object_or_404(MembrePersonnel, pk=pk)
     if request.method == 'POST':
         form = MembrePersonnelForm(request.POST, instance=personnel)
-        if form.save():
+        if form.is_valid():
+            form.save()
             messages.success(request, 'Membre du personnel modifié avec succès.')
             return redirect('ressources_humaines:liste_personnel')
     else:
@@ -55,9 +58,11 @@ def modifier_personnel(request, pk):
 @login_required
 def supprimer_personnel(request, pk):
     personnel = get_object_or_404(MembrePersonnel, pk=pk)
-    personnel.delete()
-    messages.success(request, 'Membre du personnel supprimé avec succès.')
-    return redirect('ressources_humaines:liste_personnel')
+    if request.method == 'POST':
+        personnel.delete()
+        messages.success(request, 'Membre du personnel supprimé avec succès.')
+        return redirect('ressources_humaines:liste_personnel')
+    return render(request, 'ressources_humaines/personnel_confirm_delete.html', {'personnel': personnel})
 
 
 @login_required
@@ -72,15 +77,15 @@ def liste_salaires(request):
     if employe_filter:
         salaires_list = salaires_list.filter(employe_id=int(employe_filter))
     
-    total_net = sum(s.salaire_net for s in salaries_list)
-    nb_payes = salaries_list.filter(est_paye=True).count()
+    total_net = salaires_list.aggregate(total=Sum('salaire_net'))['total'] or 0
+    nb_payes = salaires_list.filter(est_paye=True).count()
     
     paginator = Paginator(salaires_list, 20)
     page = request.GET.get('page')
     salaires = paginator.get_page(page)
     
     return render(request, 'ressources_humaines/salaires_list.html', {
-        'salaires': salaries,
+        'salaires': salaires,
         'annee_filter': annee_filter,
         'employe_filter': employe_filter,
         'total_net': total_net,
@@ -92,7 +97,8 @@ def liste_salaires(request):
 def creer_salaire(request):
     if request.method == 'POST':
         form = SalaireForm(request.POST)
-        if form.save():
+        if form.is_valid():
+            form.save()
             messages.success(request, 'Salaire enregistré avec succès.')
             return redirect('ressources_humaines:liste_salaires')
     else:
@@ -119,7 +125,8 @@ def liste_postes(request):
 def creer_poste(request):
     if request.method == 'POST':
         form = FichePosteForm(request.POST)
-        if form.save():
+        if form.is_valid():
+            form.save()
             messages.success(request, 'Poste créé avec succès.')
             return redirect('ressources_humaines:liste_postes')
     else:
@@ -132,7 +139,8 @@ def modifier_poste(request, pk):
     poste = get_object_or_404(FichePoste, pk=pk)
     if request.method == 'POST':
         form = FichePosteForm(request.POST, instance=poste)
-        if form.save():
+        if form.is_valid():
+            form.save()
             messages.success(request, 'Poste modifié avec succès.')
             return redirect('ressources_humaines:liste_postes')
     else:
@@ -155,7 +163,8 @@ def liste_contrats(request):
 def creer_contrat(request):
     if request.method == 'POST':
         form = ContratEmployeForm(request.POST)
-        if form.save():
+        if form.is_valid():
+            form.save()
             messages.success(request, 'Contrat créé avec succès.')
             return redirect('ressources_humaines:liste_contrats')
     else:

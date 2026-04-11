@@ -1,7 +1,7 @@
-"""Corriger systématiquement academics/views.py"""
+"""Corriger systématiquement enseignement/views.py"""
 import re
 
-with open('academics/views.py', 'r', encoding='utf-8') as f:
+with open('enseignement/views.py', 'r', encoding='utf-8') as f:
     lines = f.readlines()
 
 new_lines = []
@@ -26,7 +26,7 @@ while i < len(lines):
     new_lines.append(line)
     i += 1
 
-with open('academics/views.py', 'w', encoding='utf-8') as f:
+with open('enseignement/views.py', 'w', encoding='utf-8') as f:
     f.writelines(new_lines)
 
 print("Corrigé")

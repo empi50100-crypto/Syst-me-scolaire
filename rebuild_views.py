@@ -135,10 +135,10 @@ def rebuild_views_file(filepath):
     print(f"  Fichier reconstruit")
 
 # Reconstruire les fichiers
-rebuild_views_file('accounts/views.py')
+rebuild_views_file('authentification/views.py')
 rebuild_views_file('finances/views.py')
 rebuild_views_file('rapports/views.py')
-rebuild_views_file('eleves/views.py')
-rebuild_views_file('academics/views.py')
+rebuild_views_file('scolarite/views.py')
+rebuild_views_file('enseignement/views.py')
 
 print("\nTerminé!")

@@ -30,8 +30,8 @@ INSTALLED_APPS = [
     'django_filters',
     'corsheaders',
     'authentification',
-    'eleves',
-    'academics',
+    'scolarite',
+    'enseignement',
     'presences',
     'finances',
     'rapports',
@@ -114,11 +114,11 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-LOGIN_URL = 'accounts:login'
+LOGIN_URL = 'authentification:login'
 LOGIN_REDIRECT_URL = 'dashboard'
-LOGOUT_REDIRECT_URL = 'accounts:login'
+LOGOUT_REDIRECT_URL = 'authentification:login'
 
-AUTH_USER_MODEL = 'authentification.User'
+AUTH_USER_MODEL = 'authentification.Utilisateur'
 
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',

@@ -1,6 +1,6 @@
 import re
 
-with open('eleves/views.py', 'r', encoding='utf-8') as f:
+with open('scolarite/views.py', 'r', encoding='utf-8') as f:
     content = f.read()
 
 # Find all lines with only 4 spaces before statements that should have more
@@ -26,7 +26,7 @@ content = re.sub(
     content
 )
 
-with open('eleves/views.py', 'w', encoding='utf-8') as f:
+with open('scolarite/views.py', 'w', encoding='utf-8') as f:
     f.write(content)
 
 print("Fixed")

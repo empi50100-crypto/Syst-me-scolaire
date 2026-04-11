@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% load permissions_tags %}
+
+{% block title %}Parents/Tuteurs{% endblock %}
+
+{% block content %}
+{% can_add request.user 'eleve_list' as can_add_parent %}
+
+<div class="page-header">
+    <h1><i class="bi bi-person-badge"></i> Parents / Tuteurs</h1>
+    {% if can_add_parent %}
+    <a href="{% url 'scolarite:parent_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Nouveau parent/tuteur
+    </a>
+    {% endif %}
+</div>
+
+<div class="content-container">
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-8">
+                    <label class="form-label">Recherche</label>
+                    <input type="text" name="search" class="form-control" placeholder="Nom ou prénom..." value="{{ search }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">&nbsp;</label>
+                    <button type="submit" class="btn btn-primary w-100"><i class="bi bi-search"></i> Rechercher</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% if parents %}
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th><i class="bi bi-person"></i> Nom Prénom</th>
+                    <th><i class="bi bi-people"></i> Élève</th>
+                    <th><i class="bi bi-link"></i> Lien de parenté</th>
+                    <th><i class="bi bi-telephone"></i> Téléphone</th>
+                    <th><i class="bi bi-star"></i> Contact principal</th>
+                    <th><i class="bi bi-gear"></i> Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for parent in parents %}
+                <tr>
+                    <td><strong>{{ parent.nom }}</strong> {{ parent.prenom }}</td>
+                    <td>
+                        {% if parent.eleve %}
+                        <a href="{% url 'scolarite:eleve_detail' parent.eleve.pk %}">
+                            {{ parent.eleve.nom_complet }}
+                        </a>
+                        {% else %}
+                        <span class="text-muted">-</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ parent.get_lien_parente_display|default:parent.lien_parente }}</td>
+                    <td>{{ parent.telephone }}</td>
+                    <td>
+                        {% if parent.est_contact_principal %}
+                        <span class="badge bg-success"><i class="bi bi-check-circle"></i> Oui</span>
+                        {% else %}
+                        <span class="badge bg-secondary">Non</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="btn-group btn-group-sm">
+                            {% if parent.eleve %}
+                            <a href="{% url 'scolarite:eleve_detail' parent.eleve.pk %}" class="btn btn-outline-info" title="Voir l'élève">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        {% if parents.has_other_pages %}
+        <nav aria-label="Page navigation" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if parents.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page={{ parents.previous_page_number }}&search={{ search }}">Précédent</a></li>
+                {% else %}
+                <li class="page-item disabled"><span class="page-link">Précédent</span></li>
+                {% endif %}
+                
+                {% for i in parents.paginator.page_range %}
+                    {% if parents.number == i %}
+                    <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+                    {% else %}
+                    <li class="page-item"><a class="page-link" href="?page={{ i }}&search={{ search }}">{{ i }}</a></li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if parents.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ parents.next_page_number }}&search={{ search }}">Suivant</a></li>
+                {% else %}
+                <li class="page-item disabled"><span class="page-link">Suivant</span></li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="bi bi-person-badge" style="font-size: 4rem; color: var(--gray-300);"></i>
+        <h5 class="text-muted mt-3">Aucun parent/tuteur enregistré</h5>
+        <p class="text-muted">Commencez par ajouter un parent ou tuteur</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

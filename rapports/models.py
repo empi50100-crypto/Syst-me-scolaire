@@ -2,9 +2,9 @@ from django.db import models
 
 
 class Bulletin(models.Model):
-    eleve = models.ForeignKey('eleves.Eleve', on_delete=models.CASCADE, related_name='bulletins')
-    inscription = models.ForeignKey('eleves.Inscription', on_delete=models.CASCADE, related_name='bulletins')
-    cycle = models.ForeignKey('finances.CycleConfig', on_delete=models.SET_NULL, related_name='bulletins', null=True, blank=True)
+    eleve = models.ForeignKey('scolarite.Eleve', on_delete=models.CASCADE, related_name='bulletins')
+    inscription = models.ForeignKey('scolarite.EleveInscription', on_delete=models.CASCADE, related_name='bulletins')
+    cycle = models.ForeignKey('core.Cycle', on_delete=models.SET_NULL, related_name='bulletins', null=True, blank=True)
     periode = models.CharField(max_length=50)
     date_generation = models.DateField(auto_now_add=True)
     moyenne_generale = models.DecimalField(max_digits=5, decimal_places=2)

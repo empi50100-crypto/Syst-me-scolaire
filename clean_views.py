@@ -67,10 +67,10 @@ def clean_view_file(filepath):
     print(f"Fichier {filepath} nettoyé")
 
 # Nettoyer les fichiers
-clean_view_file('accounts/views.py')
+clean_view_file('authentification/views.py')
 clean_view_file('finances/views.py')
 clean_view_file('rapports/views.py')
-clean_view_file('eleves/views.py')
-clean_view_file('academics/views.py')
+clean_view_file('scolarite/views.py')
+clean_view_file('enseignement/views.py')
 
 print("\nTerminé!")

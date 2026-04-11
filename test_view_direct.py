@@ -5,11 +5,11 @@ django.setup()
 
 from accounts.models import User
 from django.test import RequestFactory
-from eleves import views as eleve_views
+from scolarite import views as eleve_views
 
 # Create a test request
 factory = RequestFactory()
-request = factory.get('/eleves/')
+request = factory.get('/scolarite/')
 
 # Add user to request
 sec = User.objects.filter(role='secretaire').first()

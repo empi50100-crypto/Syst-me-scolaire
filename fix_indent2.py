@@ -1,6 +1,6 @@
 import re
 
-with open('academics/views.py', 'r', encoding='utf-8') as f:
+with open('enseignement/views.py', 'r', encoding='utf-8') as f:
     content = f.read()
 
 lines = content.split('\n')
@@ -55,7 +55,7 @@ result = re.sub(
     result
 )
 
-with open('academics/views.py', 'w', encoding='utf-8') as f:
+with open('enseignement/views.py', 'w', encoding='utf-8') as f:
     f.write(result)
 
 print("Applied fixes")

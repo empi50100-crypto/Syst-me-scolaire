@@ -45,7 +45,7 @@ FILES_TO_FIX = {
             'rapport': 'read',
         }
     },
-    'accounts/views.py': {
+    'authentification/views.py': {
         'module': 'user_list',
         'pattern': r'@user_passes_test\(is_direction_or_superadmin\)',
         'action_map': {

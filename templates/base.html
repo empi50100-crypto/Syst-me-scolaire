@@ -329,7 +329,7 @@
 
         <div class="navbar-nav ms-auto d-flex align-items-center gap-2">
             <!-- Notifications -->
-            <a class="nav-icon-btn position-relative" href="{% url 'accounts:notification_list' %}" title="Notifications">
+            <a class="nav-icon-btn position-relative" href="{% url 'authentification:notification_list' %}" title="Notifications">
                 <i class="bi bi-bell"></i>
                 {% if unread_notifications_count %}
                 <span class="nav-badge">{{ unread_notifications_count }}</span>
@@ -337,7 +337,7 @@
             </a>
 
             <!-- Messages -->
-            <a class="nav-icon-btn position-relative" href="{% url 'accounts:chat_inbox' %}" title="Messages">
+            <a class="nav-icon-btn position-relative" href="{% url 'authentification:chat_inbox' %}" title="Messages">
                 <i class="bi bi-chat-dots"></i>
                 {% if unread_messages_count %}
                 <span class="nav-badge" style="background: #10b981;">{{ unread_messages_count }}</span>
@@ -380,9 +380,9 @@
                     <li><span class="dropdown-item-text fw-bold">{{ user.get_full_name|default:user.username }}</span></li>
                     <li><span class="dropdown-item-text text-muted small">{{ user.get_role_display }}</span></li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item" href="{% url 'accounts:profile' %}"><i class="bi bi-person"></i> Mon profil</a></li>
+                    <li><a class="dropdown-item" href="{% url 'authentification:profile' %}"><i class="bi bi-person"></i> Mon profil</a></li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item text-danger" href="{% url 'accounts:logout' %}"><i class="bi bi-box-arrow-right"></i> Déconnexion</a></li>
+                    <li><a class="dropdown-item text-danger" href="{% url 'authentification:logout' %}"><i class="bi bi-box-arrow-right"></i> Déconnexion</a></li>
                 </ul>
             </div>
         </div>

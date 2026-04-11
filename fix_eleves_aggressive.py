@@ -1,6 +1,6 @@
 import re
 
-with open('eleves/views.py', 'r', encoding='utf-8') as f:
+with open('scolarite/views.py', 'r', encoding='utf-8') as f:
     content = f.read()
 
 lines = content.split('\n')
@@ -47,7 +47,7 @@ result = re.sub(r'\n    elif ([^:]+):\n(    [^\s])', r'\n    elif \1:\n        \
 # Fix all instances of "    for" followed by 4-space code
 result = re.sub(r'\n    for ([^:]+):\n(    [^\s])', r'\n    for \1:\n        \2', result)
 
-with open('eleves/views.py', 'w', encoding='utf-8') as f:
+with open('scolarite/views.py', 'w', encoding='utf-8') as f:
     f.write(result)
 
 print("Applied aggressive fixes")

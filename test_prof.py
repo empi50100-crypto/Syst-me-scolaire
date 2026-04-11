@@ -3,7 +3,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
 import django
 django.setup()
 
-import academics.models as models_module
+import enseignement.models as models_module
 Professeur = getattr(models_module, 'Professeur')
 print('Type:', type(Professeur))
 print('Count:',Professeur.objects.count())

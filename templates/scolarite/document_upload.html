@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block title %}Ajouter un document - {{ eleve.nom_complet }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Accueil</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'scolarite:eleve_list' %}">Élèves</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'scolarite:eleve_detail' eleve.pk %}">{{ eleve.nom_complet }}</a></li>
+                <li class="breadcrumb-item active">Ajouter document</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-file-earmark-plus"></i> Ajouter un document</h1>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Document pour {{ eleve.nom_complet }}</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Type de document *</label>
+                        <select name="type_document" class="form-select" required>
+                            <option value="">Sélectionner un type</option>
+                            <option value="acte_naissance">Acte de naissance</option>
+                            <option value="certificat_scolarite">Certificat de scolarité</option>
+                            <option value="certificat_medical">Certificat médical</option>
+                            <option value="photo_identite">Photo d'identité</option>
+                            <option value="bulletin_precedent">Bulletin précédent</option>
+                            <option value="autre">Autre</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Fichier *</label>
+                        <input type="file" name="fichier" class="form-control" required accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+                        <small class="text-muted">Formats acceptés: PDF, JPG, PNG, DOC, DOCX (max 10MB)</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea name="description" class="form-control" rows="3" placeholder="Description du document (optionnel)"></textarea>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-upload"></i> Téléverser
+                        </button>
+                        <a href="{% url 'scolarite:eleve_detail' eleve.pk %}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Annuler
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

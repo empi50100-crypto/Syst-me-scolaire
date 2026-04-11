@@ -89,9 +89,9 @@ def fix_view_file(filepath):
     print(f"  Fichier traité")
 
 # Corriger tous les fichiers
-fix_view_file('eleves/views.py')
+fix_view_file('scolarite/views.py')
 fix_view_file('finances/views.py')
 fix_view_file('rapports/views.py')
-fix_view_file('academics/views.py')
+fix_view_file('enseignement/views.py')
 
 print("\nTerminé!")

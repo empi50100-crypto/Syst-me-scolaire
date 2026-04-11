@@ -1,5 +1,5 @@
 from django.db import models
-from datetime import datetime
+from core.models import AnneeScolaire
 
 
 class Presence(models.Model):
@@ -8,15 +8,15 @@ class Presence(models.Model):
         ABSENT = 'absent', 'Absent'
         RETARD = 'retard', 'Retard'
     
-    eleve = models.ForeignKey('eleves.Eleve', on_delete=models.CASCADE, related_name='presences')
-    classe = models.ForeignKey('academics.Classe', on_delete=models.CASCADE, related_name='presences')
+    eleve = models.ForeignKey('scolarite.Eleve', on_delete=models.CASCADE, related_name='presences')
+    classe = models.ForeignKey('enseignement.Classe', on_delete=models.CASCADE, related_name='presences')
     date = models.DateField()
     heure_appel = models.TimeField(null=True, blank=True)
     statut = models.CharField(max_length=20, choices=Statut.choices)
     motif_absence = models.TextField(blank=True)
     justifie = models.BooleanField(default=False)
-    professeur = models.ForeignKey('academics.Professeur', on_delete=models.SET_NULL, null=True, blank=True)
-    annee_scolaire = models.ForeignKey('finances.AnneeScolaire', on_delete=models.CASCADE, related_name='presences')
+    professeur = models.ForeignKey('enseignement.ProfilProfesseur', on_delete=models.SET_NULL, null=True, blank=True)
+    annee_scolaire = models.ForeignKey(AnneeScolaire, on_delete=models.CASCADE, related_name='presences')
     observations = models.TextField(blank=True)
     
     class Meta:
@@ -30,13 +30,13 @@ class Presence(models.Model):
 
 
 class Appel(models.Model):
-    classe = models.ForeignKey('academics.Classe', on_delete=models.CASCADE, related_name='appels')
+    classe = models.ForeignKey('enseignement.Classe', on_delete=models.CASCADE, related_name='appels')
     date = models.DateField()
     heure_debut = models.TimeField()
     heure_fin = models.TimeField(null=True, blank=True)
-    professeur = models.ForeignKey('academics.Professeur', on_delete=models.SET_NULL, null=True)
-    matiere = models.ForeignKey('academics.Matiere', on_delete=models.SET_NULL, null=True, blank=True)
-    annee_scolaire = models.ForeignKey('finances.AnneeScolaire', on_delete=models.CASCADE, related_name='appels')
+    professeur = models.ForeignKey('enseignement.ProfilProfesseur', on_delete=models.SET_NULL, null=True)
+    matiere = models.ForeignKey('enseignement.Matiere', on_delete=models.SET_NULL, null=True, blank=True)
+    annee_scolaire = models.ForeignKey(AnneeScolaire, on_delete=models.CASCADE, related_name='appels')
     
     class Meta:
         verbose_name = 'Appel'
@@ -53,17 +53,17 @@ class SeanceCours(models.Model):
         TERMINEE = 'terminee', 'Terminée'
         ANNULEE = 'annulee', 'Annulée'
     
-    professeur = models.ForeignKey('academics.Professeur', on_delete=models.CASCADE, related_name='seances')
-    classe = models.ForeignKey('academics.Classe', on_delete=models.CASCADE, related_name='seances')
-    matiere = models.ForeignKey('academics.Matiere', on_delete=models.CASCADE, related_name='seances')
+    professeur = models.ForeignKey('enseignement.ProfilProfesseur', on_delete=models.CASCADE, related_name='seances')
+    classe = models.ForeignKey('enseignement.Classe', on_delete=models.CASCADE, related_name='seances')
+    matiere = models.ForeignKey('enseignement.Matiere', on_delete=models.CASCADE, related_name='seances')
     date = models.DateField()
     heure_debut = models.TimeField(null=True, blank=True)
     heure_fin = models.TimeField(null=True, blank=True)
     duree_minutes = models.IntegerField(null=True, blank=True)
     statut = models.CharField(max_length=20, choices=Statut.choices, default=Statut.EN_COURS)
-    annee_scolaire = models.ForeignKey('finances.AnneeScolaire', on_delete=models.CASCADE, related_name='seances')
+    annee_scolaire = models.ForeignKey(AnneeScolaire, on_delete=models.CASCADE, related_name='seances')
     notes = models.TextField(blank=True)
-    creee_par = models.ForeignKey('authentification.User', on_delete=models.SET_NULL, null=True)
+    creee_par = models.ForeignKey('authentification.Utilisateur', on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -74,12 +74,3 @@ class SeanceCours(models.Model):
     
     def __str__(self):
         return f"{self.classe} - {self.matiere} - {self.date} ({self.get_statut_display()})"
-    
-    def duree_formatee(self):
-        if self.duree_minutes:
-            heures = self.duree_minutes // 60
-            minutes = self.duree_minutes % 60
-            if heures > 0:
-                return f"{heures}h {minutes}min"
-            return f"{minutes}min"
-        return "--"

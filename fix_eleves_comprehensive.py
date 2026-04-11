@@ -1,6 +1,6 @@
 import re
 
-with open('eleves/views.py', 'r', encoding='utf-8') as f:
+with open('scolarite/views.py', 'r', encoding='utf-8') as f:
     lines = f.readlines()
 
 fixed_lines = []
@@ -59,7 +59,7 @@ result = re.sub(r'(\n    elif [^:]+:\n)(    [a-z])', r'\1        \2', result)
 # Pattern: for loop followed by statement with 4 spaces
 result = re.sub(r'(\n    for [^:]+:\n)(    [a-z])', r'\1        \2', result)
 
-with open('eleves/views.py', 'w', encoding='utf-8') as f:
+with open('scolarite/views.py', 'w', encoding='utf-8') as f:
     f.write(result)
 
 print("Applied comprehensive fixes")

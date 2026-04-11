@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% block title %}Comptes Bloqués{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-lock-fill"></i> Comptes Bloqués</h1>
+    <a href="{% url 'authentification:user_list' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Retour
+    </a>
+</div>
+
+{% if locked_accounts %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-exclamation-triangle-fill text-warning"></i> Comptes temporairement bloqués</h5>
+        <span class="badge bg-warning text-dark">{{ locked_accounts.count }} compte(s)</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover table-sm mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th class="text-center" style="width: 50px;">#</th>
+                        <th>Nom d'utilisateur</th>
+                        <th>Tentatives</th>
+                        <th>N° Blocage</th>
+                        <th>Bloqué jusqu'à</th>
+                        <th>Temps restant</th>
+                        <th>Adresse IP</th>
+                        <th>Dernière tentative</th>
+                        <th style="width: 120px;" class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for attempt in locked_accounts %}
+                    <tr>
+                        <td class="text-center">{{ forloop.counter }}</td>
+                        <td>
+                            <strong>{{ attempt.username }}</strong>
+                        </td>
+                        <td>
+                            <span class="badge bg-danger">{{ attempt.attempts }}</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-warning text-dark">{{ attempt.lock_count }}</span>
+                        </td>
+                        <td>
+                            <span class="text-danger">
+                                <i class="bi bi-clock"></i>
+                                {{ attempt.locked_until|date:"d/m/Y H:i" }}
+                            </span>
+                        </td>
+                        <td>
+                            {% with remaining=attempt.locked_until|timeuntil %}
+                            <span class="badge bg-warning text-dark">{{ remaining }}</span>
+                            {% endwith %}
+                        </td>
+                        <td>
+                            <code class="px-2 py-1 rounded bg-light text-dark">{{ attempt.ip_address|default:"-" }}</code>
+                        </td>
+                        <td>{{ attempt.last_attempt|date:"d/m/Y H:i" }}</td>
+                        <td class="text-center">
+                            <a href="{% url 'unlock_account' attempt.username %}" 
+                               class="btn btn-sm btn-success"
+                               onclick="return confirm('Voulez-vous vraiment déverrouiller ce compte ?');">
+                                <i class="bi bi-unlock"></i> Déverrouiller
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="alert alert-info">
+    <i class="bi bi-info-circle"></i> Aucun compte bloqué actuellement.
+</div>
+{% endif %}
+{% endblock %}

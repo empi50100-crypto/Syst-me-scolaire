@@ -86,7 +86,7 @@
                             {% for eb in eleves_bourses %}
                             <tr>
                                 <td>
-                                    <a href="{% url 'eleves:eleve_detail' eb.eleve.pk %}">
+                                    <a href="{% url 'scolarite:eleve_detail' eb.eleve.pk %}">
                                         {{ eb.eleve.nom_complet }}
                                     </a>
                                 </td>

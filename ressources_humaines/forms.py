@@ -1,7 +1,6 @@
 from django import forms
 from .models import FichePoste, MembrePersonnel, Salaire, ContratEmploye
-from authentification.models import User
-
+from authentification.models import Utilisateur
 
 class FichePosteForm(forms.ModelForm):
     class Meta:
@@ -24,7 +23,7 @@ class MembrePersonnelForm(forms.ModelForm):
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['utilisateur'].queryset = User.objects.filter(is_active=True)
+        self.fields['utilisateur'].queryset = Utilisateur.objects.filter(is_active=True)
 
 
 class SalaireForm(forms.ModelForm):

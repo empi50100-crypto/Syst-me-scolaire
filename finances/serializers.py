@@ -1,20 +1,22 @@
 from rest_framework import serializers
 from finances.models import (
-    AnneeScolaire, FraisScolaire, Paiement, EcoleCompte, Salaire,
-    ChargeFixe, ChargeOperationnelle, Personnel, Facture, BourseRemise
+    FraisScolaire, Paiement, OperationCaisse,
+    ChargeFixe, ChargeOperationnelle, Facture, BourseRemise
 )
+from core.models import AnneeScolaire
+from ressources_humaines.models import MembrePersonnel, Salaire
 
 
 class AnneeScolaireSerializer(serializers.ModelSerializer):
     class Meta:
         model = AnneeScolaire
-        fields = ['id', 'libelle', 'date_debut', 'date_fin', 'est_active', 'type_cycle_actif']
+        fields = ['id', 'libelle', 'date_debut', 'date_fin', 'est_active']
 
 
 class FraisScolaireSerializer(serializers.ModelSerializer):
     class Meta:
         model = FraisScolaire
-        fields = ['id', 'type_frais', 'montant', 'annee_scolaire', 'classe', 'tranche', 'description']
+        fields = ['id', 'type_frais', 'montant', 'annee_scolaire', 'classe', 'description']
 
 
 class PaiementSerializer(serializers.ModelSerializer):
@@ -25,10 +27,10 @@ class PaiementSerializer(serializers.ModelSerializer):
         fields = ['id', 'eleve', 'eleve_nom', 'frais', 'montant', 'date_paiement', 'mode_paiement', 'reference']
 
 
-class EcoleCompteSerializer(serializers.ModelSerializer):
+class OperationCaisseSerializer(serializers.ModelSerializer):
     class Meta:
-        model = EcoleCompte
-        fields = ['id', 'type_operation', 'montant', 'description', 'date_operation', 'personnel']
+        model = OperationCaisse
+        fields = ['id', 'type_operation', 'montant', 'categorie', 'date_operation', 'personnel']
 
 
 class SalaireSerializer(serializers.ModelSerializer):
@@ -42,21 +44,21 @@ class SalaireSerializer(serializers.ModelSerializer):
 class ChargeFixeSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChargeFixe
-        fields = ['id', 'type_charge', 'description', 'montant', 'periode', 'date_debut', 'est_active']
+        fields = ['id', 'type_charge', 'nom', 'montant', 'periodicite', 'est_active']
 
 
 class ChargeOperationnelleSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChargeOperationnelle
-        fields = ['id', 'type_charge', 'description', 'montant', 'date_depense', 'categorie']
+        fields = ['id', 'type_charge', 'description', 'montant', 'date_charge', 'est_payee']
 
 
-class PersonnelSerializer(serializers.ModelSerializer):
+class MembrePersonnelSerializer(serializers.ModelSerializer):
     utilisateur_nom = serializers.CharField(source='utilisateur.get_full_name', read_only=True)
     
     class Meta:
-        model = Personnel
-        fields = ['id', 'nom', 'prenom', 'utilisateur_nom', 'fonction', 'telephone', 'salaire_mensuel', 'est_actif']
+        model = MembrePersonnel
+        fields = ['id', 'utilisateur', 'utilisateur_nom', 'fonction', 'poste', 'telephone', 'date_embauche', 'est_actif']
 
 
 class FactureSerializer(serializers.ModelSerializer):
@@ -64,12 +66,10 @@ class FactureSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Facture
-        fields = ['id', 'eleve', 'eleve_nom', 'numero_facture', 'montant_total', 'montant_paye', 'statut', 'date_echeance']
+        fields = ['id', 'eleve', 'eleve_nom', 'numero_facture', 'montant_total', 'statut']
 
 
 class BourseRemiseSerializer(serializers.ModelSerializer):
-    eleve_nom = serializers.CharField(source='eleve.nom_complet', read_only=True)
-    
     class Meta:
         model = BourseRemise
-        fields = ['id', 'eleve', 'eleve_nom', 'type', 'montant', 'annee_scolaire', 'motif', 'est_appliquee']
+        fields = ['id', 'nom', 'pourcentage', 'est_active']

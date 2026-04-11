@@ -1,0 +1,474 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+{% block title %}Saisie des Notes{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-pencil-square"></i> Saisie des Notes</h1>
+    {% if selected_classe %}
+    <div>
+        <a href="{% url 'enseignement:statistiques_classe' selected_classe.pk %}" class="btn btn-outline-info">
+            <i class="bi bi-bar-chart"></i> Statistiques
+        </a>
+        <a href="{% url 'rapports:bulletins_par_classe' selected_classe.pk %}" class="btn btn-outline-success">
+            <i class="bi bi-file-earmark-bar-graph"></i> Bulletins
+        </a>
+        <a href="{% url 'enseignement:feuille_notes' selected_classe.pk %}" class="btn btn-outline-primary">
+            <i class="bi bi-grid-3x3"></i> Feuille de Notes
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" id="filterForm" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label fw-bold">Classe</label>
+                <select name="classe" id="classeSelect" class="form-select" onchange="onClasseChange()">
+                    <option value="">-- Toutes les classes --</option>
+                    {% for classe in classes %}
+                    <option value="{{ classe.pk }}" {% if selected_classe and selected_classe.pk == classe.pk %}selected{% endif %}>
+                        {{ classe.nom }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% if selected_classe %}
+            <div class="col-md-3">
+                <label class="form-label fw-bold">Matière</label>
+                <select name="matiere" id="matiereSelect" class="form-select" onchange="onMatiereChange()">
+                    <option value="">-- Choisir une matière --</option>
+                    {% for matiere in matieres %}
+                    <option value="{{ matiere.pk }}" {% if selected_matiere and selected_matiere.pk == matiere.pk %}selected{% endif %}>
+                        {{ matiere.nom }} (Coef. {{ matiere.coefficient }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% if selected_matiere %}
+            <div class="col-md-2">
+                <label class="form-label fw-bold">Type</label>
+                <select name="type_eval" class="form-select" onchange="document.getElementById('filterForm').submit()">
+                    <option value="">Tous</option>
+                    <option value="interrogation" {% if type_filter == 'interrogation' %}selected{% endif %}>Interrogation</option>
+                    <option value="mini_devoir" {% if type_filter == 'mini_devoir' %}selected{% endif %}>Mini Devoir</option>
+                    <option value="devoir" {% if type_filter == 'devoir' %}selected{% endif %}>Devoir</option>
+                    <option value="examen" {% if type_filter == 'examen' %}selected{% endif %}>Examen</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label fw-bold">Cycle</label>
+                <select name="cycle" class="form-select" onchange="document.getElementById('filterForm').submit()">
+                    <option value="">Tous</option>
+                    {% for cycle in cycles %}
+                    <option value="{{ cycle.pk }}" {% if cycle_filter == cycle.pk|stringformat:"s" %}selected{% endif %}>
+                        {{ cycle.libelle }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label fw-bold">Date</label>
+                <input type="date" name="date" class="form-control" value="{{ date_filter }}" onchange="document.getElementById('filterForm').submit()">
+            </div>
+            {% endif %}
+            {% endif %}
+        </form>
+    </div>
+</div>
+
+{% url 'enseignement:saisie_notes_classe' 0 as url_classe %}
+{% url 'enseignement:saisie_notes_detail' 0 0 as url_matiere %}
+{% url 'enseignement:statistiques_classe' 0 as url_stats %}
+{% url 'rapports:bulletins_par_classe' 0 as url_bulletin %}
+{% url 'enseignement:feuille_notes' 0 as url_feuille %}
+{% url 'enseignement:classe_fiche_notes' 0 as url_fiche %}
+<script>
+var baseUrl = '/enseignement/saisie-notes/';
+function onClasseChange() {
+    var classePk = document.getElementById('classeSelect').value;
+    if (classePk) {
+        window.location.href = baseUrl + classePk + '/';
+    } else {
+        window.location.href = '/enseignement/saisie-notes/';
+    }
+}
+
+function onMatiereChange() {
+    var classePk = document.getElementById('classeSelect').value;
+    var matierePk = document.getElementById('matiereSelect').value;
+    if (classePk && matierePk) {
+        window.location.href = baseUrl + classePk + '/' + matierePk + '/';
+    } else if (classePk) {
+        window.location.href = baseUrl + classePk + '/';
+    }
+}
+</script>
+
+{% if selected_classe and selected_matiere %}
+
+{% if stats.global.count > 0 %}
+<div class="row mb-4 g-3">
+    <div class="col-md-2">
+        <div class="card border-start border-primary border-4">
+            <div class="card-body text-center py-2">
+                <h6 class="text-muted mb-1">TOTAL NOTES</h6>
+                <h4 class="mb-0 text-primary">{{ stats.global.count }}</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card border-start border-success border-4">
+            <div class="card-body text-center py-2">
+                <h6 class="text-muted mb-1">MOYENNE CLASSE</h6>
+                <h4 class="mb-0 {% if stats.global.avg >= 10 %}text-success{% elif stats.global.avg >= 5 %}text-warning{% else %}text-danger{% endif %}">
+                    {{ stats.global.avg|floatformat:2 }}/20
+                </h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card border-start border-info border-4">
+            <div class="card-body text-center py-2">
+                <h6 class="text-muted mb-1">PLUS HAUTE</h6>
+                <h4 class="mb-0 text-info">{{ stats.global.max|floatformat:1 }}/20</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card border-start border-danger border-4">
+            <div class="card-body text-center py-2">
+                <h6 class="text-muted mb-1">PLUS BASSE</h6>
+                <h4 class="mb-0 text-danger">{{ stats.global.min|floatformat:1 }}/20</h4>
+            </div>
+        </div>
+    </div>
+    {% if stats.interrogation %}
+    <div class="col-md-2">
+        <div class="card border-start border-secondary border-4">
+            <div class="card-body text-center py-2">
+                <h6 class="text-muted mb-1">MOY. INTERRO</h6>
+                <h4 class="mb-0 text-secondary">{{ stats.interrogation.avg|floatformat:2 }}/20</h4>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    {% if stats.devoir %}
+    <div class="col-md-2">
+        <div class="card border-start border-warning border-4">
+            <div class="card-body text-center py-2">
+                <h6 class="text-muted mb-1">MOY. DEVOIR</h6>
+                <h4 class="mb-0 text-warning">{{ stats.devoir.avg|floatformat:2 }}/20</h4>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+<div class="card mb-3">
+    <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+            <i class="bi bi-list-check"></i> Évaluations existantes
+            <span class="badge bg-light text-dark ms-2">{{ evaluations_by_date|length }}</span>
+        </h5>
+    </div>
+    <div class="card-body p-0">
+        {% if evaluations %}
+        <div class="table-responsive">
+            <table class="table table-sm table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="text-center">Type</th>
+                        <th>Titre</th>
+                        <th class="text-center">Date</th>
+                        <th class="text-center">Nb Notes</th>
+                        <th class="text-center">Min</th>
+                        <th class="text-center">Max</th>
+                        <th class="text-center">Moyenne</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for date_group in evaluations_by_date %}
+                    {% with date_group.evals as evals %}
+                    {% with date_group.count as c %}
+                    <tr>
+                        <td class="text-center">
+                            {% with evals.0.type_eval as type_val %}
+                            {% if type_val == 'interrogation' %}<span class="badge bg-info">Interrogation</span>
+                            {% elif type_val == 'mini_devoir' %}<span class="badge bg-secondary">Mini Devoir</span>
+                            {% elif type_val == 'devoir' %}<span class="badge bg-primary">Devoir</span>
+                            {% elif type_val == 'examen' %}<span class="badge bg-success">Examen</span>
+                            {% else %}<span class="badge bg-dark">{{ type_val }}</span>
+                            {% endif %}
+                            {% endwith %}
+                        </td>
+                        <td>{{ evals.0.titre|default:"-" }}</td>
+                        <td class="text-center">{{ date_group.date|date:"d/m/Y" }}</td>
+                        <td class="text-center">{{ c }}</td>
+                        <td class="text-center">{{ evals|min_note|floatformat:1 }}</td>
+                        <td class="text-center">{{ evals|max_note|floatformat:1 }}</td>
+                        <td class="text-center fw-bold">{{ evals|avg_note|floatformat:2 }}</td>
+                        <td class="text-center">
+                            <a href="{% url 'enseignement:evaluation_edit' date_group.eval_id %}" class="btn btn-sm btn-outline-primary" title="Modifier">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <a href="{% url 'enseignement:evaluation_delete' date_group.eval_id %}" class="btn btn-sm btn-outline-danger" title="Supprimer" onclick="return confirm('Êtes-vous sûr de vouloir supprimer toutes les notes de cette évaluation ?');">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endwith %}
+                    {% endwith %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center text-muted py-4">
+            <i class="bi bi-clipboard-x" style="font-size: 2rem;"></i>
+            <p class="mt-2 mb-0">Aucune évaluation trouvée pour cette matière.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">
+            <i class="bi bi-pencil"></i> Nouvelle Saisie de Notes
+        </h5>
+    </div>
+    <div class="card-body">
+        <form method="post" id="saisieForm">
+            {% csrf_token %}
+            <input type="hidden" name="classe" value="{{ selected_classe.pk }}">
+            <input type="hidden" name="matiere" value="{{ selected_matiere.pk }}">
+            
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Type d'évaluation <span class="text-danger">*</span></label>
+                    <select name="type_eval" class="form-select" required>
+                        <option value="interrogation">Interrogation</option>
+                        <option value="mini_devoir">Mini Devoir</option>
+                        <option value="devoir">Devoir</option>
+                        <option value="examen">Examen</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Titre / Description</label>
+                    <input type="text" name="titre" class="form-control" placeholder="Ex: Interrogation n°1, Devoir Surveillé...">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Date <span class="text-danger">*</span></label>
+                    <input type="date" name="date_eval" class="form-control" value="{{ today|date:'Y-m-d' }}" required>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="button" class="btn btn-info w-100" onclick="autoFillLastNotes()">
+                        <i class="bi bi-magic"></i> Dernières notes
+                    </button>
+                </div>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-bordered table-sm align-middle mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th class="text-center" style="width:5%">#</th>
+                            <th style="width:12%">Matricule</th>
+                            <th style="width:25%">Élève</th>
+                            <th class="text-center" style="width:10%">Moyenne</th>
+                            <th class="text-center" style="width:15%">Note /20 <span class="text-danger">*</span></th>
+                            <th class="text-center" style="width:10%">Statut</th>
+                            <th style="width:23%">Observation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in eleves_data %}
+                        <tr>
+                            <td class="text-center">{{ forloop.counter }}</td>
+                            <td><strong>{{ item.eleve.matricule }}</strong></td>
+                            <td>
+                                <strong>{{ item.eleve.nom }}</strong> {{ item.eleve.prenom }}
+                                <br><small class="text-muted">{{ item.count }} note(s) existantes</small>
+                            </td>
+                            <td class="text-center">
+                                {% if item.student_avg %}
+                                <span class="badge bg-primary">{{ item.student_avg|floatformat:1 }}</span>
+                                <br><small class="text-muted">({{ item.count }} notes)</small>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                <br><small class="text-muted">(0 notes)</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <input type="number" 
+                                       name="note_eleve_{{ item.eleve.pk }}" 
+                                       min="0" max="20" step="0.25" 
+                                       class="form-control form-control-sm text-center note-input" 
+                                       placeholder="--"
+                                       data-eleve="{{ item.eleve.pk }}"
+                                       data-student-avg="{{ item.student_avg|floatformat:2 }}"
+                                       oninput="validateNote(this)">
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-secondary note-status" id="status-{{ item.eleve.pk }}">
+                                    {% if item.student_avg %}
+                                    Moy: {{ item.student_avg|floatformat:1 }}
+                                    {% else %}
+                                    Non noté
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                <input type="text" name="observation_eleve_{{ item.eleve.pk }}" class="form-control form-control-sm" placeholder="Observation...">
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">Aucun élève inscrit dans cette classe.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="table-light">
+                        <tr>
+                            <td colspan="4" class="text-end fw-bold">STATISTIQUES:</td>
+                            <td class="text-center">
+                                <span id="countNoted">0</span>/{{ eleves_data|length }} noté(s)
+                            </td>
+                            <td colspan="2">
+                                <span class="text-muted">Moyenne: </span>
+                                <strong id="avgNoted">-</strong>
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            
+            <div class="mt-3 d-flex justify-content-between">
+                <div>
+                    <button type="button" class="btn btn-outline-secondary" onclick="selectAllNotes()">
+                        <i class="bi bi-check-all"></i> Tout sélectionner
+                    </button>
+                    <button type="button" class="btn btn-outline-warning" onclick="clearAllNotes()">
+                        <i class="bi bi-x-lg"></i> Effacer tout
+                    </button>
+                </div>
+                <div>
+                    <a href="{% url 'enseignement:classe_fiche_notes' selected_classe.pk %}" class="btn btn-info">
+                        <i class="bi bi-file-earmark-text"></i> Voir Fiche de Notes
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Enregistrer les notes
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function validateNote(input) {
+    const eleveId = input.dataset.eleve;
+    const status = document.getElementById('status-' + eleveId);
+    const value = parseFloat(input.value);
+    
+    if (!input.value) {
+        status.className = 'badge bg-secondary note-status';
+        status.textContent = 'Non noté';
+        input.classList.remove('is-valid', 'is-invalid');
+    } else if (isNaN(value) || value < 0 || value > 20) {
+        status.className = 'badge bg-danger note-status';
+        status.textContent = 'Invalide';
+        input.classList.add('is-invalid');
+        input.classList.remove('is-valid');
+    } else {
+        status.className = 'badge bg-success note-status';
+        status.textContent = value + '/20';
+        input.classList.add('is-valid');
+        input.classList.remove('is-invalid');
+    }
+    
+    updateStats();
+}
+
+function updateStats() {
+    const inputs = document.querySelectorAll('.note-input');
+    let counted = 0;
+    let studentAvgs = [];
+    
+    inputs.forEach(input => {
+        const value = parseFloat(input.value);
+        const studentAvg = parseFloat(input.dataset.studentAvg) || null;
+        
+        if (!isNaN(value) && value >= 0 && value <= 20) {
+            counted++;
+        }
+        
+        if (studentAvg !== null) {
+            studentAvgs.push(studentAvg);
+        }
+    });
+    
+    document.getElementById('countNoted').textContent = counted;
+    
+    const totalStudents = parseInt('{{ eleves_data|length }}') || 0;
+    const avgEl = document.getElementById('avgNoted');
+    
+    if (studentAvgs.length > 0) {
+        const classAvg = studentAvgs.reduce((a, b) => a + b, 0) / studentAvgs.length;
+        avgEl.textContent = classAvg.toFixed(2);
+    } else {
+        avgEl.textContent = '-';
+    }
+}
+
+function autoFillLastNotes() {
+    const inputs = document.querySelectorAll('.note-input');
+    inputs.forEach(input => {
+        const badge = input.closest('tr').querySelector('.badge.bg-secondary');
+        if (badge && badge.textContent !== '-') {
+            input.value = badge.textContent.trim();
+            validateNote(input);
+        }
+    });
+}
+
+function selectAllNotes() {
+    const inputs = document.querySelectorAll('.note-input');
+    inputs.forEach(input => input.select());
+}
+
+function clearAllNotes() {
+    const inputs = document.querySelectorAll('.note-input');
+    inputs.forEach(input => {
+        input.value = '';
+        validateNote(input);
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    updateStats();
+});
+</script>
+
+{% elif selected_classe %}
+<div class="alert alert-info text-center">
+    <i class="bi bi-info-circle" style="font-size: 1.5rem;"></i>
+    <p class="mb-0 mt-2">Sélectionnez une <strong>matière</strong> pour saisir les notes.</p>
+</div>
+{% else %}
+<div class="alert alert-info text-center">
+    <i class="bi bi-info-circle" style="font-size: 1.5rem;"></i>
+    <p class="mb-0 mt-2">Sélectionnez une <strong>classe</strong> puis une <strong>matière</strong> pour commencer.</p>
+</div>
+{% endif %}
+
+<style>
+.note-input.is-valid { background-color: #d4edda !important; border-color: #28a745 !important; }
+.note-input.is-invalid { background-color: #f8d7da !important; border-color: #dc3545 !important; }
+.note-input.has-existing { background-color: #fff3cd !important; }
+</style>
+{% endblock %}

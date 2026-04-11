@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+{% block title %}{{ eleve.nom_complet }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex align-items-center">
+        {% if eleve.photo %}
+        <img src="{{ eleve.photo.url }}" alt="{{ eleve.nom_complet }}" class="rounded-circle me-3" style="width: 80px; height: 80px; object-fit: cover;">
+        {% else %}
+        <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center me-3" style="width: 80px; height: 80px;">
+            <i class="bi bi-person text-white" style="font-size: 2.5rem;"></i>
+        </div>
+        {% endif %}
+        <h1>{{ eleve.nom_complet }}</h1>
+    </div>
+    <div>
+        <a href="{% url 'scolarite:eleve_update' eleve.pk %}" class="btn btn-warning">Modifier</a>
+        <a href="{% url 'finances:paiement_create_eleve' eleve.pk %}" class="btn btn-success">Enregistrer paiement</a>
+    </div>
+</div>
+
+<ul class="nav nav-tabs mb-4" id="eleveTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="infos-tab" data-bs-toggle="tab" data-bs-target="#infos" type="button">Informations</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="documents-tab" data-bs-toggle="tab" data-bs-target="#documents" type="button">Documents</button>
+    </li>
+</ul>
+
+<div class="tab-content" id="eleveTabsContent">
+    <div class="tab-pane fade show active" id="infos" role="tabpanel">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Informations personnelles</h5>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Matricule:</strong> {{ eleve.matricule }}</p>
+                        <p><strong>Nom:</strong> {{ eleve.nom }}</p>
+                        <p><strong>Prénom:</strong> {{ eleve.prenom }}</p>
+                        <p><strong>Date de naissance:</strong> {{ eleve.date_naissance }}</p>
+                        <p><strong>Lieu de naissance:</strong> {{ eleve.lieu_naissance }}</p>
+                        <p><strong>Sexe:</strong> {{ eleve.get_sexe_display }}</p>
+                        <p><strong>Adresse:</strong> {{ eleve.adresse }}</p>
+                        <p><strong>Téléphone parent:</strong> {{ eleve.telephone_parent }}</p>
+                        <p><strong>Email parent:</strong> {{ eleve.email_parent }}</p>
+                        <p><strong>Statut:</strong> 
+                            <span class="badge bg-{% if eleve.statut == 'actif' %}success{% else %}secondary{% endif %}">
+                                {{ eleve.get_statut_display }}
+                            </span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-8">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Historique des inscriptions</h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Année</th>
+                                    <th>Classe</th>
+                                    <th>Moyenne</th>
+                                    <th>Mention</th>
+                                    <th>Décision</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for inscription in inscriptions %}
+                                <tr>
+                                    <td>{{ inscription.annee_scolaire.libelle }}</td>
+                                    <td>{{ inscription.classe.nom }}</td>
+                                    <td>{{ inscription.moyenne_generale|default:"-" }}/20</td>
+                                    <td>{{ inscription.mention|default:"-" }}</td>
+                                    <td>{{ inscription.decision|default:"-" }}</td>
+                                    <td>
+                                        <a href="{% url 'rapports:generer_bulletin' inscription.pk %}" class="btn btn-sm btn-primary">
+                                            Bulletin
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted">Aucune inscription</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Derniers paiements</h5>
+                        <a href="{% url 'finances:historique_paiements_eleve' eleve.pk %}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-clock-history"></i> Historique complet
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Type</th>
+                                    <th class="text-end">Montant</th>
+                                    <th>Mode</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for paiement in eleve.paiements.all|slice:":5" %}
+                                <tr>
+                                    <td>{{ paiement.date_paiement|date:"d/m/Y" }}</td>
+                                    <td>{{ paiement.frais.get_type_frais_display }}</td>
+                                    <td class="text-end">{{ paiement.montant|floatformat:0 }} FCFA</td>
+                                    <td>
+                                        <span class="badge bg-{% if paiement.mode_paiement == 'espece' %}warning{% elif paiement.mode_paiement == 'virement' %}primary{% else %}info{% endif %}">
+                                            {{ paiement.get_mode_paiement_display }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted">Aucun paiement</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="tab-pane fade" id="documents" role="tabpanel">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5><i class="bi bi-file-earmark"></i> Documents de {{ eleve.nom_complet }}</h5>
+            <a href="{% url 'scolarite:document_upload' eleve.pk %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Ajouter un document
+            </a>
+        </div>
+        
+        {% with eleve.documents.all as docs %}
+        {% if docs %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                        <th>Fichier</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for doc in docs %}
+                    <tr>
+                        <td>{{ doc.date_upload|date:"d/m/Y" }}</td>
+                        <td><span class="badge bg-secondary">{{ doc.get_type_document_display }}</span></td>
+                        <td>{{ doc.description|default:"-" }}</td>
+                        <td>
+                            <a href="{{ doc.fichier.url }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                                <i class="bi bi-download"></i> Télécharger
+                            </a>
+                        </td>
+                        <td>
+                            <a href="{% url 'scolarite:document_delete' doc.pk %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Supprimer ce document ?')">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-file-earmark" style="font-size: 4rem; color: var(--gray-300);"></i>
+            <h5 class="text-muted mt-3">Aucun document</h5>
+            <p class="text-muted">Cliquez sur "Ajouter un document" pour commencer</p>
+        </div>
+        {% endif %}
+        {% endwith %}
+    </div>
+</div>
+{% endblock %}

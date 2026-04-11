@@ -1,7 +1,7 @@
-"""Reconstruire le fichier accounts/views.py correctement"""
+"""Reconstruire le fichier authentification/views.py correctement"""
 import re
 
-filepath = 'accounts/views.py'
+filepath = 'authentification/views.py'
 
 with open(filepath, 'r', encoding='utf-8') as f:
     content = f.read()

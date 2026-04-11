@@ -11,11 +11,11 @@ def user_create(request):
         if form.is_valid():
             form.save()
             messages.success(request, 'Utilisateur cree.')
-            return redirect('accounts:user_list')
+            return redirect('authentification:user_list')
     else:
         form = UserCreationForm()
     
-    return render(request, 'accounts/user_form.html', {'form': form})
+    return render(request, 'authentification/user_form.html', {'form': form})
 
 
 @login_required
@@ -31,11 +31,11 @@ def user_edit(request, pk):
         if form.is_valid():
             form.save()
             messages.success(request, 'Utilisateur modifie.')
-            return redirect('accounts:user_list')
+            return redirect('authentification:user_list')
     else:
         form = UserChangeForm(instance=user)
     
-    return render(request, 'accounts/user_form.html', {'form': form, 'user_obj': user})
+    return render(request, 'authentification/user_form.html', {'form': form, 'user_obj': user})
 
 
 @login_required
@@ -49,9 +49,9 @@ def user_delete(request, pk):
     if request.method == 'POST':
         user.delete()
         messages.success(request, 'Utilisateur supprime.')
-        return redirect('accounts:user_list')
+        return redirect('authentification:user_list')
     
-    return render(request, 'accounts/user_confirm_delete.html', {'user_obj': user})
+    return render(request, 'authentification/user_confirm_delete.html', {'user_obj': user})
 
 
 @login_required
@@ -64,7 +64,7 @@ def user_approve(request, pk):
     user.is_active = True
     user.save()
     messages.success(request, f'Utilisateur {user.username} approuve.')
-    return redirect('accounts:user_list')
+    return redirect('authentification:user_list')
 
 
 @login_required
@@ -78,7 +78,7 @@ def user_toggle_active(request, pk):
     user.save()
     status = 'active' if user.is_active else 'desactive'
     messages.success(request, f'Utilisateur {user.username} {status}.')
-    return redirect('accounts:user_list')
+    return redirect('authentification:user_list')
 
 
 @login_required
@@ -88,7 +88,7 @@ def user_show_password(request, pk):
         return redirect('dashboard')
     
     user = get_object_or_404(User, pk=pk)
-    return render(request, 'accounts/user_password.html', {'user_obj': user})
+    return render(request, 'authentification/user_password.html', {'user_obj': user})
 
 
 @login_required
@@ -101,7 +101,7 @@ def user_reset_password(request, pk):
     user.set_password('password123')
     user.save()
     messages.success(request, f'Mot de passe de {user.username} reinitialise.')
-    return redirect('accounts:user_list')
+    return redirect('authentification:user_list')
 
 
 @login_required
@@ -110,7 +110,7 @@ def user_permission_toggle(request, user_id, module_code):
         messages.error(request, "Vous n'avez pas l'autorisation.")
         return redirect('dashboard')
     
-    return redirect('accounts:user_list')
+    return redirect('authentification:user_list')
 
 
 @login_required
@@ -120,7 +120,7 @@ def notification_list(request):
         return redirect('dashboard')
     
     notifications = Notification.objects.filter(destinataire=request.user).order_by('-date_creation')[:50]
-    return render(request, 'accounts/notification_list.html', {'notifications': notifications})
+    return render(request, 'authentification/notification_list.html', {'notifications': notifications})
 
 
 @login_required
@@ -132,7 +132,7 @@ def notification_detail(request, pk):
     notification = get_object_or_404(Notification, pk=pk, destinataire=request.user)
     notification.est_lue = True
     notification.save()
-    return render(request, 'accounts/notification_detail.html', {'notification': notification})
+    return render(request, 'authentification/notification_detail.html', {'notification': notification})
 
 
 @login_required
@@ -143,7 +143,7 @@ def notification_mark_all_read(request):
     
     Notification.objects.filter(destinataire=request.user).update(est_lue=True)
     messages.success(request, 'Toutes les notifications marquees comme lues.')
-    return redirect('accounts:notification_list')
+    return redirect('authentification:notification_list')
 
 
 @login_required
@@ -153,7 +153,7 @@ def message_list(request):
         return redirect('dashboard')
     
     messages_list = Message.objects.filter(destinataire=request.user).order_by('-date_creation')[:50]
-    return render(request, 'accounts/message_list.html', {'messages': messages_list})
+    return render(request, 'authentification/message_list.html', {'messages': messages_list})
 
 
 @login_required
@@ -165,7 +165,7 @@ def message_detail(request, pk):
     msg = get_object_or_404(Message, pk=pk, destinataire=request.user)
     msg.est_lu = True
     msg.save()
-    return render(request, 'accounts/message_detail.html', {'message': msg})
+    return render(request, 'authentification/message_detail.html', {'message': msg})
 
 
 @login_required
@@ -186,10 +186,10 @@ def message_create(request):
                 contenu=contenu
             )
             messages.success(request, 'Message envoye.')
-            return redirect('accounts:message_list')
+            return redirect('authentification:message_list')
     
     users = User.objects.filter(is_active=True).exclude(pk=request.user.pk)
-    return render(request, 'accounts/message_form.html', {'users': users})
+    return render(request, 'authentification/message_form.html', {'users': users})
 
 
 @login_required
@@ -200,7 +200,7 @@ def message_mark_all_read(request):
     
     Message.objects.filter(destinataire=request.user).update(est_lu=True)
     messages.success(request, 'Tous les messages marques comme lus.')
-    return redirect('accounts:message_list')
+    return redirect('authentification:message_list')
 
 
 @login_required
@@ -210,7 +210,7 @@ def locked_accounts(request):
         return redirect('dashboard')
     
     locked = User.objects.filter(is_locked=True)
-    return render(request, 'accounts/locked_accounts.html', {'locked_users': locked})
+    return render(request, 'authentification/locked_accounts.html', {'locked_users': locked})
 
 
 @login_required
@@ -219,7 +219,7 @@ def chat_inbox(request):
         messages.error(request, "Vous n'avez pas l'autorisation.")
         return redirect('dashboard')
     
-    return render(request, 'accounts/chat_inbox.html')
+    return render(request, 'authentification/chat_inbox.html')
 
 
 @login_required
@@ -229,7 +229,7 @@ def chat_conversation(request, pk):
         return redirect('dashboard')
     
     user = get_object_or_404(User, pk=pk)
-    return render(request, 'accounts/chat_conversation.html', {'user': user})
+    return render(request, 'authentification/chat_conversation.html', {'user': user})
 
 
 @login_required
@@ -238,10 +238,10 @@ def chat_new(request):
         messages.error(request, "Vous n'avez pas l'autorisation.")
         return redirect('dashboard')
     
-    return redirect('accounts:chat_inbox')
+    return redirect('authentification:chat_inbox')
 '''
 
-with open('accounts/views.py', 'a', encoding='utf-8') as f:
+with open('authentification/views.py', 'a', encoding='utf-8') as f:
     f.write(missing_funcs)
 
 print("Added missing functions")

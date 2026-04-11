@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}Supprimer Discipline - SyGeS-AM{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Accueil</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'scolarite:discipline_list' %}">Discipline</a></li>
+                <li class="breadcrumb-item active">Supprimer</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h5><i class="bi bi-trash"></i> Confirmer la suppression</h5>
+            </div>
+            <div class="card-body">
+                <p>Êtes-vous sûr de vouloir supprimer cette discipline ?</p>
+                
+                <div class="alert alert-warning">
+                    <p><strong>Élève:</strong> {{ discipline.eleve.nom_complet }}</p>
+                    <p><strong>Type:</strong> {{ discipline.get_type_display }} - {{ discipline.get_type_detail_display }}</p>
+                    <p><strong>Points:</strong> {{ discipline.points }}</p>
+                    <p><strong>Date:</strong> {{ discipline.date_incident|date:"d/m/Y" }}</p>
+                </div>
+                
+                <p class="text-muted">Cette action recalculera la note de conduite de l'élève.</p>
+            </div>
+            <div class="card-footer">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'scolarite:discipline_list' %}" class="btn btn-secondary">Annuler</a>
+                        {% if user.is_surveillance or user.is_direction or user.is_superadmin %}
+                        <button type="submit" name="action" value="confirmer" class="btn btn-danger">
+                            <i class="bi bi-trash"></i> Confirmer la suppression
+                        </button>
+                        {% else %}
+                        <button type="submit" name="action" value="demander" class="btn btn-warning">
+                            <i class="bi bi-send"></i> Demander approbation
+                        </button>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

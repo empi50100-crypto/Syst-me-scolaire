@@ -1,0 +1,214 @@
+{% extends 'base.html' %}
+{% block title %}Permissions de {{ target_user.get_full_name|default:target_user.username }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1><i class="bi bi-shield-check"></i> Permissions de {{ target_user.get_full_name|default:target_user.username }}</h1>
+        <p class="text-muted mb-0">
+            Rôle: <span class="badge bg-{% if target_user.role == 'direction' %}danger{% elif target_user.role == 'secretaire' %}info{% elif target_user.role == 'comptable' %}success{% elif target_user.role == 'professeur' %}warning text-dark{% elif target_user.role == 'surveillance' %}primary{% else %}secondary{% endif %}">{{ target_user.get_role_display }}</span>
+        </p>
+    </div>
+    <a href="{% url 'authentification:user_list' %}" class="btn btn-secondary">
+        <i class="bi bi-arrow-left"></i> Retour à la liste
+    </a>
+</div>
+
+{% for svc in service_data %}
+<div class="card mb-4">
+    <div class="card-header bg-dark text-white">
+        <h5 class="mb-0"><i class="{{ svc.service.icone }}"></i> {{ svc.service.nom }}</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 250px;">Module</th>
+                        <th style="width: 150px;">Accès</th>
+                        <th>Actions autorisées</th>
+                        <th style="width: 200px;" class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in svc.modules %}
+                    <tr class="{% if not item.has_permission %}table-secondary{% endif %}">
+                        <td>
+                            <strong>{{ item.module.nom }}</strong>
+                            <br><small class="text-muted">{{ item.module.url }}</small>
+                            {% if item.is_custom %}
+                            <br><span class="badge bg-info">Personnalisé</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if item.has_permission %}
+                                <span class="badge bg-success"><i class="bi bi-check-circle"></i> Activé</span>
+                            {% else %}
+                                <span class="badge bg-secondary"><i class="bi bi-x-circle"></i> Désactivé</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if item.has_permission %}
+                                {% for action in item.actions %}
+                                <span class="badge bg-{% if action == 'read' %}info{% elif action == 'write' %}primary{% elif action == 'update' %}warning{% elif action == 'delete' %}danger{% else %}secondary{% endif %} text-dark">
+                                    {% if action == 'read' %}<i class="bi bi-eye"></i> Lecture
+                                    {% elif action == 'write' %}<i class="bi bi-plus-circle"></i> Ajout
+                                    {% elif action == 'update' %}<i class="bi bi-pencil"></i> Modifier
+                                    {% elif action == 'delete' %}<i class="bi bi-trash"></i> Supprimer{% endif %}
+                                </span>
+                                {% endfor %}
+                            {% else %}
+                                <span class="text-muted">Aucune action</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <div class="btn-group btn-group-sm">
+                                {% if item.is_disabled %}
+                                <button type="button" class="btn btn-success" 
+                                        onclick="toggleModule({{ target_user.id }}, '{{ item.module.code }}', 'true')">
+                                    <i class="bi bi-toggle-on"></i> Activer
+                                </button>
+                                {% else %}
+                                <button type="button" class="btn btn-warning" 
+                                        onclick="toggleModule({{ target_user.id }}, '{{ item.module.code }}', 'false')">
+                                    <i class="bi bi-toggle-off"></i> Désactiver
+                                </button>
+                                {% endif %}
+                                {% if item.has_permission and not item.is_disabled %}
+                                <button type="button" class="btn btn-primary" onclick="showActionsModal({{ target_user.id }}, '{{ item.module.code }}', '{{ item.module.nom }}', [{% for a in item.actions %}'{{ a }}'{% if not forloop.last %}, {% endif %}{% endfor %}])">
+                                    <i class="bi bi-gear"></i>
+                                </button>
+                                {% endif %}
+                                {% if item.is_custom %}
+                                <button type="button" class="btn btn-danger" onclick="removeCustom({{ target_user.id }}, '{{ item.module.code }}')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center text-muted py-3">
+                            Aucun module dans ce service
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<div id="actionsModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+    <div style="background: var(--bs-body-bg, white); padding: 20px; border-radius: 8px; width: 400px; max-width: 90%;">
+        <h5 id="actionsModalTitle">Modifier les actions</h5>
+        <form method="post" action="{% url 'authentification:user_permission_toggle' 0 0 %}" id="actionsForm">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="update_actions">
+            <input type="hidden" name="user_id" id="modalUserId">
+            <input type="hidden" name="module_id" id="modalModuleId">
+            
+            <div class="mb-3">
+                <label class="form-label">Actions autorisées</label>
+                <div class="border rounded p-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="actions" value="read" id="action_read">
+                        <label class="form-check-label" for="action_read">Lecture (voir les données)</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="actions" value="write" id="action_write">
+                        <label class="form-check-label" for="action_write">Ajout (créer des données)</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="actions" value="update" id="action_update">
+                        <label class="form-check-label" for="action_update">Modification (éditer les données)</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="actions" value="delete" id="action_delete">
+                        <label class="form-check-label" for="action_delete">Suppression (effacer les données)</label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="d-flex gap-2 justify-content-end">
+                <button type="button" onclick="document.getElementById('actionsModal').style.display='none'" class="btn btn-secondary">Annuler</button>
+                <button type="submit" class="btn btn-primary">Enregistrer</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleModule(userId, moduleCode, shouldEnable) {
+    if (!confirm(shouldEnable === 'true' ? 'Activer l\'accès à ce module ?' : 'Désactiver l\'accès à ce module ?')) {
+        return;
+    }
+    
+    var form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/authentification/utilisateur/' + userId + '/permissions/' + moduleCode + '/';
+    
+    var csrfInput = document.createElement('input');
+    csrfInput.type = 'hidden';
+    csrfInput.name = 'csrfmiddlewaretoken';
+    csrfInput.value = '{{ csrf_token }}';
+    
+    var actionInput = document.createElement('input');
+    actionInput.type = 'hidden';
+    actionInput.name = 'action';
+    actionInput.value = 'toggle_module';
+    
+    var enableInput = document.createElement('input');
+    enableInput.type = 'hidden';
+    enableInput.name = 'enable';
+    enableInput.value = shouldEnable;
+    
+    form.appendChild(csrfInput);
+    form.appendChild(actionInput);
+    form.appendChild(enableInput);
+    document.body.appendChild(form);
+    form.submit();
+}
+
+function showActionsModal(userId, moduleCode, moduleName, currentActions) {
+    document.getElementById('actionsModalTitle').textContent = 'Modifier les actions - ' + moduleName;
+    document.getElementById('modalUserId').value = userId;
+    document.getElementById('modalModuleId').value = moduleCode;
+    document.getElementById('actionsForm').action = '/authentification/utilisateur/' + userId + '/permissions/' + moduleCode + '/';
+    
+    document.getElementById('action_read').checked = currentActions.includes('read');
+    document.getElementById('action_write').checked = currentActions.includes('write');
+    document.getElementById('action_update').checked = currentActions.includes('update');
+    document.getElementById('action_delete').checked = currentActions.includes('delete');
+    
+    document.getElementById('actionsModal').style.display = 'flex';
+}
+
+function removeCustom(userId, moduleCode) {
+    if (confirm('Retirer ce module de l\'utilisateur?')) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/authentification/utilisateur/' + userId + '/permissions/' + moduleCode + '/';
+        
+        const csrf = document.createElement('input');
+        csrf.type = 'hidden';
+        csrf.name = 'csrfmiddlewaretoken';
+        csrf.value = '{{ csrf_token }}';
+        
+        const action = document.createElement('input');
+        action.type = 'hidden';
+        action.name = 'action';
+        action.value = 'remove_custom';
+        
+        form.appendChild(csrf);
+        form.appendChild(action);
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+</script>
+{% endblock %}

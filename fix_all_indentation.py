@@ -68,10 +68,10 @@ def fix_file(filepath, module_code):
 
 # Corriger les fichiers
 base_path = r'C:\Users\empi5\Desktop\Système scolaire\gestion_ecole'
-fix_file(f'{base_path}/accounts/views.py', 'user_list')
+fix_file(f'{base_path}/authentification/views.py', 'user_list')
 fix_file(f'{base_path}/finances/views.py', 'annee_scolaire')
 fix_file(f'{base_path}/rapports/views.py', 'rapport_academique')
-fix_file(f'{base_path}/eleves/views.py', 'discipline')
-fix_file(f'{base_path}/academics/views.py', 'examen_list')
+fix_file(f'{base_path}/scolarite/views.py', 'discipline')
+fix_file(f'{base_path}/enseignement/views.py', 'examen_list')
 
 print("\nTerminé!")

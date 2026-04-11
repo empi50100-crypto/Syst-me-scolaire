@@ -65,7 +65,7 @@
                         <td>{{ facture.date_facture|date:"d/m/Y" }}</td>
                         <td>{{ facture.date_echeance|date:"d/m/Y" }}</td>
                         <td>
-                            <a href="{% url 'eleves:eleve_detail' facture.eleve.pk %}">
+                            <a href="{% url 'scolarite:eleve_detail' facture.eleve.pk %}">
                                 {{ facture.eleve.nom_complet }}
                             </a>
                         </td>

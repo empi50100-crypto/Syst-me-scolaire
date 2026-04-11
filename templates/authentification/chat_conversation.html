@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% block title %}Conversation avec {{ autre_user.get_full_name|default:autre_user.username }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>
+        <a href="{% url 'authentification:chat_inbox' %}" class="btn btn-outline-secondary btn-sm me-2">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        <i class="bi bi-chat-dots-fill"></i> Conversation
+    </h1>
+</div>
+
+<div class="card shadow-sm mt-3">
+    <!-- En-tête de la conversation -->
+    <div class="card-header bg-light d-flex align-items-center p-3 border-bottom">
+        <div class="avatar bg-gradient text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px; font-size: 16px;">
+            {{ autre_user.get_full_name|default:autre_user.username|slice:":1"|upper }}
+        </div>
+        <div>
+            <h5 class="mb-0">{{ autre_user.get_full_name|default:autre_user.username }}</h5>
+            <small class="text-muted">{{ autre_user.get_role_display }}</small>
+        </div>
+    </div>
+    
+    <!-- Messages -->
+    <div class="card-body chat-messages p-3" id="chatMessages" style="height: 400px; overflow-y: auto; background: #f8f9fa;">
+        {% for msg in messages %}
+        <div class="mb-3 d-flex {% if msg.auteur == request.user %}justify-content-end{% else %}justify-content-start{% endif %}">
+            <div class="d-flex flex-column {% if msg.auteur == request.user %}align-items-end{% else %}align-items-start{% endif %}" style="max-width: 70%;">
+                <div class="p-3 rounded-3 {% if msg.auteur == request.user %}bg-gradient text-white{% else %}bg-white border shadow-sm{% endif %}">
+                    <p class="mb-0">{{ msg.contenu }}</p>
+                </div>
+                <small class="{% if msg.auteur == request.user %}text-muted{% else %}text-muted{% endif %} mt-1">
+                    {{ msg.date_envoi|date:"d/m/Y" }} à {{ msg.date_envoi|date:"H:i" }}
+                </small>
+            </div>
+        </div>
+        {% empty %}
+        <div class="text-center text-muted py-5">
+            <div class="mb-3">
+                <i class="bi bi-chat display-4 text-muted opacity-25"></i>
+            </div>
+            <p class="fw-medium">Aucun message</p>
+            <small class="text-muted">Commencez la conversation!</small>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Formulaire d'envoi -->
+    <div class="card-footer border-top">
+        <form method="post" class="d-flex align-items-center gap-3">
+            {% csrf_token %}
+            <div class="flex-grow-1">
+                <input type="text" name="contenu" class="form-control rounded-pill px-4" placeholder="Tapez votre message..." required autofocus>
+            </div>
+            <button type="submit" class="btn btn-primary rounded-pill px-4">
+                <i class="bi bi-send-fill"></i>
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const chatMessages = document.getElementById('chatMessages');
+    if (chatMessages) {
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+    
+    const input = document.querySelector('input[name="contenu"]');
+    if (input) {
+        input.focus();
+    }
+});
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.bg-gradient {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+}
+.chat-messages .rounded-3 {
+    border-radius: 18px !important;
+}
+.chat-messages .bg-gradient.text-white {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+}
+</style>
+{% endblock %}

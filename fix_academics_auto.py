@@ -1,7 +1,7 @@
-"""Corriger les erreurs d'indentation courantes dans academics/views.py"""
+"""Corriger les erreurs d'indentation courantes dans enseignement/views.py"""
 import re
 
-with open('academics/views.py', 'r', encoding='utf-8') as f:
+with open('enseignement/views.py', 'r', encoding='utf-8') as f:
     content = f.read()
 
 # Corriger les patterns courants
@@ -17,7 +17,7 @@ patterns = [
 for pattern, replacement in patterns:
     content = re.sub(pattern, replacement, content, flags=re.MULTILINE)
 
-with open('academics/views.py', 'w', encoding='utf-8') as f:
+with open('enseignement/views.py', 'w', encoding='utf-8') as f:
     f.write(content)
 
 print("Corrigé")

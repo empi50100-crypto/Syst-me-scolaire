@@ -4,16 +4,17 @@ from django.contrib import messages
 from django.http import HttpResponse
 from django.db.models import Avg, Sum, Count, Q
 from datetime import date
-from eleves.models import Eleve, Inscription, DisciplineEleve
-from academics.models import Classe, Matiere, Evaluation, FicheNote, Enseignement
-from finances.models import AnneeScolaire, FraisScolaire, Paiement, CycleConfig
+from scolarite.models import Eleve, EleveInscription, SanctionRecompense
+from enseignement.models import Classe, Matiere, Evaluation, FicheNote, Attribution
+from core.models import AnneeScolaire
+from finances.models import FraisScolaire, Paiement
 from presences.models import Presence
 from .models import Bulletin
 
 
 def calculer_total_frais_avec_eleves(annee):
-    from eleves.models import Inscription
-    from academics.models import Classe
+    from scolarite.models import Inscription
+    from enseignement.models import Classe
     from django.db.models import Q
     
     total_frais = 0
@@ -33,7 +34,7 @@ def calculer_total_frais_avec_eleves(annee):
 
 
 def calculer_moyenne_matiere(eleve, matiere, annee, cycle=None):
-    from eleves.models import PeriodeCloture
+    from scolarite.models import PeriodeCloture
     
     inscription = Inscription.objects.filter(eleve=eleve, annee_scolaire=annee).first()
     classe = inscription.classe if inscription else None
@@ -82,7 +83,7 @@ def calculer_moyenne_matiere(eleve, matiere, annee, cycle=None):
 
 
 def calculer_note_conduite(eleve, classe, annee, cycle=None):
-    from eleves.models import ConduiteConfig
+    from scolarite.models import ConduiteConfig
     
     inscription = Inscription.objects.filter(eleve=eleve, annee_scolaire=annee, classe=classe).first()
     if not inscription:
@@ -184,7 +185,7 @@ def bulletin_list(request):
                 Q(eleve__matricule__icontains=search)
             )
         
-        from eleves.models import PeriodeCloture
+        from scolarite.models import PeriodeCloture
         
         classes_with_inscriptions = set(inscriptions.values_list('classe_id', flat=True))
         
@@ -253,7 +254,7 @@ def bulletin_list(request):
                     total_coef += matiere.coefficient
             
             if has_other_subject_notes:
-                from eleves.models import ConduiteConfig
+                from scolarite.models import ConduiteConfig
                 note_base = 20
                 config = ConduiteConfig.objects.filter(
                     annee_scolaire=annee,
@@ -297,7 +298,7 @@ def bulletin_list(request):
                 Q(eleve__matricule__icontains=search)
             )
         
-        from eleves.models import PeriodeCloture
+        from scolarite.models import PeriodeCloture
         
         p1_cloture = PeriodeCloture.objects.filter(classe=selected_classe, periode=1).exists()
         p2_cloture = PeriodeCloture.objects.filter(classe=selected_classe, periode=2).exists()
@@ -353,7 +354,7 @@ def bulletin_list(request):
                     total_coef += matiere.coefficient
             
             if has_other_subject_notes:
-                from eleves.models import ConduiteConfig
+                from scolarite.models import ConduiteConfig
                 note_base = 20
                 config = ConduiteConfig.objects.filter(
                     annee_scolaire=annee,

@@ -67,7 +67,7 @@ if __name__ == '__main__':
     files = [
         'finances/views.py',
         'rapports/views.py',
-        'accounts/views.py',
+        'authentification/views.py',
     ]
     
     for filename in files:

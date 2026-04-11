@@ -1,7 +1,7 @@
-"""Corriger les problèmes d'indentation dans academics/views.py"""
+"""Corriger les problèmes d'indentation dans enseignement/views.py"""
 import re
 
-with open('academics/views.py', 'r', encoding='utf-8') as f:
+with open('enseignement/views.py', 'r', encoding='utf-8') as f:
     content = f.read()
 
 lines = content.split('\n')
@@ -43,7 +43,7 @@ while i < len(lines):
 
 content = '\n'.join(new_lines)
 
-with open('academics/views.py', 'w', encoding='utf-8') as f:
+with open('enseignement/views.py', 'w', encoding='utf-8') as f:
     f.write(content)
 
 print("Corrigé")

@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block title %}Messages{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="bi bi-chat-dots-fill"></i> Messages</h1>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        <div class="row g-0" style="min-height: 500px;">
+            <!-- Liste des conversations -->
+            <div class="col-md-4 border-end conv-list" style="max-height: 500px; overflow-y: auto;">
+                <div class="p-3 border-bottom">
+                    <a href="{% url 'authentification:chat_new' %}" class="btn btn-primary w-100">
+                        <i class="bi bi-plus-lg"></i> Nouvelle conversation
+                    </a>
+                </div>
+                <div class="list-group list-group-flush">
+                    {% for conv in conversations %}
+                    <a href="{% url 'authentification:chat_conversation' conv.autre_user.id %}" 
+                       class="list-group-item list-group-item-action border-0 py-3 {% if conv.unread_count > 0 %}unread-conv{% endif %}">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0 position-relative">
+                                <div class="avatar bg-gradient text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; font-size: 16px;">
+                                    {{ conv.autre_user.get_full_name|default:conv.autre_user.username|slice:":1"|upper }}
+                                </div>
+                                {% if conv.unread_count > 0 %}
+                                <span class="position-absolute bottom-0 end-0 translate-middle badge bg-primary rounded-pill" style="font-size: 10px;">
+                                    {{ conv.unread_count }}
+                                </span>
+                                {% endif %}
+                            </div>
+                            <div class="flex-grow-1 ms-3 overflow-hidden">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <h6 class="mb-0 text-truncate fw-semibold">{{ conv.autre_user.get_full_name|default:conv.autre_user.username }}</h6>
+                                    {% if conv.last_message %}
+                                    <small class="text-muted text-nowrap ms-2">{{ conv.last_message.date_envoi|date:"H:i" }}</small>
+                                    {% endif %}
+                                </div>
+                                <p class="mb-0 text-muted text-truncate small">
+                                    {% if conv.last_message %}
+                                        {% if conv.last_message.auteur == request.user %}<span class="text-primary fw-medium">Vous: </span>{% endif %}{{ conv.last_message.contenu|truncatechars:40 }}
+                                    {% else %}
+                                    <small class="text-muted">{{ conv.autre_user.get_role_display }}</small>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </a>
+                    {% empty %}
+                    <div class="text-center text-muted py-5 px-3">
+                        <div class="mb-3">
+                            <i class="bi bi-chat-square-text display-4 text-muted"></i>
+                        </div>
+                        <p class="mb-1 fw-medium">Aucune conversation</p>
+                        <small>Commencez une nouvelle conversation</small>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- Zone de sélection -->
+            <div class="col-md-8 d-flex align-items-center justify-content-center">
+                <div class="text-center text-muted p-4">
+                    <div class="mb-3">
+                        <i class="bi bi-chat-dots display-1 text-muted"></i>
+                    </div>
+                    <h5 class="fw-medium">Sélectionnez une conversation</h5>
+                    <p class="text-muted small">Choisissez une conversation dans la liste pour afficher les messages</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.avatar {
+    font-weight: 600;
+}
+.bg-gradient {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+}
+.unread-conv {
+    background: rgba(99, 102, 241, 0.15) !important;
+    border-left: 3px solid #6366f1 !important;
+}
+</style>
+{% endblock %}
