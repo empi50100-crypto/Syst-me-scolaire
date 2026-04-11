@@ -73,15 +73,16 @@ class UserCreationForm(forms.ModelForm):
     
     class Meta:
         model = Utilisateur
-        fields = ['username', 'email', 'first_name', 'last_name', 'role', 'telephone', 'adresse', 'is_active', 'est_approuve']
+        fields = ['username', 'email', 'first_name', 'last_name', 'role', 'telephone', 'adresse', 'matiere', 'is_active', 'est_approuve']
         widgets = {
             'username': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nom d\'utilisateur'}),
             'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'email@exemple.com'}),
             'first_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Prénom'}),
             'last_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nom'}),
-            'role': forms.Select(attrs={'class': 'form-select'}),
+            'role': forms.Select(attrs={'class': 'form-select', 'id': 'id_role'}),
             'telephone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ex: +225 00 00 00 00'}),
             'adresse': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Adresse'}),
+            'matiere': forms.Select(attrs={'class': 'form-select', 'id': 'id_matiere'}),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'est_approuve': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
@@ -115,15 +116,16 @@ class UserCreationForm(forms.ModelForm):
 class UserChangeForm(forms.ModelForm):
     class Meta:
         model = Utilisateur
-        fields = ['username', 'email', 'first_name', 'last_name', 'role', 'telephone', 'adresse', 'is_active', 'est_approuve']
+        fields = ['username', 'email', 'first_name', 'last_name', 'role', 'telephone', 'adresse', 'matiere', 'is_active', 'est_approuve']
         widgets = {
             'username': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nom d\'utilisateur'}),
             'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'email@exemple.com'}),
             'first_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Prénom'}),
             'last_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nom'}),
-            'role': forms.Select(attrs={'class': 'form-select'}),
+            'role': forms.Select(attrs={'class': 'form-select', 'id': 'id_role'}),
             'telephone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ex: +225 00 00 00 00'}),
             'adresse': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Adresse'}),
+            'matiere': forms.Select(attrs={'class': 'form-select', 'id': 'id_matiere'}),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'est_approuve': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }

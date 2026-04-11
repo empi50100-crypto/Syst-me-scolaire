@@ -214,9 +214,11 @@ def _get_direction_context(annee, today):
             annee=annee.date_fin.year
         ).aggregate(Sum('salaire_net'))['salaire_net__sum'] or 0
         
-        masse_salariale_mensuelle = MembrePersonnel.objects.filter(est_actif=True).aggregate(
-            total=Sum('salaire_base')
-        )['total'] or 0
+        # Calculer la masse salariale à partir des salaires payés
+        masse_salariale_mensuelle = Salaire.objects.filter(
+            est_paye=True,
+            annee=annee.date_fin.year
+        ).aggregate(total=Sum('salaire_net'))['total'] or 0
         
         total_encaissé = float(total_paiements) + float(autres_encaissements)
         total_charges = float(total_decaissement) + float(total_salaires)

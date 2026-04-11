@@ -305,6 +305,10 @@ def user_delete(request, pk):
         messages.error(request, 'Vous ne pouvez pas supprimer votre propre compte.')
         return redirect('authentification:user_list')
     
+    if user.is_superadmin:
+        messages.error(request, 'Impossible de supprimer un compte SuperAdmin.')
+        return redirect('authentification:user_list')
+    
     if request.method == 'POST':
         user.delete()
         messages.success(request, 'Utilisateur supprimé.')
@@ -364,3 +368,205 @@ def message_create(request):
     
     utilisateurs = Utilisateur.objects.filter(is_active=True).exclude(pk=request.user.pk)
     return render(request, 'authentification/message_form.html', {'utilisateurs': utilisateurs})
+
+
+@login_required
+def user_permissions_detail(request, pk):
+    if not request.user.is_superadmin:
+        messages.error(request, "Vous n'avez pas l'autorisation de gérer les permissions.")
+        return redirect('authentification:user_list')
+    
+    utilisateur = get_object_or_404(Utilisateur, pk=pk)
+    
+    if request.method == 'POST':
+        # Mise à jour des permissions personnalisées
+        permission_codes = request.POST.getlist('permissions')
+        
+        # Supprimer les anciennes permissions
+        PermissionPersonnalisee.objects.filter(utilisateur=utilisateur).delete()
+        
+        # Créer les nouvelles permissions
+        for code in permission_codes:
+            PermissionPersonnalisee.objects.create(
+                utilisateur=utilisateur,
+                module_code=code,
+                peut_lire='lecture' in request.POST.get(f'perm_{code}', ''),
+                peut_creer='creation' in request.POST.get(f'perm_{code}', ''),
+                peut_modifier='modification' in request.POST.get(f'perm_{code}', ''),
+                peut_supprimer='suppression' in request.POST.get(f'perm_{code}', '')
+            )
+        
+        messages.success(request, f'Permissions de {utilisateur.get_full_name} mises à jour.')
+        return redirect('authentification:user_list')
+    
+    # Récupérer les permissions actuelles
+    permissions_existantes = {
+        p.module_code: p for p in PermissionPersonnalisee.objects.filter(utilisateur=utilisateur)
+    }
+    
+    # Pour superadmin/direction, simuler des permissions complètes si pas de custom permissions
+    is_superadmin_or_direction = utilisateur.est_superadmin() or utilisateur.est_direction()
+    
+    # Liste des modules où l'utilisateur a une permission personnalisée active
+    custom_active_modules = set()
+    # Liste des modules où l'utilisateur a une permission personnalisée inactive (désactivée)
+    custom_disabled_modules = set()
+    
+    for code, perm in permissions_existantes.items():
+        if perm.est_actif:
+            custom_active_modules.add(code)
+        else:
+            custom_disabled_modules.add(code)
+    
+    # Modules disponibles
+    modules_disponibles = [
+        {'code': 'eleve_list', 'nom': 'Gestion des Élèves'},
+        {'code': 'professeur_list', 'nom': 'Gestion des Professeurs'},
+        {'code': 'classe_list', 'nom': 'Gestion des Classes'},
+        {'code': 'matiere_list', 'nom': 'Gestion des Matières'},
+        {'code': 'attribution_list', 'nom': 'Attributions'},
+        {'code': 'emploi_temps', 'nom': 'Emploi du Temps'},
+        {'code': 'evaluation_list', 'nom': 'Évaluations'},
+        {'code': 'saisie_notes', 'nom': 'Saisie des Notes'},
+        {'code': 'presence_list', 'nom': 'Gestion des Présences'},
+        {'code': 'paiement_list', 'nom': 'Gestion des Paiements'},
+        {'code': 'frais_scolarite', 'nom': 'Frais de Scolarité'},
+        {'code': 'bulletin_list', 'nom': 'Bulletins'},
+        {'code': 'rapport_academique', 'nom': 'Rapports Académiques'},
+        {'code': 'personnel_list', 'nom': 'Gestion du Personnel'},
+        {'code': 'salaire_list', 'nom': 'Gestion des Salaires'},
+        {'code': 'user_list', 'nom': 'Gestion des Utilisateurs'},
+    ]
+    
+    # Construire service_data pour le template
+    from authentification.models import Service, Module
+    services = Service.objects.prefetch_related('modules').all()
+    
+    service_data = []
+    for service in services:
+        modules_list = []
+        for module in service.modules.filter(est_actif=True):
+            perm = permissions_existantes.get(module.code)
+            
+            # Logique des permissions:
+            # - Si superadmin/direction: accès par défaut à tout, sauf si custom désactivé
+            # - Sinon: accès uniquement si permission custom active
+            if is_superadmin_or_direction:
+                # Superadmin/Direction: accès par défaut, sauf si explicitement désactivé
+                if module.code in custom_disabled_modules:
+                    has_perm = False  # Explicitement désactivé
+                    is_disabled = True
+                elif module.code in custom_active_modules:
+                    has_perm = True  # Custom permission active
+                    is_disabled = False
+                else:
+                    has_perm = True  # Accès par défaut (pas de custom permission)
+                    is_disabled = False
+            else:
+                # Autres rôles: accès uniquement via custom permission
+                has_perm = perm is not None and perm.est_actif
+                is_disabled = perm is None or (perm is not None and not perm.est_actif)
+            
+            # Construire la liste des actions
+            actions = []
+            if has_perm:
+                if perm:
+                    # Permissions personnalisées définies
+                    if perm.peut_lire:
+                        actions.append('read')
+                    if perm.peut_creer:
+                        actions.append('write')
+                    if perm.peut_modifier:
+                        actions.append('update')
+                    if perm.peut_supprimer:
+                        actions.append('delete')
+                elif is_superadmin_or_direction:
+                    # Superadmin/Direction sans custom permission = full access
+                    actions = ['read', 'write', 'update', 'delete']
+            
+            modules_list.append({
+                'module': module,
+                'has_permission': has_perm,
+                'is_disabled': is_disabled,
+                'is_custom': perm is not None,
+                'actions': actions
+            })
+        
+        if modules_list:
+            service_data.append({
+                'service': service,
+                'modules': modules_list
+            })
+    
+    return render(request, 'authentification/user_permissions_detail.html', {
+        'target_user': utilisateur,
+        'service_data': service_data,
+        'permissions_existantes': permissions_existantes
+    })
+
+
+@login_required
+def user_permission_toggle(request, user_pk, module_code):
+    if not request.user.is_superadmin:
+        messages.error(request, "Vous n'avez pas l'autorisation de modifier les permissions.")
+        return redirect('authentification:user_list')
+    
+    utilisateur = get_object_or_404(Utilisateur, pk=user_pk)
+    
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        
+        if action == 'toggle_module':
+            # Activer/désactiver l'accès à un module
+            perm, created = PermissionPersonnalisee.objects.get_or_create(
+                utilisateur=utilisateur,
+                module_code=module_code,
+                defaults={'peut_lire': True, 'est_actif': True}
+            )
+            if not created:
+                perm.est_actif = not perm.est_actif
+                perm.save()
+            
+            status = 'activé' if perm.est_actif else 'désactivé'
+            messages.success(request, f"Accès au module {module_code} {status} pour {utilisateur.get_full_name}.")
+        
+        elif action == 'update_actions':
+            # Mettre à jour les actions (lecture, création, modification, suppression)
+            perm, created = PermissionPersonnalisee.objects.get_or_create(
+                utilisateur=utilisateur,
+                module_code=module_code,
+                defaults={'est_actif': True}
+            )
+            
+            actions = request.POST.getlist('actions')
+            perm.peut_lire = 'read' in actions
+            perm.peut_creer = 'create' in actions
+            perm.peut_modifier = 'update' in actions
+            perm.peut_supprimer = 'delete' in actions
+            perm.save()
+            
+            messages.success(request, f"Permissions du module {module_code} mises à jour pour {utilisateur.get_full_name}.")
+    
+    return redirect('authentification:user_permissions_detail', pk=user_pk)
+
+
+@login_required
+def user_reset_password(request, pk):
+    if not request.user.is_superadmin:
+        messages.error(request, "Vous n'avez pas l'autorisation de réinitialiser les mots de passe.")
+        return redirect('authentification:user_list')
+    
+    utilisateur = get_object_or_404(Utilisateur, pk=pk)
+    
+    if request.method == 'POST':
+        new_password = request.POST.get('new_password')
+        if new_password:
+            utilisateur.set_password(new_password)
+            utilisateur.save()
+            log_audit(request.user, 'password_reset', utilisateur, f"Réinitialisation du mot de passe de {utilisateur.username}")
+            messages.success(request, f'Mot de passe de {utilisateur.get_full_name} réinitialisé avec succès.')
+        else:
+            messages.error(request, 'Veuillez entrer un nouveau mot de passe.')
+        return redirect('authentification:user_list')
+    
+    return redirect('authentification:user_list')

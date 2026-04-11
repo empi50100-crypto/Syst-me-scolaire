@@ -8,3 +8,4 @@ class AuthentificationConfig(AppConfig):
     
     def ready(self):
         import authentification.audit_signals
+        import authentification.signals

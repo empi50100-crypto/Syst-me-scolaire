@@ -392,3 +392,38 @@ def rapport_financier(request):
         messages.error(request, "Vous n'avez pas l'autorisation.")
         return redirect('dashboard')
     return render(request, 'finances/rapport_financier.html')
+
+
+@login_required
+def rappel_list(request):
+    if not request.user.has_module_permission('eleves_en_retard', 'read'):
+        messages.error(request, "Vous n'avez pas l'autorisation de voir les rappels.")
+        return redirect('dashboard')
+    
+    annee = AnneeScolaire.objects.filter(est_active=True).first()
+    eleves_en_retard = []
+    
+    if annee:
+        inscriptions = EleveInscription.objects.filter(
+            annee_scolaire=annee
+        ).select_related('eleve', 'classe')
+        
+        for inscription in inscriptions:
+            eleve = inscription.eleve
+            total_frais = FraisScolaire.get_total_frais_classe(inscription.classe, annee)
+            total_paye = Paiement.get_total_paye(eleve, annee)
+            reste = total_frais - total_paye
+            
+            if reste > 0:
+                eleves_en_retard.append({
+                    'eleve': eleve,
+                    'classe': inscription.classe,
+                    'total_frais': total_frais,
+                    'total_paye': total_paye,
+                    'reste': reste
+                })
+    
+    return render(request, 'finances/rappel_list.html', {
+        'eleves_en_retard': eleves_en_retard,
+        'annee': annee
+    })

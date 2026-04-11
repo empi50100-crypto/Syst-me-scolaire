@@ -306,6 +306,7 @@ class Utilisateur(AbstractUser):
     role = models.CharField(max_length=25, choices=Role.choices)
     telephone = models.CharField(max_length=20, blank=True)
     adresse = models.TextField(blank=True, verbose_name="Adresse")
+    matiere = models.ForeignKey('enseignement.Matiere', on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Matière enseignée", related_name="professeurs")
     est_approuve = models.BooleanField(default=False, verbose_name="Compte approuvé")
     
     totp_secret = models.CharField(max_length=32, blank=True, verbose_name="Secret TOTP")
@@ -323,8 +324,18 @@ class Utilisateur(AbstractUser):
     def __str__(self):
         return self.get_full_name() if self.get_full_name() else self.username
     
-    def est_superadmin(self):
+    @property
+    def is_superadmin(self):
+        """Propriété pour compatibilité template"""
         return self.role == self.Role.SUPERADMIN or self.is_superuser
+    
+    def est_superadmin(self):
+        return self.is_superadmin
+    
+    @property
+    def is_approved(self):
+        """Propriété pour compatibilité template (anglais)"""
+        return self.est_approuve
     
     def est_direction(self):
         return self.role == self.Role.DIRECTION

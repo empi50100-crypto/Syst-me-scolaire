@@ -11,36 +11,54 @@
     <form method="post">
         {% csrf_token %}
         
+        <!-- Identité -->
         <div class="form-section">
             <div class="form-section-header">
-                <i class="bi bi-person"></i> Informations Personnelles
+                <i class="bi bi-person-badge"></i> Identité
             </div>
-            
             <div class="row g-4">
                 <div class="col-md-6">
                     <div class="form-group">
-                        <label class="form-label">Nom</label>
+                        <label class="form-label">Nom <span class="text-danger">*</span></label>
                         {{ form.last_name }}
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="form-group">
-                        <label class="form-label">Prénom</label>
+                        <label class="form-label">Prénom(s) <span class="text-danger">*</span></label>
                         {{ form.first_name }}
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Informations de connexion -->
+        <div class="form-section">
+            <div class="form-section-header">
+                <i class="bi bi-shield-lock"></i> Informations de Connexion
+            </div>
+            <div class="row g-4">
                 <div class="col-md-6">
                     <div class="form-group">
-                        <label class="form-label">Nom d'utilisateur</label>
+                        <label class="form-label">Nom d'utilisateur <span class="text-danger">*</span></label>
                         {{ form.username }}
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="form-group">
-                        <label class="form-label">Email</label>
+                        <label class="form-label">Adresse email <span class="text-danger">*</span></label>
                         {{ form.email }}
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Coordonnées -->
+        <div class="form-section">
+            <div class="form-section-header">
+                <i class="bi bi-geo-alt"></i> Coordonnées
+            </div>
+            <div class="row g-4">
                 <div class="col-md-6">
                     <div class="form-group">
                         <label class="form-label">Téléphone</label>
@@ -49,32 +67,29 @@
                 </div>
                 <div class="col-md-6">
                     <div class="form-group">
-                        <label class="form-label">Adresse</label>
+                        <label class="form-label">Adresse complète</label>
                         {{ form.adresse }}
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Informations Professionnelles -->
+        <div class="form-section">
+            <div class="form-section-header">
+                <i class="bi bi-briefcase"></i> Informations Professionnelles
+            </div>
+            <div class="row g-4">
                 <div class="col-md-6">
                     <div class="form-group">
-                        <label class="form-label">Rôle</label>
+                        <label class="form-label">Rôle / Fonction <span class="text-danger">*</span></label>
                         {{ form.role }}
                     </div>
                 </div>
                 <div class="col-md-6" id="matiere_field" style="display: none;">
                     <div class="form-group">
-                        <label class="form-label">Matière</label>
+                        <label class="form-label">Matière enseignée</label>
                         {{ form.matiere }}
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label class="form-label">Salaire de base (FCFA)</label>
-                        {{ form.salaire_base }}
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label class="form-label">Date d'embauche</label>
-                        {{ form.date_embauche }}
                     </div>
                 </div>
             </div>
@@ -122,8 +137,8 @@
                 <div class="col-md-6">
                     <div class="form-group">
                         <div class="form-check">
-                            {{ form.is_approved }}
-                            <label class="form-check-label" for="{{ form.is_approved.id_for_label }}">
+                            {{ form.est_approuve }}
+                            <label class="form-check-label" for="{{ form.est_approuve.id_for_label }}">
                                 Compte approuvé
                             </label>
                         </div>

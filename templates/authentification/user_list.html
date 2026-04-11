@@ -135,7 +135,7 @@
                                 </a>
                                 {% endif %}
                                 
-                                {% if can_del and u != request.user %}
+                                {% if can_del and u != request.user and not u.is_superadmin %}
                                 <a href="{% url 'authentification:user_delete' u.pk %}" class="btn btn-danger btn-action" title="Supprimer">
                                     <i class="bi bi-trash"></i>
                                 </a>
