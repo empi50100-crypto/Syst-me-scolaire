@@ -159,24 +159,37 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const roleSelect = document.getElementById('id_role');
-    const matiereField = document.getElementById('matiere_field');
-    
-    function checkRole() {
-        if (roleSelect && matiereField) {
+(function() {
+    function initMatiereField() {
+        const roleSelect = document.getElementById('id_role');
+        const matiereField = document.getElementById('matiere_field');
+        
+        if (!roleSelect || !matiereField) {
+            console.log('Elements not found, retrying...');
+            setTimeout(initMatiereField, 100);
+            return;
+        }
+        
+        function checkRole() {
+            console.log('Role changed to:', roleSelect.value);
             if (roleSelect.value === 'professeur') {
                 matiereField.style.display = 'block';
+                matiereField.classList.remove('d-none');
             } else {
                 matiereField.style.display = 'none';
+                matiereField.classList.add('d-none');
             }
         }
+        
+        roleSelect.addEventListener('change', checkRole);
+        checkRole(); // Vérifier au chargement
     }
     
-    if (roleSelect) {
-        roleSelect.addEventListener('change', checkRole);
-        checkRole();
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initMatiereField);
+    } else {
+        initMatiereField();
     }
-});
+})();
 </script>
 {% endblock %}

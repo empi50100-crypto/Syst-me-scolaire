@@ -1,134 +1,767 @@
 {% extends 'base.html' %}
-{% block title %}Messages{% endblock %}
+{% load static %}
+{% block title %}Messagerie{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+:root {
+    --primary: #4f46e5;
+    --primary-dark: #4338ca;
+    --secondary: #64748b;
+    --bg-light: #f8fafc;
+    --border: #e2e8f0;
+    --text-dark: #1e293b;
+    --text-muted: #64748b;
+}
+
+.chat-container {
+    display: flex;
+    height: calc(100vh - 140px);
+    background: white;
+    overflow: hidden;
+}
+
+.chat-sidebar {
+    width: 350px;
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    background: white;
+}
+
+.sidebar-header {
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+}
+
+.sidebar-header h4 {
+    margin: 0 0 12px 0;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.header-actions .btn {
+    background: rgba(255,255,255,0.2);
+    border: none;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    width: 100%;
+}
+
+.header-actions .btn:hover {
+    background: rgba(255,255,255,0.3);
+}
+
+.conversations-list {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.conversation-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.conversation-item:hover {
+    background: var(--bg-light);
+}
+
+.conversation-item.active {
+    background: rgba(79, 70, 229, 0.1);
+    border-left: 3px solid var(--primary);
+}
+
+.conv-avatar {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), #818cf8);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.conv-avatar i {
+    font-size: 1rem;
+}
+
+.conv-info {
+    margin-left: 12px;
+    flex: 1;
+    min-width: 0;
+}
+
+.conv-name {
+    font-weight: 600;
+    color: var(--text-dark);
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.conv-preview {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.badge-unread {
+    background: var(--primary);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.conv-time {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+}
+
+.chat-messages-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-light);
+}
+
+.chat-header-bar {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.chat-header-bar h5 {
+    margin: 0;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.chat-messages-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 15px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background: var(--bg-light);
+}
+
+.chat-message {
+    max-width: 75%;
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-message.sent {
+    align-self: flex-end;
+    align-items: flex-end;
+}
+
+.chat-message.received {
+    align-self: flex-start;
+    align-items: flex-start;
+}
+
+.chat-message .message-bubble {
+    padding: 10px 15px;
+    border-radius: 15px;
+    line-height: 1.4;
+    font-size: 0.9rem;
+}
+
+.chat-message.sent .message-bubble {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    border-bottom-right-radius: 4px;
+}
+
+.chat-message.received .message-bubble {
+    background: white;
+    color: var(--text-dark);
+    border-bottom-left-radius: 4px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.chat-message .message-text {
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+.chat-message .message-time {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+.chat-message.sent .message-time {
+    color: rgba(255,255,255,0.7);
+    text-align: right;
+}
+
+.chat-input-area {
+    background: white;
+    padding: 12px 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.chat-input {
+    flex: 1;
+    padding: 10px 15px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 0.9rem;
+    outline: none;
+}
+
+.chat-input:focus {
+    border-color: var(--primary);
+}
+
+.send-button {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--primary);
+    border: none;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.send-button:hover {
+    background: var(--primary-dark);
+}
+
+.empty-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    background: var(--bg-light);
+    padding: 40px;
+}
+
+.empty-state i {
+    font-size: 4rem;
+    margin-bottom: 20px;
+    color: var(--border);
+}
+
+.empty-state h5 {
+    color: var(--text-dark);
+    margin-bottom: 10px;
+    font-size: 1.2rem;
+}
+
+.empty-state p {
+    font-size: 0.95rem;
+}
+
+.typing-indicator {
+    padding: 5px 20px;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    font-style: italic;
+}
+
+.typing-indicator.d-none {
+    display: none;
+}
+
+.chat-messages-area::-webkit-scrollbar {
+    width: 4px;
+}
+
+.chat-messages-area::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 2px;
+}
+
+.conversations-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.conversations-list::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 2px;
+}
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1><i class="bi bi-envelope"></i> Messages</h1>
-    <div>
-        <a href="{% url 'authentification:message_mark_all_read' %}" class="btn btn-outline-primary btn-sm">
-            <i class="bi bi-check-all"></i> Tout marquer comme lu
-        </a>
-        <a href="{% url 'authentification:message_create' %}" class="btn btn-primary btn-sm">
-            <i class="bi bi-plus-circle"></i> Nouveau message
-        </a>
-    </div>
-</div>
-
-<div class="mb-3">
-    <div class="btn-group" role="group">
-        <a href="?filter=all" class="btn btn-sm btn-{% if filter_type == 'all' or not filter_type %}primary{% else %}outline-primary{% endif %}">
-            Tous les messages
-        </a>
-        <a href="?filter=unread" class="btn btn-sm btn-{% if filter_type == 'unread' %}primary{% else %}outline-primary{% endif %}">
-            Non lus
-        </a>
-        <a href="?filter=read" class="btn btn-sm btn-{% if filter_type == 'read' %}primary{% else %}outline-primary{% endif %}">
-            Lus
-        </a>
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-md-12">
-        <ul class="nav nav-tabs mb-3" id="messageTab" role="tablist">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="recus-tab" data-bs-toggle="tab" data-bs-target="#recus" type="button">
-                    <i class="bi bi-inbox"></i> Messages reçus
+<div class="chat-container">
+    {% if conversations %}
+    <div class="chat-sidebar">
+        <div class="sidebar-header">
+            <h4><i class="fas fa-comments me-2"></i>Messages</h4>
+            <div class="header-actions">
+                <button class="btn" onclick="showNewMessageModal()">
+                    <i class="fas fa-plus me-1"></i> Nouveau message
                 </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="envoyes-tab" data-bs-toggle="tab" data-bs-target="#envoyes" type="button">
-                    <i class="bi bi-send"></i> Messages envoyés
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="services-tab" data-bs-toggle="tab" data-bs-target="#services" type="button">
-                    <i class="bi bi-people"></i> Messages de service
-                </button>
-            </li>
-        </ul>
-        
-        <div class="tab-content" id="messageTabContent">
-            <div class="tab-pane fade show active" id="recus" role="tabpanel">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="list-group">
-                            {% for msg in messages_recus %}
-                            <a href="{% url 'authentification:message_detail' msg.pk %}" class="list-group-item list-group-item-action {% if not msg.est_lu %}unread-message{% endif %}">
-                                <div class="d-flex w-100 justify-content-between">
-                                    <h6 class="mb-1">{{ msg.sujet }}</h6>
-                                    <small class="text-muted">{{ msg.date_envoi|date:"d/m/Y H:i" }}</small>
-                                </div>
-                                <p class="mb-1 text-muted" style="font-size: 0.9rem;">{{ msg.contenu|truncatechars:80 }}</p>
-                                <small class="text-muted">De: {{ msg.auteur.get_full_name }}</small>
-                            </a>
-                            {% empty %}
-                            <div class="text-center text-muted py-4">
-                                <i class="bi bi-envelope-open display-4"></i>
-                                <p class="mt-2">Aucun message reçu</p>
-                            </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="tab-pane fade" id="envoyes" role="tabpanel">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="list-group">
-                            {% for msg in messages_envoyes %}
-                            <div class="list-group-item">
-                                <div class="d-flex w-100 justify-content-between">
-                                    <h6 class="mb-1">{{ msg.sujet }}</h6>
-                                    <small class="text-muted">{{ msg.date_envoi|date:"d/m/Y H:i" }}</small>
-                                </div>
-                                <p class="mb-1 text-muted" style="font-size: 0.9rem;">{{ msg.contenu|truncatechars:80 }}</p>
-                                <small class="text-muted">À: {{ msg.destinataire.get_full_name }}</small>
-                            </div>
-                            {% empty %}
-                            <div class="text-center text-muted py-4">
-                                <i class="bi bi-send display-4"></i>
-                                <p class="mt-2">Aucun message envoyé</p>
-                            </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="tab-pane fade" id="services" role="tabpanel">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="list-group">
-                            {% for msg in messages_groupes %}
-                            <div class="list-group-item">
-                                <div class="d-flex w-100 justify-content-between">
-                                    <h6 class="mb-1">{{ msg.sujet }}</h6>
-                                    <small class="text-muted">{{ msg.date_envoi|date:"d/m/Y H:i" }}</small>
-                                </div>
-                                <p class="mb-1 text-muted" style="font-size: 0.9rem;">{{ msg.contenu|truncatechars:80 }}</p>
-                                <small class="text-muted">De: {{ msg.auteur.get_full_name }} - {{ msg.get_type_message_display }}</small>
-                            </div>
-                            {% empty %}
-                            <div class="text-center text-muted py-4">
-                                <p>Aucun message de service</p>
-                            </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
+        
+        <div class="conversations-list">
+            {% for item in conversations %}
+            <a href="{% url 'authentification:message_conversation' item.conversation.id %}" 
+               class="conversation-item {% if selected_conversation.id == item.conversation.id %}active{% endif %}"
+               data-conversation-id="{{ item.conversation.id }}">
+                <div class="conv-avatar">
+                    {% if item.conversation.is_groupe %}<i class="fas fa-users"></i>{% else %}{{ item.other_user.get_full_name|default:item.other_user.username|slice:":1"|upper }}{% endif %}
+                </div>
+                <div class="conv-info">
+                    <div class="conv-name">
+                        {% if item.conversation.is_groupe %}{{ item.conversation.nom }}{% else %}{{ item.other_user.get_full_name|default:item.other_user.username }}{% endif %}
+                        {% if item.unread_count > 0 %}
+                        <span class="badge-unread">{{ item.unread_count }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="conv-preview">
+                        {% if item.last_message %}
+                            {% if item.last_message.auteur == user %}<span style="color: var(--primary);">Vous:</span>{% endif %}
+                            {{ item.last_message.contenu|truncatechars:40 }}
+                        {% endif %}
+                    </div>
+                </div>
+                {% if item.last_message %}
+                <div class="conv-time">{{ item.last_message.date_envoi|date:"H:i" }}</div>
+                {% endif %}
+            </a>
+            {% endfor %}
+        </div>
     </div>
+    {% endif %}
+
+    {% if selected_conversation %}
+    <div class="chat-messages-panel">
+        <div class="chat-header-bar">
+            <div style="display: flex; align-items: center;">
+                <div class="conv-avatar">
+                    {% if display_name %}{{ display_name|slice:":1"|upper }}{% else %}{{ other_user.get_full_name|default:other_user.username|slice:":1"|upper }}{% endif %}
+                </div>
+                <div class="conv-info" style="margin-left: 12px;">
+                    <div class="conv-name" style="color: white;">{% if display_name %}{{ display_name }}{% else %}{{ other_user.get_full_name|default:other_user.username }}{% endif %}</div>
+                    <div class="conv-preview" style="opacity: 0.8;">{% if selected_conversation.is_groupe %}{{ selected_conversation.participants.count }} participants{% else %}En ligne{% endif %}</div>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="btn" onclick="showNewMessageModal()">
+                    <i class="fas fa-plus"></i> Nouveau
+                </button>
+            </div>
+        </div>
+
+        <div class="chat-messages-area" id="messagesContainer">
+            {% for msg in chat_messages %}
+            <div class="chat-message {% if msg.auteur == user %}sent{% else %}received{% endif %}" data-message-id="{{ msg.id }}">
+                <div class="message-bubble">
+                    <p class="message-text">{{ msg.contenu }}</p>
+                </div>
+                <span class="message-time">
+                    {{ msg.date_envoi|date:"H:i" }}
+                    {% if msg.auteur == user %}
+                    {% if msg.est_lu %}
+                    <i class="fas fa-check-double" style="color: #93c5fd; margin-left: 4px;"></i>
+                    {% else %}
+                    <i class="fas fa-check" style="margin-left: 4px;"></i>
+                    {% endif %}
+                    {% endif %}
+                </span>
+            </div>
+            {% empty %}
+            <div class="text-center" style="color: var(--text-muted); padding: 30px;">
+                <i class="fas fa-comment-dots" style="font-size: 2.5rem; color: var(--border);"></i>
+                <p class="mt-3">Aucun message</p>
+                <small>Envoyez le premier message!</small>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="typing-indicator d-none" id="typingIndicator">
+            <i class="fas fa-circle-notch fa-spin"></i>
+            <span id="typingUser"></span> écrit...
+        </div>
+
+        <div class="chat-input-area">
+            <form action="{% url 'authentification:conversation_send' selected_conversation.id %}" method="post" id="messageForm" style="display: flex; gap: 10px; width: 100%;">
+                {% csrf_token %}
+                <input type="text" name="message" class="chat-input" placeholder="Votre message..." id="messageInput" autocomplete="off">
+                <button type="submit" class="send-button">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+    {% else %}
+    <div class="empty-state" style="flex: 1;">
+        <i class="fas fa-comments"></i>
+        <h5>Bienvenue dans la messagerie</h5>
+        <p>Sélectionnez une conversation ou créez-en une nouvelle</p>
+        {% if not conversations %}
+        <button class="btn btn-primary mt-3" onclick="showNewMessageModal()">
+            <i class="fas fa-plus me-2"></i>Nouveau message
+        </button>
+        {% endif %}
+    </div>
+    {% endif %}
 </div>
 {% endblock %}
 
-{% block extra_css %}
-<style>
-.unread-message {
-    background: rgba(99, 102, 241, 0.15) !important;
-    border-left: 3px solid #6366f1 !important;
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+<script>
+function showNewMessageModal() {
+    window.location.href = "{% url 'authentification:message_create' %}";
 }
-</style>
+
+window.conversationId = {{ selected_conversation.id|default:"null" }};
+window.userId = {{ user.id }};
+window.socket = null;
+window.pendingOutgoingMessages = [];
+
+function scrollToBottom() {
+    const container = document.getElementById('messagesContainer');
+    if (container) {
+        container.scrollTop = container.scrollHeight;
+    }
+}
+
+function connectWebSocket() {
+    if (!window.conversationId) return;
+
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+    const wsUrl = wsProtocol + window.location.host + `/ws/chat/${window.conversationId}/`;
+
+    window.socket = new WebSocket(wsUrl);
+
+    window.socket.onopen = function(e) {
+        console.log('WebSocket connecté');
+    };
+
+    window.socket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+
+        if (data.type === 'new_message') {
+            reconcileOrAddMessage(data.message);
+        } else if (data.type === 'typing' && data.user_id !== window.userId) {
+            showTyping(data.user_name, data.is_typing);
+        }
+    };
+
+    window.socket.onclose = function(e) {
+        setTimeout(connectWebSocket, 3000);
+    };
+}
+
+function sendMessage(message) {
+    const container = document.getElementById('messagesContainer');
+    if (!container) return;
+    
+    const empty = container.querySelector('.text-center');
+    if (empty) empty.remove();
+    
+    const tempId = 'temp_' + Date.now();
+    const now = new Date().toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
+    const tempHtml = `
+        <div class="chat-message sent" data-temp-id="${tempId}">
+            <div class="message-bubble">
+                <p class="message-text">${escapeHtml(message)}</p>
+            </div>
+            <span class="message-time">
+                ${now}
+                <i class="fas fa-clock" style="margin-left: 4px;"></i>
+            </span>
+        </div>
+    `;
+    container.insertAdjacentHTML('beforeend', tempHtml);
+    window.pendingOutgoingMessages.push(tempId);
+    scrollToBottom();
+
+    fetch('/authentification/chat/' + window.conversationId + '/envoyer/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
+        },
+        body: 'message=' + encodeURIComponent(message)
+    })
+    .then(async r => {
+        const data = await r.json();
+        if (!r.ok) {
+            throw new Error(data.error || 'Erreur d\'envoi');
+        }
+        return data;
+    })
+    .then(d => {
+        if (d.success && d.message) {
+            reconcileOrAddMessage(d.message, tempId);
+        }
+    })
+    .catch(e => {
+        const tempEl = container.querySelector(`[data-temp-id="${tempId}"]`);
+        if (tempEl) {
+            tempEl.remove();
+        }
+        window.pendingOutgoingMessages = window.pendingOutgoingMessages.filter(id => id !== tempId);
+        console.error('AJAX error:', e);
+        alert(e.message || 'Impossible d\'envoyer le message.');
+    });
+}
+
+function markMessageAsRead(messageId) {
+    fetch(`/authentification/api/updates/?mark_message_read=${messageId}`)
+        .then(() => {
+            // Mettre à jour le badge global
+            const badge = document.getElementById('message-badge');
+            if (badge) {
+                const currentCount = parseInt(badge.textContent) || 0;
+                if (currentCount > 0) {
+                    const newCount = currentCount - 1;
+                    badge.textContent = newCount > 99 ? '99+' : newCount;
+                    if (newCount <= 0) {
+                        badge.style.display = 'none';
+                    }
+                }
+            }
+            // Mettre à jour aussi le badge dans la liste des conversations
+            if (window.conversationId) {
+                const convBadge = document.querySelector(`[data-conversation-id="${window.conversationId}"] .badge-unread`);
+                if (convBadge) {
+                    const currentConvCount = parseInt(convBadge.textContent) || 0;
+                    if (currentConvCount > 0) {
+                        const newConvCount = currentConvCount - 1;
+                        if (newConvCount <= 0) {
+                            convBadge.remove();
+                        } else {
+                            convBadge.textContent = newConvCount;
+                        }
+                    }
+                }
+            }
+        });
+}
+
+function addMessage(msg) {
+    const container = document.getElementById('messagesContainer');
+    if (!container) return;
+
+    if (container.querySelector(`[data-message-id="${msg.id}"]`)) {
+        return;
+    }
+
+    const isSent = msg.auteur.id === window.userId;
+    const html = `
+        <div class="chat-message ${isSent ? 'sent' : 'received'}" data-message-id="${msg.id}">
+            <div class="message-bubble">
+                <p class="message-text">${escapeHtml(msg.contenu)}</p>
+            </div>
+            <span class="message-time">
+                ${formatTime(msg.date_envoi)}
+                ${isSent ? '<i class="fas fa-check" style="margin-left: 4px;"></i>' : ''}
+            </span>
+        </div>
+    `;
+    container.insertAdjacentHTML('beforeend', html);
+    scrollToBottom();
+
+    if (!isSent) {
+        markMessageAsRead(msg.id);
+        if (window.socket && window.socket.readyState === WebSocket.OPEN) {
+            window.socket.send(JSON.stringify({ type: 'read', message_id: msg.id, conversation_id: window.conversationId }));
+        }
+    }
+}
+
+function reconcileOrAddMessage(msg, explicitTempId = null) {
+    const container = document.getElementById('messagesContainer');
+    if (!container) return;
+
+    const isSent = msg.auteur.id === window.userId;
+    const tempId = explicitTempId || (isSent ? window.pendingOutgoingMessages.shift() : null);
+
+    if (explicitTempId) {
+        window.pendingOutgoingMessages = window.pendingOutgoingMessages.filter(id => id !== explicitTempId);
+    }
+
+    if (tempId) {
+        const tempEl = container.querySelector(`[data-temp-id="${tempId}"]`);
+        if (tempEl) {
+            tempEl.className = 'chat-message sent';
+            tempEl.setAttribute('data-message-id', msg.id);
+            tempEl.removeAttribute('data-temp-id');
+            const bubble = tempEl.querySelector('.message-text');
+            if (bubble) {
+                bubble.textContent = msg.contenu;
+            }
+            const timeSpan = tempEl.querySelector('.message-time');
+            if (timeSpan) {
+                timeSpan.innerHTML = `${formatTime(msg.date_envoi)}<i class="fas fa-check" style="margin-left: 4px;"></i>`;
+            }
+            scrollToBottom();
+            return;
+        }
+    }
+
+    addMessage(msg);
+}
+
+function sendTyping(isTyping) {
+    if (window.socket && window.socket.readyState === WebSocket.OPEN) {
+        window.socket.send(JSON.stringify({ type: 'typing', is_typing: isTyping, conversation_id: window.conversationId }));
+    }
+}
+
+function showTyping(userName, isTyping) {
+    const indicator = document.getElementById('typingIndicator');
+    const typingUser = document.getElementById('typingUser');
+    if (indicator && typingUser) {
+        typingUser.textContent = userName;
+        indicator.classList.toggle('d-none', !isTyping);
+    }
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function formatTime(dateStr) {
+    const date = new Date(dateStr);
+    return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+}
+
+function clearConversationBadge() {
+    if (window.conversationId) {
+        // Supprimer le badge de la conversation dans la liste
+        const convItem = document.querySelector(`[data-conversation-id="${window.conversationId}"]`);
+        if (convItem) {
+            const badge = convItem.querySelector('.badge-unread');
+            if (badge) {
+                badge.remove();
+            }
+            convItem.classList.remove('unread');
+        }
+        
+        // Marquer tous les messages comme lus visuellement
+        document.querySelectorAll('.chat-message.received').forEach(msg => {
+            const checkIcon = msg.querySelector('.message-time i');
+            if (checkIcon && checkIcon.classList.contains('fa-check') && !checkIcon.classList.contains('fa-check-double')) {
+                checkIcon.classList.remove('fa-check');
+                checkIcon.classList.add('fa-check-double');
+                checkIcon.style.color = '#93c5fd';
+            }
+        });
+    }
+}
+
+function markAllMessagesAsRead() {
+    if (!window.conversationId) return;
+    
+    // Récupérer tous les IDs de messages reçus non lus
+    const unreadMessages = [];
+    document.querySelectorAll('.chat-message.received').forEach(msg => {
+        const msgId = msg.getAttribute('data-message-id');
+        const checkIcon = msg.querySelector('.message-time i');
+        // Si c'est juste un check simple (non lu) et pas un check-double (lu)
+        if (msgId && checkIcon && checkIcon.classList.contains('fa-check') && !checkIcon.classList.contains('fa-check-double')) {
+            unreadMessages.push(msgId);
+        }
+    });
+    
+    // Compter combien de messages non lus
+    const unreadCount = unreadMessages.length;
+    
+    if (unreadCount > 0) {
+        // Marquer tous les messages comme lus côté serveur
+        fetch(`/authentification/api/updates/?mark_conversation_read=${window.conversationId}`)
+            .then(() => {
+                // Mettre à jour le badge global
+                const badge = document.getElementById('message-badge');
+                if (badge) {
+                    const currentCount = parseInt(badge.textContent) || 0;
+                    const newCount = Math.max(0, currentCount - unreadCount);
+                    badge.textContent = newCount > 99 ? '99+' : newCount;
+                    if (newCount <= 0) {
+                        badge.style.display = 'none';
+                    }
+                }
+                // Supprimer le badge de la conversation
+                clearConversationBadge();
+            })
+            .catch(err => console.error('Erreur markAllMessagesAsRead:', err));
+    } else {
+        // Juste s'assurer que le badge est supprimé
+        clearConversationBadge();
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    scrollToBottom();
+    connectWebSocket();
+    
+    // Marquer tous les messages comme lus au chargement
+    setTimeout(markAllMessagesAsRead, 500);
+
+    const messageInput = document.getElementById('messageInput');
+    const messageForm = document.getElementById('messageForm');
+    let typingTimeout;
+
+    if (messageInput && messageForm) {
+        messageInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                if (this.value.trim()) {
+                    sendMessage(this.value.trim());
+                    this.value = '';
+                }
+            }
+        });
+
+        messageForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const msg = messageInput.value.trim();
+            if (msg) {
+                sendMessage(msg);
+                messageInput.value = '';
+            }
+        });
+
+        messageInput.addEventListener('input', function() {
+            sendTyping(true);
+            clearTimeout(typingTimeout);
+            typingTimeout = setTimeout(() => sendTyping(false), 1500);
+        });
+    }
+});
+</script>
 {% endblock %}

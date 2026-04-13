@@ -25,13 +25,13 @@ class NotificationSerializer(serializers.ModelSerializer):
 
 
 class MessageSerializer(serializers.ModelSerializer):
-    expediteur_nom = serializers.CharField(source='expediteur.get_full_name', read_only=True)
+    auteur_nom = serializers.CharField(source='auteur.get_full_name', read_only=True)
     destinataire_nom = serializers.CharField(source='destinataire.get_full_name', read_only=True)
     
     class Meta:
         model = Message
-        fields = ['id', 'expediteur', 'expediteur_nom', 'destinataire', 'destinataire_nom', 
-                  'sujet', 'message', 'type_message', 'est_lu', 'date_envoi']
+        fields = ['id', 'auteur', 'auteur_nom', 'destinataire', 'destinataire_nom', 
+                  'sujet', 'contenu', 'type_message', 'service', 'est_lu', 'date_envoi', 'conversation', 'groupe']
 
 
 class ServiceSerializer(serializers.ModelSerializer):

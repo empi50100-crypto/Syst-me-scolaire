@@ -331,17 +331,13 @@
             <!-- Notifications -->
             <a class="nav-icon-btn position-relative" href="{% url 'authentification:notification_list' %}" title="Notifications">
                 <i class="bi bi-bell"></i>
-                {% if unread_notifications_count %}
-                <span class="nav-badge">{{ unread_notifications_count }}</span>
-                {% endif %}
+                <span class="nav-badge" id="notification-badge" {% if not unread_notifications_count %}style="display:none;"{% endif %}>{{ unread_notifications_count|default:0 }}</span>
             </a>
 
             <!-- Messages -->
             <a class="nav-icon-btn position-relative" href="{% url 'authentification:chat_inbox' %}" title="Messages">
                 <i class="bi bi-chat-dots"></i>
-                {% if unread_messages_count %}
-                <span class="nav-badge" style="background: #10b981;">{{ unread_messages_count }}</span>
-                {% endif %}
+                <span class="nav-badge" id="message-badge" style="background: #10b981;{% if not unread_messages_count %}display:none;{% endif %}">{{ unread_messages_count|default:0 }}</span>
             </a>
 
             <!-- Theme Toggle -->
@@ -660,5 +656,540 @@
             }
         });
     </script>
+    
+    {% if request.user.is_authenticated %}
+    <script>
+    // ── Système de polling silencieux pour les mises à jour en temps réel ──────────
+    (function() {
+        console.log('[POLLING] Initialisation du système de polling...');
+        
+        let lastNotificationId = 0;
+        let lastMessageId = 0;
+        let lastConversationId = 0;
+        let pollInterval = 3000;
+        let currentConversationId = null;
+        let pollCount = 0;
+        const userId = {{ request.user.id }};
+        
+        // Détecter si on est sur la page de conversation
+        function detectCurrentPage() {
+            const match = window.location.pathname.match(/\/messages\/(\d+)\//);
+            if (match) {
+                currentConversationId = parseInt(match[1]);
+                console.log('[POLLING] Conversation détectée:', currentConversationId);
+            } else {
+                currentConversationId = null;
+            }
+        }
+        detectCurrentPage();
+        
+        function updateBadge(elementId, count) {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+            if (count > 0) {
+                el.textContent = count > 99 ? '99+' : count;
+                el.style.display = '';
+            } else {
+                el.style.display = 'none';
+            }
+        }
+        
+        function showToast(titre, message, type = 'info', link = null) {
+            console.log('[POLLING] Toast:', titre, message);
+            const toastContainer = document.getElementById('toastContainer') || createToastContainer();
+            
+            const toast = document.createElement('div');
+            toast.className = `toast-notification toast-${type}`;
+            
+            const iconClass = type === 'message' ? 'fa-comment' : type === 'success' ? 'fa-check-circle' : type === 'warning' ? 'fa-exclamation-triangle' : 'fa-bell';
+            const iconBg = type === 'message' ? 'linear-gradient(135deg, #22c55e, #16a34a)' : type === 'success' ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 'linear-gradient(135deg, #6366f1, #8b5cf6)';
+            
+            toast.innerHTML = `
+                <div class="toast-icon" style="background: ${iconBg};">
+                    <i class="fas ${iconClass}"></i>
+                </div>
+                <div class="toast-content">
+                    <strong>${titre}</strong>
+                    <p>${message}</p>
+                </div>
+                <button class="toast-close" onclick="this.parentElement.remove()">&times;</button>
+            `;
+            
+            if (link) {
+                toast.style.cursor = 'pointer';
+                toast.onclick = () => window.location.href = link;
+            }
+            
+            toastContainer.appendChild(toast);
+            setTimeout(() => toast.classList.add('show'), 10);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 5000);
+        }
+        
+        function createToastContainer() {
+            const container = document.createElement('div');
+            container.id = 'toastContainer';
+            container.style.cssText = 'position:fixed;top:80px;right:20px;z-index:99999;max-width:350px;';
+            document.body.appendChild(container);
+            return container;
+        }
+        
+        function formatTime(dateStr) {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            const now = new Date();
+            const diff = now - date;
+            
+            if (diff < 60000) return 'À l\'instant';
+            if (diff < 3600000) return `Il y a ${Math.floor(diff/60000)} min`;
+            if (diff < 86400000) return date.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
+            return date.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'});
+        }
+        
+        function fetchUpdates() {
+            detectCurrentPage();
+            pollCount++;
+            
+            let url = `/authentification/api/updates/?last_notification=${lastNotificationId}&last_message=${lastMessageId}&last_conversation=${lastConversationId}`;
+            
+            if (pollCount % 10 === 1) {
+                console.log('[POLLING] Requête #', pollCount, 'URL:', url);
+            }
+            
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        return response.text().then(text => {
+                            console.error('[POLLING] Erreur HTTP:', response.status, 'Réponse:', text);
+                            throw new Error('HTTP error: ' + text);
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (pollCount % 10 === 1) {
+                        console.log('[POLLING] Données reçues:', data);
+                    }
+                    
+                    // Mettre à jour les badges globaux
+                    updateBadge('notification-badge', data.totals.notifications);
+                    updateBadge('message-badge', data.totals.messages);
+                    
+                    // Traiter les nouvelles notifications
+                    if (data.notifications && data.notifications.length > 0) {
+                        console.log('[POLLING] Nouvelles notifications:', data.notifications.length);
+                        data.notifications.forEach(n => {
+                            const isMessageEvent = n.type_notification === 'message';
+                            if (isMessageEvent) {
+                                if (n.id > lastMessageId) {
+                                    lastMessageId = Math.max(lastMessageId, n.id);
+                                    updateBadge('message-badge', (parseInt(document.getElementById('message-badge')?.textContent) || 0) + 1);
+                                    showToast('Nouveau message', `${n.auteur?.name || 'Quelqu\'un'}: ${n.message || ''}`, 'message', n.lien);
+                                }
+                            } else {
+                                if (n.id > lastNotificationId) {
+                                    lastNotificationId = Math.max(lastNotificationId, n.id);
+                                    updateBadge('notification-badge', (parseInt(document.getElementById('notification-badge')?.textContent) || 0) + 1);
+                                    showToast(n.titre, n.message, 'info', n.lien);
+                                    
+                                    // Ajouter à la liste des notifications
+                                    const notifList = document.querySelector('.notifications-list, .notification-items');
+                                    if (notifList) {
+                                        const newItem = document.createElement('a');
+                                        newItem.href = n.lien || '#';
+                                        newItem.className = 'dropdown-item unread';
+                                        newItem.innerHTML = `
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-bell text-primary me-2"></i>
+                                                <div>
+                                                    <strong>${n.titre}</strong>
+                                                    <br><small class="text-muted">${n.message}</small>
+                                                </div>
+                                            </div>
+                                        `;
+                                        const firstItem = notifList.querySelector('.dropdown-item, .notification-item');
+                                        if (firstItem) {
+                                            notifList.insertBefore(newItem, firstItem);
+                                        } else {
+                                            notifList.appendChild(newItem);
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    }
+                    
+                    // Traiter les nouveaux messages
+                    if (data.messages && data.messages.length > 0) {
+                        data.messages.forEach(m => {
+                            if (m.id > lastMessageId) {
+                                lastMessageId = Math.max(lastMessageId, m.id);
+                                
+                                // Afficher le toast
+                                let msgType = 'message';
+                                if (m.type_message === 'service') msgType = 'info';
+                                
+                                showToast(
+                                    m.type_message === 'service' ? 'Message Service' : 'Nouveau message',
+                                    `${m.auteur.name}: ${m.contenu}`,
+                                    msgType,
+                                    m.conversation_id ? `/authentification/messages/${m.conversation_id}/` : null
+                                );
+                                
+                                // Si c'est pour la conversation actuelle, ajouter le message et marquer comme lu
+                                if (currentConversationId && m.conversation_id === currentConversationId) {
+                                    addMessageToChat(m);
+                                    markMessageAsRead(m.id);
+                                }
+                            }
+                        });
+                    }
+                    
+                    // Traiter les conversations
+                    if (data.conversations && data.conversations.length > 0) {
+                        data.conversations.forEach(conv => {
+                            if (conv.type === 'new') {
+                                addConversationToList(conv);
+                            } else if (conv.type === 'updated') {
+                                updateConversationInList(conv);
+                            }
+                        });
+                    }
+                    
+                    // Marquer automatiquement les messages comme lus si conversation ouverte
+                    if (currentConversationId && data.messages) {
+                        data.messages.forEach(m => {
+                            if (m.conversation_id === currentConversationId && m.auteur.id !== userId) {
+                                markMessageAsRead(m.id);
+                            }
+                        });
+                    }
+                    
+                    if (data.max_conversation_id > lastConversationId) {
+                        lastConversationId = data.max_conversation_id;
+                    }
+                })
+                .catch(error => console.error('[POLLING] Erreur:', error));
+        }
+        
+        function markMessageAsRead(messageId) {
+            fetch(`/authentification/api/updates/?mark_message_read=${messageId}`)
+                .then(() => {
+                    const msgEl = document.querySelector(`[data-message-id="${messageId}"]`);
+                    if (msgEl) {
+                        msgEl.classList.remove('unread');
+                        const checkIcon = msgEl.querySelector('.message-status i');
+                        if (checkIcon) {
+                            checkIcon.className = 'fas fa-check-double';
+                            checkIcon.style.color = '#93c5fd';
+                        }
+                    }
+                });
+        }
+        
+        function markNotificationAsRead(notificationId) {
+            fetch(`/authentification/api/updates/?mark_notification_read=${notificationId}`);
+        }
+        
+        function addMessageToChat(msg) {
+            const container = document.getElementById('messagesContainer');
+            if (!container) return;
+            
+            // Vérifier si le message existe déjà
+            if (container.querySelector(`[data-message-id="${msg.id}"]`)) {
+                return;
+            }
+            
+            const isSent = msg.auteur.id === userId;
+            const html = `
+                <div class="chat-message ${isSent ? 'sent' : 'received'}" data-message-id="${msg.id}">
+                    <div class="message-bubble">
+                        <p class="message-text">${escapeHtml(msg.contenu)}</p>
+                    </div>
+                    <span class="message-time">
+                        ${formatTime(msg.date_envoi)}
+                        ${isSent ? '<i class="fas fa-check" style="margin-left: 4px;"></i>' : ''}
+                    </span>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', html);
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        function addConversationToList(conv) {
+            const list = document.querySelector('.conversations-list, .conversation-items, .list-group');
+            if (!list) return;
+            
+            if (list.querySelector(`[data-conversation-id="${conv.id}"]`)) return;
+            
+            const html = createConversationItemHTML(conv);
+            if (!html) return;
+            
+            const temp = document.createElement('div');
+            temp.innerHTML = html;
+            const newItem = temp.firstElementChild;
+            if (!newItem) return;
+            
+            const firstItem = list.querySelector('.conversation-item, .list-group-item');
+            if (firstItem) {
+                list.insertBefore(newItem, firstItem);
+            } else {
+                list.appendChild(newItem);
+            }
+        }
+        
+        function updateConversationInList(conv) {
+            if (!conv || !conv.other_user || !conv.other_user.avatar) {
+                return;
+            }
+            
+            const list = document.querySelector('.conversations-list, .conversation-items, .list-group');
+            if (!list) return;
+            
+            const existingItem = list.querySelector(`[data-conversation-id="${conv.id}"]`);
+            
+            if (existingItem) {
+                // Mettre à jour l'aperçu
+                const preview = existingItem.querySelector('.conv-preview');
+                if (preview && conv.last_message) {
+                    const isMe = conv.last_message.auteur_id === userId;
+                    preview.innerHTML = `<span style="color: var(--primary);">${isMe ? 'Vous:' : conv.auteur_name || ''}</span> ${conv.last_message.content || ''}`;
+                }
+                
+                // Mettre à jour l'heure
+                const timeEl = existingItem.querySelector('.conv-time');
+                if (timeEl && conv.last_message) {
+                    timeEl.textContent = formatTime(conv.last_message.date_envoi);
+                }
+                
+                // Badge non lu
+                if (conv.unread_count > 0 && conv.id !== currentConversationId) {
+                    existingItem.classList.add('unread');
+                    let badge = existingItem.querySelector('.badge-unread, .unread-badge');
+                    if (!badge) {
+                        badge = document.createElement('span');
+                        badge.className = 'badge-unread';
+                        const nameEl = existingItem.querySelector('.conv-name');
+                        if (nameEl) nameEl.appendChild(badge);
+                    }
+                    badge.textContent = conv.unread_count;
+                }
+                
+                // Déplacer en haut si nouveau message
+                if (conv.unread_count > 0 || conv.type === 'updated') {
+                    list.insertBefore(existingItem, list.firstChild);
+                }
+            } else {
+                addConversationToList(conv);
+            }
+        }
+        
+        function createConversationItemHTML(conv) {
+            if (!conv || !conv.other_user || !conv.other_user.avatar) {
+                console.log('[CONV] Skip invalid conv:', conv);
+                return '';
+            }
+            return `
+                <a href="/authentification/messages/${conv.id}/" 
+                   class="conversation-item list-group-item list-group-item-action${conv.unread_count > 0 ? ' unread' : ''}" 
+                   data-conversation-id="${conv.id}">
+                    <div class="conv-avatar">${conv.other_user.avatar}</div>
+                    <div class="conv-info">
+                        <div class="conv-name">
+                            ${conv.other_user.name}
+                            ${conv.unread_count > 0 ? `<span class="badge-unread">${conv.unread_count}</span>` : ''}
+                        </div>
+                        <div class="conv-preview">
+                            ${conv.last_message ? (conv.last_message.auteur_id === userId ? '<span style="color: var(--primary);">Vous:</span> ' : (conv.last_message.auteur_name ? conv.last_message.auteur_name + ': ' : '')) : ''}
+                            ${conv.last_message ? conv.last_message.content : ''}
+                        </div>
+                    </div>
+                    <div class="conv-meta">
+                        <span class="conv-time">${conv.last_message ? formatTime(conv.last_message.date_envoi) : ''}</span>
+                    </div>
+                </a>
+            `;
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Écouter les changements d'URL pour détecter la conversation actuelle
+        let lastUrl = location.href;
+        new MutationObserver(() => {
+            const url = location.href;
+            if (url !== lastUrl) {
+                lastUrl = url;
+                detectCurrentPage();
+            }
+        }).observe(document, {subtree: true, childList: true});
+        
+        // ── Connexion WebSocket pour les notifications temps réel ──
+        let notifSocket = null;
+        let notifReconnectAttempts = 0;
+        const maxReconnectAttempts = 10;
+        
+        function connectNotificationSocket() {
+            const wsProtocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+            const wsUrl = wsProtocol + window.location.host + '/ws/notifications/';
+            
+            notifSocket = new WebSocket(wsUrl);
+            
+            notifSocket.onopen = function() {
+                console.log('[NOTIF-WS] Connecté');
+                notifReconnectAttempts = 0;
+            };
+            
+            notifSocket.onmessage = function(e) {
+                try {
+                    const data = JSON.parse(e.data);
+                    const dataType = data.type;
+                    console.log('[NOTIF-WS] Message reçu - type:', dataType, 'data:', JSON.stringify(data.data).substring(0, 200));
+                    if (dataType === 'messages_read' && data.data) {
+                        const count = data.data.count || 0;
+                        const currentBadge = document.getElementById('message-badge');
+                        const currentCount = parseInt(currentBadge?.textContent) || 0;
+                        const newCount = Math.max(0, currentCount - count);
+                        console.log('[NOTIF-WS] Messages lus:', count, 'Nouveau total:', newCount);
+                        updateBadge('message-badge', newCount);
+                    } else if ((dataType === 'notification' || dataType === 'message') && data.data) {
+                        const n = data.data;
+                        console.log('[NOTIF-WS] n defined:', n ? 'yes' : 'no');
+                        const isMessageEvent = dataType === 'message' || (n && n.type === 'message') || (n && n.type_notification === 'message');
+                        console.log('[NOTIF-WS] isMessageEvent:', isMessageEvent);
+                        if (isMessageEvent) {
+                            console.log('[NOTIF-WS] Handling message event');
+                            if (!n.id || n.id > lastMessageId) {
+                                if (n.id) lastMessageId = Math.max(lastMessageId, n.id);
+                                console.log('[NOTIF-WS] Updating message badge, current text:', document.getElementById('message-badge')?.textContent);
+                                console.log('[NOTIF-WS] Calling updateBadge with count:', (parseInt(document.getElementById('message-badge')?.textContent) || 0) + 1);
+                                updateBadge('message-badge', (parseInt(document.getElementById('message-badge')?.textContent) || 0) + 1);
+                                console.log('[NOTIF-WS] Badge updated, new text:', document.getElementById('message-badge')?.textContent);
+                                const auteurName = n.auteur ? n.auteur.name : 'Quelqu\'un';
+                                const convLink = n.conversation_id ? `/authentification/messages/${n.conversation_id}/` : '/authentification/messages/';
+                                showToast('Nouveau message', `${auteurName}: ${n.message || ''}`, 'message', convLink);
+                                setTimeout(function() { fetchUpdates(); }, 200);
+                            }
+                        } else {
+                            if (!n.id || n.id > lastNotificationId) {
+                                if (n.id) lastNotificationId = Math.max(lastNotificationId, n.id);
+                                updateBadge('notification-badge', (parseInt(document.getElementById('notification-badge')?.textContent) || 0) + 1);
+                                showToast(n.titre || 'Notification', n.message || '', 'info', n.lien || null);
+                                const notifList = document.querySelector('.notifications-list, .notification-items');
+                                if (notifList) {
+                                    const newItem = document.createElement('a');
+                                    newItem.href = n.lien || '#';
+                                    newItem.className = 'dropdown-item unread';
+                                    newItem.innerHTML = `
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-bell text-primary me-2"></i>
+                                            <div>
+                                                <strong>${n.titre || ''}</strong>
+                                                <br><small class="text-muted">${n.message || ''}</small>
+                                            </div>
+                                        </div>
+                                    `;
+                                    const firstItem = notifList.querySelector('.dropdown-item, .notification-item');
+                                    if (firstItem) {
+                                        notifList.insertBefore(newItem, firstItem);
+                                    } else {
+                                        notifList.appendChild(newItem);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } catch (err) {
+                    console.error('[NOTIF-WS] Erreur de parsing:', err);
+                }
+            };
+            
+            notifSocket.onclose = function() {
+                console.log('[NOTIF-WS] Déconnecté');
+                notifReconnectAttempts++;
+                if (notifReconnectAttempts <= maxReconnectAttempts) {
+                    const delay = Math.min(3000 * notifReconnectAttempts, 30000);
+                    setTimeout(connectNotificationSocket, delay);
+                }
+            };
+            
+            notifSocket.onerror = function(err) {
+                console.error('[NOTIF-WS] Erreur:', err);
+            };
+        }
+        
+        connectNotificationSocket();
+        
+        // Style pour les toasts
+        const style = document.createElement('style');
+        style.textContent = `
+            .toast-notification {
+                display: flex;
+                align-items: flex-start;
+                gap: 12px;
+                padding: 15px;
+                background: white;
+                border-radius: 10px;
+                box-shadow: 0 5px 25px rgba(0,0,0,0.2);
+                margin-bottom: 10px;
+                transform: translateX(120%);
+                transition: transform 0.3s ease;
+                border-left: 4px solid #6366f1;
+                cursor: pointer;
+            }
+            .toast-notification:hover {
+                box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+            }
+            .toast-icon {
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                color: white;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-shrink: 0;
+                font-size: 1rem;
+            }
+            .toast-content {
+                flex: 1;
+            }
+            .toast-content strong {
+                display: block;
+                margin-bottom: 3px;
+                color: #1e293b;
+            }
+            .toast-content p {
+                margin: 0;
+                font-size: 0.85rem;
+                color: #64748b;
+            }
+            .toast-close {
+                background: none;
+                border: none;
+                font-size: 1.5rem;
+                color: #94a3b8;
+                cursor: pointer;
+                padding: 0;
+                line-height: 1;
+            }
+            .toast-close:hover {
+                color: #475569;
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // Démarrer le polling (backup pour les cas où WebSocket est indisponible)
+        console.log('[POLLING] Démarrage du polling toutes les', pollInterval/1000, 'secondes');
+        fetchUpdates();
+        setInterval(fetchUpdates, pollInterval);
+    })();
+    </script>
+    {% endif %}
 </body>
 </html>

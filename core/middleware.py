@@ -33,6 +33,16 @@ class SessionTimeoutMiddleware:
     
     def __init__(self, get_response):
         self.get_response = get_response
+    
+    def should_skip_activity_update(self, request):
+        path = request.path
+        if path.startswith('/authentification/api/'):
+            return True
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return True
+        if path.endswith('.js') or path.endswith('.css') or path.endswith('.png') or path.endswith('.jpg') or path.endswith('.svg') or path.endswith('.woff2'):
+            return True
+        return False
 
     def __call__(self, request):
         if request.user.is_authenticated:
@@ -53,8 +63,9 @@ class SessionTimeoutMiddleware:
                     logout(request)
                     return redirect('authentification:login')
             
-            request.session['last_activity'] = now.isoformat()
-            request.session.modified = True
+            if not self.should_skip_activity_update(request):
+                request.session['last_activity'] = now.isoformat()
+                request.session.modified = True
         
         response = self.get_response(request)
         return response

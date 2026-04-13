@@ -73,7 +73,7 @@ class MessageViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         Utilisateur = self.request.Utilisateur
         return Message.objects.filter(
-            models.Q(destinataire=Utilisateur) | models.Q(expediteur=Utilisateur)
+            models.Q(destinataire=Utilisateur) | models.Q(auteur=Utilisateur)
         ).order_by('-date_envoi')
     
     @action(detail=False, methods=['get'])
@@ -84,7 +84,7 @@ class MessageViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'])
     def sent(self, request):
-        messages = Message.objects.filter(expediteur=request.Utilisateur)
+        messages = Message.objects.filter(auteur=request.Utilisateur)
         serializer = self.get_serializer(messages, many=True)
         return Response(serializer.data)
 

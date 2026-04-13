@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -6,14 +7,77 @@ from django.views import View
 from django.utils.decorators import method_decorator
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+from django.db import models
 from datetime import datetime
 import pyotp
 import qrcode
 import io
 import base64
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 
-from .models import Utilisateur, log_audit, Notification, Message, TentativeConnexion, ProfilPermission, PermissionPersonnalisee, CodeReinitialisation
+from .models import Utilisateur, log_audit, Notification, Message, TentativeConnexion, ProfilPermission, PermissionPersonnalisee, CodeReinitialisation, Conversation, Groupe
 from .forms import UserRegistrationForm, UserCreationForm, UserChangeForm
+
+
+def send_message_notification(auteur, destinataire, contenu, type_message, conversation=None):
+    """Diffuse un événement de message sans l'ajouter à la liste des notifications."""
+    if not destinataire:
+        return
+
+    titre = f"Nouveau message de {auteur.get_full_name() or auteur.username}"
+    message_preview = contenu[:100] + "..." if len(contenu) > 100 else contenu
+    lien = "/authentification/messages/"
+    if conversation:
+        lien = f"/authentification/messages/{conversation.id}/"
+
+    from authentification.consumers import send_message_to_user
+
+    send_message_to_user(destinataire.id, {
+        'type': 'message',
+        'titre': titre,
+        'message': message_preview,
+        'conversation_id': conversation.id if conversation else None,
+        'lien': lien,
+        'auteur': {
+            'id': auteur.id,
+            'name': auteur.get_full_name() or auteur.username,
+        },
+        'date_creation': timezone.now().isoformat()
+    })
+
+
+def serialize_chat_message(message):
+    return {
+        'id': message.id,
+        'contenu': message.contenu,
+        'auteur': {
+            'id': message.auteur_id,
+            'name': message.auteur.get_full_name() or message.auteur.username,
+        },
+        'date_envoi': message.date_envoi.isoformat(),
+        'est_lu': message.est_lu,
+    }
+
+
+def broadcast_conversation_message(message):
+    if not message.conversation_id:
+        return
+
+    channel_layer = get_channel_layer()
+    if not channel_layer:
+        return
+
+    async_to_sync(channel_layer.group_send)(
+        f'conversation_{message.conversation_id}',
+        {
+            'type': 'chat_message',
+            'message': serialize_chat_message(message),
+            'conversation_id': str(message.conversation_id),
+            'sender_id': message.auteur_id
+        }
+    )
 
 
 class LoginView(View):
@@ -255,7 +319,12 @@ def user_list(request):
         messages.error(request, "Accès refusé.")
         return redirect('dashboard')
     
-    users = Utilisateur.objects.all().order_by('-date_joined')
+    # SuperAdmin voit tous les utilisateurs, les autres ne voient pas les SuperAdmin
+    if request.user.is_superadmin:
+        users = Utilisateur.objects.all().order_by('-date_joined')
+    else:
+        users = Utilisateur.objects.exclude(role='superadmin').exclude(is_superuser=True).order_by('-date_joined')
+    
     return render(request, 'authentification/user_list.html', {'users': users})
 
 
@@ -283,6 +352,12 @@ def user_update(request, pk):
         return redirect('authentification:user_list')
     
     user = get_object_or_404(Utilisateur, pk=pk)
+    
+    # Seul le SuperAdmin peut modifier un SuperAdmin
+    if user.is_superadmin and not request.user.is_superadmin:
+        messages.error(request, "Vous ne pouvez pas modifier un compte SuperAdmin.")
+        return redirect('authentification:user_list')
+    
     if request.method == 'POST':
         form = UserChangeForm(request.POST, instance=user)
         if form.is_valid():
@@ -345,29 +420,544 @@ def user_toggle_active(request, pk):
 
 @login_required
 def notification_list(request):
-    notifications = request.user.notifications.all().order_by('-date_creation')[:50]
-    return render(request, 'authentification/notification_list.html', {'notifications': notifications})
+    filter_type = request.GET.get('filter', 'all')
+    notifications = request.user.notifications.exclude(
+        type_notification=Notification.TypeNotification.MESSAGE
+    ).order_by('-date_creation')
+    if filter_type == 'unread':
+        notifications = notifications.filter(est_lu=False)
+    elif filter_type == 'read':
+        notifications = notifications.filter(est_lu=True)
+    notifications = notifications[:50]
+    return render(request, 'authentification/notification_list.html', {'notifications': notifications, 'filter_type': filter_type})
 
 
 @login_required
-def message_list(request):
-    messages_recus = request.user.messages_recus.all().order_by('-date_envoi')[:50]
-    return render(request, 'authentification/message_list.html', {'messages_recus': messages_recus})
+def notification_mark_all_read(request):
+    request.user.notifications.exclude(
+        type_notification=Notification.TypeNotification.MESSAGE
+    ).filter(est_lu=False).update(est_lu=True)
+    messages.success(request, 'Toutes les notifications ont été marquées comme lues.')
+    return redirect('authentification:notification_list')
+
+
+@login_required
+def notification_detail(request, pk):
+    from django.shortcuts import get_object_or_404
+    notification = get_object_or_404(Notification, pk=pk, destinataire=request.user)
+    if not notification.est_lu:
+        notification.est_lu = True
+        notification.save(update_fields=['est_lu'])
+    if notification.lien:
+        return redirect(notification.lien)
+    return redirect('authentification:notification_list')
+
+
+@login_required
+def message_list(request, conversation_id=None):
+    filter_type = request.GET.get('filter', 'all')
+    
+    conversations = request.user.conversations.all().prefetch_related('participants', 'messages')
+    conversations_data = []
+    total_unread = 0
+    for conv in conversations:
+        other = conv.get_other_participant(request.user)
+        last_msg = conv.get_last_message()
+        unread = conv.get_unread_count(request.user)
+        total_unread += unread
+        conversations_data.append({
+            'conversation': conv,
+            'other_user': other,
+            'last_message': last_msg,
+            'unread_count': unread
+        })
+    conversations_data.sort(key=lambda x: x['last_message'].date_envoi if x['last_message'] else x['conversation'].updated_at, reverse=True)
+    
+    selected_conversation = None
+    chat_messages = []
+    other_user = None
+    display_name = None
+    template_name = 'authentification/message_list.html'
+    
+    if conversation_id:
+        try:
+            selected_conversation = Conversation.objects.get(id=conversation_id)
+        except Conversation.DoesNotExist:
+            messages.error(request, "Cette conversation n'existe plus.")
+            return redirect('authentification:message_list')
+        
+        if not selected_conversation.participants.filter(id=request.user.id).exists():
+            messages.error(request, "Vous n'avez pas accès à cette conversation.")
+            return redirect('authentification:message_list')
+        else:
+            if selected_conversation.is_groupe:
+                chat_messages = selected_conversation.messages.all().order_by('date_envoi')
+            else:
+                chat_messages = selected_conversation.messages.all().order_by('date_envoi')
+            selected_conversation.messages.filter(destinataire=request.user, est_lu=False).update(est_lu=True)
+            other_user = selected_conversation.get_other_participant(request.user)
+            display_name = selected_conversation.get_display_name(request.user)
+    elif filter_type == 'recus':
+        messages_recus_base = request.user.messages_recus.exclude(type_message__in=['service', 'groupe'])
+        chat_messages = messages_recus_base.filter(est_lu=False).order_by('-date_envoi')[:50]
+    elif filter_type == 'envoyes':
+        chat_messages = request.user.messages_envoyes.exclude(type_message__in=['service', 'groupe']).order_by('-date_envoi')[:50]
+    elif filter_type == 'service':
+        chat_messages = Message.objects.filter(type_message='service').order_by('-date_envoi')[:50]
+    elif filter_type == 'groupe':
+        chat_messages = Message.objects.filter(type_message='groupe').order_by('-date_envoi')[:50]
+    
+    available_users = Utilisateur.objects.filter(is_active=True).exclude(pk=request.user.pk).order_by('first_name', 'username')
+    
+    return render(request, template_name, {
+        'conversations': conversations_data,
+        'selected_conversation': selected_conversation,
+        'chat_messages': chat_messages,
+        'other_user': other_user,
+        'display_name': display_name,
+        'available_users': available_users,
+        'filter_type': filter_type,
+        'total_unread': total_unread
+    })
+
+
+@login_required
+def message_detail(request, pk):
+    message = get_object_or_404(Message, pk=pk)
+    if message.destinataire != request.user and message.auteur != request.user:
+        messages.error(request, "Vous n'avez pas accès à ce message.")
+        return redirect('authentification:message_list')
+    if not message.est_lu and message.destinataire == request.user:
+        message.est_lu = True
+        message.save(update_fields=['est_lu'])
+    if message.conversation:
+        return redirect('authentification:message_list', conversation_id=message.conversation.id)
+    elif message.destinataire:
+        other_user = message.destinataire if message.auteur == request.user else message.auteur
+        conversation = Conversation.get_or_create_conversation(request.user, other_user)
+        return redirect('authentification:message_list', conversation_id=conversation.id)
+    return redirect('authentification:message_list')
 
 
 @login_required
 def message_create(request):
-    if request.method == 'POST':
-        dest_id = request.POST.get('destinataire')
-        sujet = request.POST.get('sujet')
-        contenu = request.POST.get('contenu')
-        if dest_id:
-            Message.objects.create(auteur=request.user, destinataire_id=dest_id, sujet=sujet, contenu=contenu)
-            messages.success(request, 'Message envoyé.')
-            return redirect('authentification:message_list')
+    utilisateurs = Utilisateur.objects.filter(is_active=True).exclude(pk=request.user.pk).order_by('first_name', 'username')
     
-    utilisateurs = Utilisateur.objects.filter(is_active=True).exclude(pk=request.user.pk)
-    return render(request, 'authentification/message_form.html', {'utilisateurs': utilisateurs})
+    if request.method == 'POST':
+        type_message = request.POST.get('type_message', 'individuel')
+        contenu = request.POST.get('contenu', '').strip()
+        sujet = request.POST.get('sujet', '').strip()
+        
+        if type_message == 'individuel':
+            dest_id = request.POST.get('destinataire')
+            if not dest_id:
+                messages.error(request, 'Veuillez sélectionner un destinataire.')
+                return render(request, 'authentification/message_create.html', {'utilisateurs': utilisateurs, 'selected_type': 'individuel'})
+            if not contenu:
+                messages.error(request, 'Le message ne peut pas être vide.')
+                return render(request, 'authentification/message_create.html', {'utilisateurs': utilisateurs, 'selected_type': 'individuel'})
+            other_user = get_object_or_404(Utilisateur, pk=dest_id)
+            conversation = Conversation.get_or_create_conversation(request.user, other_user)
+            Message.objects.create(
+                auteur=request.user,
+                destinataire=other_user,
+                conversation=conversation,
+                contenu=contenu,
+                type_message='individuel'
+            )
+            send_message_notification(request.user, other_user, contenu, 'individuel', conversation)
+            messages.success(request, 'Message envoyé.')
+            return redirect('authentification:message_conversation', conversation_id=conversation.id)
+        
+        elif type_message == 'service':
+            service = request.POST.get('service', '')
+            if not service:
+                messages.error(request, 'Veuillez sélectionner un service.')
+                return render(request, 'authentification/message_create.html', {'utilisateurs': utilisateurs, 'selected_type': 'service'})
+            if not contenu:
+                messages.error(request, 'Le message ne peut pas être vide.')
+                return render(request, 'authentification/message_create.html', {'utilisateurs': utilisateurs, 'selected_type': 'service'})
+            
+            destinataires_ids = Utilisateur.objects.filter(role=service, is_active=True).values_list('id', flat=True)
+            
+            for dest_id in destinataires_ids:
+                dest = Utilisateur.objects.get(id=dest_id)
+                Message.objects.create(
+                    auteur=request.user,
+                    destinataire=dest,
+                    contenu=contenu,
+                    sujet=sujet,
+                    type_message='service',
+                    service=service
+                )
+                send_message_notification(request.user, dest, contenu, 'service', None)
+            
+            messages.success(request, f'Message envoyé à tous les utilisateurs du service.')
+            return redirect(f"{reverse('authentification:message_list')}?filter=service")
+        
+        elif type_message == 'groupe':
+            nom_groupe = request.POST.get('nom_groupe', '').strip()
+            destinataires_ids = request.POST.getlist('destinataires')
+            
+            if not nom_groupe:
+                messages.error(request, 'Veuillez entrer un nom de groupe.')
+                return render(request, 'authentification/message_create.html', {'utilisateurs': utilisateurs, 'selected_type': 'groupe'})
+            if not destinataires_ids:
+                messages.error(request, 'Veuillez sélectionner au moins un participant.')
+                return render(request, 'authentification/message_create.html', {'utilisateurs': utilisateurs, 'selected_type': 'groupe'})
+            if not contenu:
+                messages.error(request, 'Le message ne peut pas être vide.')
+                return render(request, 'authentification/message_create.html', {'utilisateurs': utilisateurs, 'selected_type': 'groupe'})
+            
+            groupe, created = Groupe.objects.get_or_create(nom=nom_groupe)
+            
+            participants = [request.user]
+            for dest_id in destinataires_ids:
+                participants.append(Utilisateur.objects.get(id=dest_id))
+            
+            conversation = Conversation.create_groupe_conversation(request.user, nom_groupe, participants)
+            
+            for dest_id in destinataires_ids:
+                dest = Utilisateur.objects.get(id=dest_id)
+                Message.objects.create(
+                    auteur=request.user,
+                    destinataire=dest,
+                    conversation=conversation,
+                    contenu=contenu,
+                    sujet=sujet,
+                    type_message='groupe',
+                    groupe=groupe
+                )
+                send_message_notification(request.user, dest, contenu, 'groupe', conversation)
+            
+            messages.success(request, f'Message de groupe "{nom_groupe}" envoyé à {len(destinataires_ids)} participants.')
+            return redirect('authentification:message_conversation', conversation_id=conversation.id)
+        
+        messages.error(request, 'Veuillez remplir tous les champs.')
+    
+    return render(request, 'authentification/message_create.html', {
+        'utilisateurs': utilisateurs
+    })
+
+
+@login_required
+def message_mark_all_read(request):
+    Message.objects.filter(destinataire=request.user, est_lu=False).update(est_lu=True)
+    messages.success(request, 'Tous les messages ont été marqués comme lus.')
+    return redirect('authentification:message_list')
+
+
+@login_required
+@csrf_exempt
+def api_updates(request):
+    try:
+        last_notification_id = int(request.GET.get('last_notification', 0))
+        last_message_id = int(request.GET.get('last_message', 0))
+        last_conversation_id = int(request.GET.get('last_conversation', 0))
+        mark_notification_read = request.GET.get('mark_notification_read')
+        mark_message_read = request.GET.get('mark_message_read')
+        
+        if mark_notification_read:
+            try:
+                notification = Notification.objects.get(id=int(mark_notification_read), destinataire=request.user)
+                notification.est_lu = True
+                notification.save(update_fields=['est_lu'])
+            except (Notification.DoesNotExist, ValueError):
+                pass
+        
+        if mark_message_read:
+            try:
+                message = Message.objects.get(id=int(mark_message_read))
+                # Vérifier que l'utilisateur est le destinataire ou un participant de la conversation de groupe
+                if message.destinataire == request.user or (
+                    message.conversation and 
+                    message.conversation.participants.filter(id=request.user.id).exists()
+                ):
+                    message.est_lu = True
+                    message.save(update_fields=['est_lu'])
+            except (Message.DoesNotExist, ValueError):
+                pass
+        
+        mark_conversation_read = request.GET.get('mark_conversation_read')
+        if mark_conversation_read:
+            try:
+                conversation = Conversation.objects.get(id=int(mark_conversation_read))
+                if conversation.participants.filter(id=request.user.id).exists():
+                    # Marquer tous les messages non lus comme lus
+                    if conversation.is_groupe:
+                        unread = conversation.messages.filter(est_lu=False).exclude(auteur=request.user)
+                    else:
+                        unread = conversation.messages.filter(destinataire=request.user, est_lu=False)
+                    
+                    unread_count = unread.count()
+                    if unread_count > 0:
+                        unread.update(est_lu=True)
+                        # Envoyer notification pour mettre à jour le badge
+                        from .consumers import send_message_to_user
+                        send_message_to_user(request.user.id, {
+                            'type': 'messages_read',
+                            'conversation_id': conversation.id,
+                            'count': unread_count
+                        })
+            except (Conversation.DoesNotExist, ValueError):
+                pass
+        
+        new_notifications = list(Notification.objects.filter(
+            destinataire=request.user,
+            est_lu=False,
+            id__gt=last_notification_id
+        ).exclude(
+            type_notification=Notification.TypeNotification.MESSAGE
+        ).order_by('-date_creation')[:20])
+        
+        from django.db.models import Q
+        # Messages non lus : individuels OU groupe (où l'utilisateur est participant mais pas auteur)
+        new_messages = list(Message.objects.filter(
+            Q(
+                destinataire=request.user,
+                type_message=Message.TypeMessage.INDIVIDUEL
+            ) | Q(
+                conversation__participants=request.user,
+                type_message=Message.TypeMessage.GROUPE,
+                auteur__isnull=False
+            ),
+            est_lu=False,
+            id__gt=last_message_id
+        ).exclude(
+            type_message=Message.TypeMessage.GROUPE,
+            auteur=request.user
+        ).select_related('auteur', 'conversation').order_by('-date_envoi')[:20])
+        
+        conversations_qs = request.user.conversations.all().prefetch_related('messages')
+        conversations_data = []
+        max_conv_id = last_conversation_id
+        all_conversations = []
+        
+        for conv in conversations_qs.order_by('-updated_at')[:20]:
+            if conv.id > last_conversation_id:
+                max_conv_id = max(max_conv_id, conv.id)
+            
+            other = conv.get_other_participant(request.user)
+            last_msg = conv.get_last_message()
+            unread = conv.get_unread_count(request.user)
+            
+            if conv.is_groupe:
+                conv_data = {
+                    'type': 'updated',
+                    'id': conv.id,
+                    'is_groupe': True,
+                    'nom': conv.nom or 'Groupe',
+                    'other_user': None,
+                    'unread_count': unread,
+                    'updated_at': conv.updated_at.isoformat()
+                }
+            else:
+                conv_data = {
+                    'type': 'updated',
+                    'id': conv.id,
+                    'is_groupe': False,
+                    'nom': None,
+                    'other_user': {
+                        'id': other.id,
+                        'name': other.get_full_name() or other.username,
+                        'avatar': (other.get_full_name()[:1].upper() if other.get_full_name() else other.username[:1].upper())
+                    } if other else None,
+                    'unread_count': unread,
+                    'updated_at': conv.updated_at.isoformat()
+                }
+            
+            if last_msg:
+                conv_data['last_message'] = {
+                    'id': last_msg.id,
+                    'content': last_msg.contenu[:100] if last_msg.contenu else '',
+                    'auteur_id': last_msg.auteur_id,
+                    'auteur_name': last_msg.auteur.get_full_name() if last_msg.auteur else '',
+                    'date_envoi': last_msg.date_envoi.isoformat()
+                }
+            
+            all_conversations.append(conv_data)
+        
+        notifications_data = []
+        for n in new_notifications:
+            notifications_data.append({
+                'id': n.id,
+                'titre': n.titre or '',
+                'message': (n.message or '')[:150],
+                'type_notification': n.type_notification or '',
+                'auteur': {
+                    'id': n.expediteur.id if n.expediteur else None,
+                    'name': n.expediteur.get_full_name() if n.expediteur else ''
+                } if n.expediteur else None,
+                'lien': n.lien or '',
+                'date_creation': n.date_creation.isoformat()
+            })
+        
+        messages_data = []
+        for m in new_messages:
+            messages_data.append({
+                'id': m.id,
+                'contenu': (m.contenu or '')[:100],
+                'auteur': {
+                    'id': m.auteur.id,
+                    'name': m.auteur.get_full_name() or m.auteur.username
+                },
+                'conversation_id': m.conversation.id if m.conversation else None,
+                'type_message': m.type_message,
+                'date_envoi': m.date_envoi.isoformat()
+            })
+        
+        total_notifications = Notification.objects.filter(
+            destinataire=request.user,
+            est_lu=False
+        ).exclude(type_notification=Notification.TypeNotification.MESSAGE).count()
+        # Total messages individuels + messages de groupe non lus
+        total_individual = Message.objects.filter(
+            destinataire=request.user, 
+            est_lu=False, 
+            type_message=Message.TypeMessage.INDIVIDUEL
+        ).count()
+        total_group = Message.objects.filter(
+            conversation__participants=request.user,
+            est_lu=False,
+            type_message=Message.TypeMessage.GROUPE
+        ).exclude(auteur=request.user).count()
+        total_messages = total_individual + total_group
+        
+        return JsonResponse({
+            'notifications': notifications_data,
+            'messages': messages_data,
+            'conversations': all_conversations,
+            'all_conversations': all_conversations,
+            'totals': {
+                'notifications': total_notifications,
+                'messages': total_messages
+            },
+            'max_conversation_id': max_conv_id,
+            'timestamp': timezone.now().isoformat()
+        })
+    except Exception as e:
+        import traceback
+        return JsonResponse({'error': str(e), 'trace': traceback.format_exc()}, status=500)
+
+
+@login_required
+def conversation_list(request):
+    conversations = request.user.conversations.all().prefetch_related('participants', 'messages')
+    conversations_data = []
+    for conv in conversations:
+        other = conv.get_other_participant(request.user)
+        last_msg = conv.get_last_message()
+        unread = conv.get_unread_count(request.user)
+        conversations_data.append({
+            'conversation': conv,
+            'other_user': other,
+            'last_message': last_msg,
+            'unread_count': unread
+        })
+    conversations_data.sort(key=lambda x: x['last_message'].date_envoi if x['last_message'] else x['conversation'].updated_at, reverse=True)
+    
+    available_users = Utilisateur.objects.filter(is_active=True).exclude(pk=request.user.pk).order_by('first_name', 'username')
+    
+    return render(request, 'authentification/conversation_list.html', {
+        'conversations': conversations_data,
+        'available_users': available_users
+    })
+
+
+@login_required
+def conversation_detail(request, conversation_id):
+    conversation = get_object_or_404(Conversation, id=conversation_id)
+    if not conversation.participants.filter(id=request.user.id).exists():
+        messages.error(request, "Vous n'avez pas accès à cette conversation.")
+        return redirect('authentification:conversation_list')
+    
+    messages_conv = conversation.messages.all().order_by('date_envoi')
+    
+    # Marquer les messages comme lus
+    if conversation.is_groupe:
+        # Pour les groupes: marquer tous les messages non lus où l'utilisateur n'est pas l'auteur
+        unread_messages = conversation.messages.filter(est_lu=False).exclude(auteur=request.user)
+    else:
+        # Pour les conversations individuelles
+        unread_messages = conversation.messages.filter(destinataire=request.user, est_lu=False)
+    
+    unread_count = unread_messages.count()
+    if unread_count > 0:
+        unread_messages.update(est_lu=True)
+        # Envoyer une notification WebSocket pour mettre à jour le badge en temps réel
+        from .consumers import send_message_to_user
+        send_message_to_user(request.user.id, {
+            'type': 'messages_read',
+            'conversation_id': conversation.id,
+            'count': unread_count
+        })
+    
+    other_user = conversation.get_other_participant(request.user)
+    
+    return render(request, 'authentification/conversation_detail.html', {
+        'conversation': conversation,
+        'messages': messages_conv,
+        'other_user': other_user
+    })
+
+
+@login_required
+def conversation_start(request, user_id):
+    other_user = get_object_or_404(Utilisateur, pk=user_id)
+    conversation = Conversation.get_or_create_conversation(request.user, other_user)
+    return redirect('authentification:message_conversation', conversation_id=conversation.id)
+
+
+@login_required
+def conversation_send(request, conversation_id):
+    if request.method == 'POST':
+        conversation = get_object_or_404(Conversation, id=conversation_id)
+        if not conversation.participants.filter(id=request.user.id).exists():
+            return JsonResponse({'error': "Accès refusé"}, status=403)
+        
+        contenu = request.POST.get('message', '').strip()
+        if not contenu:
+            return JsonResponse({'error': 'Message vide'}, status=400)
+        
+        if conversation.is_groupe:
+            message = Message.objects.create(
+                auteur=request.user,
+                conversation=conversation,
+                contenu=contenu,
+                type_message='groupe'
+            )
+            conversation.updated_at = message.date_envoi
+            conversation.save(update_fields=['updated_at'])
+            for participant in conversation.participants.exclude(id=request.user.id):
+                send_message_notification(request.user, participant, contenu, 'groupe', conversation)
+        else:
+            other_user = conversation.get_other_participant(request.user)
+            if other_user:
+                message = Message.objects.create(
+                    auteur=request.user,
+                    destinataire=other_user,
+                    conversation=conversation,
+                    contenu=contenu,
+                    type_message='individuel'
+                )
+                conversation.updated_at = message.date_envoi
+                conversation.save(update_fields=['updated_at'])
+                send_message_notification(request.user, other_user, contenu, 'individuel', conversation)
+            else:
+                return JsonResponse({'error': 'Destinataire non trouvé'}, status=400)
+
+        message = Message.objects.select_related('auteur').get(pk=message.pk)
+        broadcast_conversation_message(message)
+        
+        return JsonResponse({
+            'success': True,
+            'message_id': message.id,
+            'date_envoi': message.date_envoi.isoformat(),
+            'message': serialize_chat_message(message),
+            'conversation_id': conversation.id
+        })
+    
+    return JsonResponse({'error': 'Méthode non autorisée'}, status=405)
 
 
 @login_required
@@ -562,11 +1152,55 @@ def user_reset_password(request, pk):
         new_password = request.POST.get('new_password')
         if new_password:
             utilisateur.set_password(new_password)
-            utilisateur.save()
+            utilisateur.save(update_fields=['password'])
             log_audit(request.user, 'password_reset', utilisateur, f"Réinitialisation du mot de passe de {utilisateur.username}")
-            messages.success(request, f'Mot de passe de {utilisateur.get_full_name} réinitialisé avec succès.')
+            messages.success(request, f'Mot de passe réinitialisé pour {utilisateur.get_full_name()}.')
         else:
             messages.error(request, 'Veuillez entrer un nouveau mot de passe.')
         return redirect('authentification:user_list')
     
     return redirect('authentification:user_list')
+
+
+@login_required
+def conversation_delete(request, conversation_id):
+    conversation = get_object_or_404(Conversation, id=conversation_id)
+    
+    if not conversation.participants.filter(id=request.user.id).exists():
+        messages.error(request, "Vous n'avez pas accès à cette conversation.")
+        return redirect('authentification:message_list')
+    
+    is_admin = request.user.is_superadmin or request.user.role == Utilisateur.Role.DIRECTION
+    
+    if conversation.is_groupe:
+        if not is_admin:
+            messages.error(request, "Seuls l'administrateur et le directeur peuvent supprimer les groupes.")
+            return redirect('authentification:message_conversation', conversation_id=conversation_id)
+        
+        conversation.delete()
+        messages.success(request, "Groupe supprimé avec succès.")
+    else:
+        conversation.delete()
+        messages.success(request, "Conversation supprimée.")
+    
+    return redirect('authentification:message_list')
+
+
+@login_required
+def message_delete(request, pk):
+    message = get_object_or_404(Message, pk=pk)
+    
+    is_admin = request.user.is_superadmin or request.user.role == Utilisateur.Role.DIRECTION
+    
+    if not is_admin:
+        if message.auteur != request.user and message.destinataire != request.user:
+            messages.error(request, "Vous ne pouvez pas supprimer ce message.")
+            return redirect('authentification:message_list')
+    
+    conversation_id = message.conversation_id if message.conversation else None
+    message.delete()
+    messages.success(request, "Message supprimé.")
+    
+    if conversation_id:
+        return redirect('authentification:message_conversation', conversation_id=conversation_id)
+    return redirect('authentification:message_list')

@@ -513,7 +513,7 @@ class Notification(models.Model):
     
     @classmethod
     def creer_notification(cls, destinataire, type_notification, titre, message, expediteur=None, lien=''):
-        return cls.objects.create(
+        notification = cls.objects.create(
             destinataire=destinataire,
             type_notification=type_notification,
             titre=titre,
@@ -521,6 +521,72 @@ class Notification(models.Model):
             expediteur=expediteur,
             lien=lien
         )
+        try:
+            from authentification.consumers import send_notification_to_user
+            send_notification_to_user(destinataire.id, {
+                'id': notification.id,
+                'type': 'notification',
+                'titre': notification.titre,
+                'message': notification.message,
+                'lien': notification.lien,
+                'type_notification': notification.type_notification,
+                'date_creation': notification.date_creation.isoformat()
+            })
+        except Exception:
+            pass
+        return notification
+
+
+class Conversation(models.Model):
+    participants = models.ManyToManyField('Utilisateur', related_name='conversations')
+    nom = models.CharField(max_length=100, blank=True, verbose_name="Nom du groupe")
+    is_groupe = models.BooleanField(default=False, verbose_name="Est un groupe")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-updated_at']
+    
+    def __str__(self):
+        return self.nom or f"Conversation {self.pk}"
+    
+    @classmethod
+    def get_or_create_conversation(cls, user1, user2):
+        conv = cls.objects.filter(participants=user1).filter(participants=user2).filter(is_groupe=False).first()
+        if not conv:
+            conv = cls.objects.create()
+            conv.participants.add(user1, user2)
+        return conv
+    
+    @classmethod
+    def create_groupe_conversation(cls, createur, nom_groupe, participants):
+        conv = cls.objects.create(nom=nom_groupe, is_groupe=True)
+        conv.participants.add(createur)
+        for participant in participants:
+            conv.participants.add(participant)
+        return conv
+    
+    def get_other_participant(self, user):
+        if self.is_groupe:
+            return None
+        return self.participants.exclude(pk=user.pk).first()
+    
+    def get_display_name(self, user):
+        if self.is_groupe:
+            return self.nom
+        other = self.get_other_participant(user)
+        return other.get_full_name() or other.username if other else "Inconnu"
+    
+    def get_last_message(self):
+        return self.messages.order_by('-date_envoi').first()
+    
+    def get_unread_count(self, user):
+        # Pour les conversations de groupe, le destinataire est null
+        # On compte les messages non lus où l'utilisateur n'est pas l'auteur
+        if self.is_groupe:
+            return self.messages.filter(est_lu=False).exclude(auteur=user).count()
+        else:
+            return self.messages.filter(destinataire=user, est_lu=False).count()
 
 
 class Message(models.Model):
@@ -531,6 +597,7 @@ class Message(models.Model):
     
     auteur = models.ForeignKey('Utilisateur', on_delete=models.CASCADE, related_name='messages_envoyes')
     destinataire = models.ForeignKey('Utilisateur', on_delete=models.CASCADE, related_name='messages_recus', null=True, blank=True)
+    conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, related_name='messages', null=True, blank=True)
     type_message = models.CharField(max_length=20, choices=TypeMessage.choices, default=TypeMessage.INDIVIDUEL)
     service = models.CharField(max_length=20, blank=True, choices=[
         ('direction', 'Direction générale'),
@@ -539,7 +606,7 @@ class Message(models.Model):
         ('professeur', 'Enseignement'),
         ('surveillance', 'Contrôle & Supervision'),
     ])
-    sujet = models.CharField(max_length=200)
+    sujet = models.CharField(max_length=200, blank=True)
     contenu = models.TextField()
     est_lu = models.BooleanField(default=False)
     date_envoi = models.DateTimeField(auto_now_add=True)
@@ -705,9 +772,6 @@ class DemandeApprobation(models.Model):
 
 
 def creer_demande_approbation(demandeur, type_action, type_objet, objet_repr, details, objet_id=None, details_avant='', details_apos='', motif=''):
-    """Helper function to create an approval request and notify approvers"""
-    from authentification.models import Notification, Utilisateur
-    
     demande = DemandeApprobation.objects.create(
         demandeur=demandeur,
         type_action=type_action,
@@ -719,9 +783,9 @@ def creer_demande_approbation(demandeur, type_action, type_objet, objet_repr, de
         details_apos=details_apos,
         motif=motif
     )
-    
+
     approbateurs = Utilisateur.objects.filter(role__in=[Utilisateur.Role.SUPERADMIN, Utilisateur.Role.DIRECTION], is_active=True)
-    
+
     for approbateur in approbateurs:
         Notification.creer_notification(
             destinataire=approbateur,
@@ -729,7 +793,7 @@ def creer_demande_approbation(demandeur, type_action, type_objet, objet_repr, de
             titre=f"Demande d'approbation - {type_objet}",
             message=f"Nouvelle demande de {type_action} {type_objet} de la part de {demandeur.get_full_name() or demandeur.username}.\n\n{details}",
             expediteur=demandeur,
-            lien=f'/authentification/demandes/'
+            lien='/authentification/demandes/'
         )
-    
+
     return demande

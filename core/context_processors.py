@@ -8,11 +8,22 @@ def annee_scolaire_actuelle(request):
 def notification_count(request):
     if request.user.is_authenticated:
         from authentification.models import Notification, Message
-        unread_notifications = Notification.objects.filter(destinataire=request.user, est_lu=False).count()
-        unread_messages = Message.objects.filter(
+        unread_notifications = Notification.objects.filter(
+            destinataire=request.user,
+            est_lu=False
+        ).exclude(type_notification=Notification.TypeNotification.MESSAGE).count()
+        # Messages individuels non lus
+        unread_individual = Message.objects.filter(
             destinataire=request.user,
             est_lu=False,
             type_message=Message.TypeMessage.INDIVIDUEL
         ).count()
+        # Messages de groupe non lus (où l'utilisateur est participant mais pas auteur)
+        unread_group = Message.objects.filter(
+            conversation__participants=request.user,
+            est_lu=False,
+            type_message=Message.TypeMessage.GROUPE
+        ).exclude(auteur=request.user).count()
+        unread_messages = unread_individual + unread_group
         return {'notification_count': unread_notifications, 'unread_notifications_count': unread_notifications, 'unread_messages_count': unread_messages}
     return {'notification_count': 0, 'unread_notifications_count': 0, 'unread_messages_count': 0}

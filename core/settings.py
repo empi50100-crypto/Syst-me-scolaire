@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_filters',
     'corsheaders',
+    'channels',
     'authentification',
     'scolarite',
     'enseignement',
@@ -198,5 +199,13 @@ LOGGING = {
     'loggers': {
         'axes': {'handlers': ['file'], 'level': 'INFO', 'propagate': False},
         'django.security': {'handlers': ['file'], 'level': 'INFO', 'propagate': False},
+    },
+}
+
+ASGI_APPLICATION = 'core.asgi.application'
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
     },
 }
