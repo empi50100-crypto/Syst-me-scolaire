@@ -465,22 +465,35 @@ def notification_detail(request, pk):
 @login_required
 def message_list(request, conversation_id=None):
     filter_type = request.GET.get('filter', 'all')
-    
-    conversations = request.user.conversations.all().prefetch_related('participants', 'messages').distinct()
     conversations_data = []
     total_unread = 0
     
-    # Définir le type de chaque conversation
-    for conv in conversations:
+    if filter_type == 'service':
+        # Pour Service: afficher TOUTES les conversations de service qui existent
+        all_conversations = Conversation.objects.filter(
+            is_groupe=True,
+            nom__startswith='Service:'
+        ).prefetch_related('participants', 'messages')
+    elif filter_type == 'groupe':
+        # Pour Groupe: afficher toutes les conversations de groupe (mais pas Service)
+        all_conversations = Conversation.objects.filter(
+            is_groupe=True
+        ).exclude(nom__startswith='Service:').prefetch_related('participants', 'messages')
+    elif filter_type == 'individuel':
+        # Pour Individuel: afficher toutes les conversations non-groupe
+        all_conversations = Conversation.objects.filter(
+            is_groupe=False
+        ).prefetch_related('participants', 'messages')
+    else:
+        # Pour 'all' (Tous): afficher toutes les conversations de l'utilisateur
+        all_conversations = request.user.conversations.all().prefetch_related('participants', 'messages').distinct()
+    
+    # Traiter chaque conversation
+    for conv in all_conversations:
         is_service = conv.is_groupe and conv.nom and conv.nom.startswith('Service:')
-        is_groupe = conv.is_groupe and not is_service
         
-        # Filtrer selon filter_type
-        if filter_type == 'individuel' and (is_service or is_groupe):
-            continue
-        if filter_type == 'service' and not is_service:
-            continue
-        if filter_type == 'groupe' and not is_groupe:
+        # Pour 'all', limiter aux conversations de l'utilisateur
+        if filter_type == 'all' and not conv.participants.filter(id=request.user.id).exists():
             continue
             
         last_msg = conv.get_last_message()
