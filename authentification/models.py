@@ -538,9 +538,15 @@ class Notification(models.Model):
 
 
 class Conversation(models.Model):
+    class TypeConversation(models.TextChoices):
+        INDIVIDUEL = 'individuel', 'Conversation individuelle'
+        GROUPE = 'groupe', 'Conversation de groupe'
+        SERVICE = 'service', 'Message au service'
+    
     participants = models.ManyToManyField('Utilisateur', related_name='conversations')
     nom = models.CharField(max_length=100, blank=True, verbose_name="Nom du groupe")
     is_groupe = models.BooleanField(default=False, verbose_name="Est un groupe")
+    type_conversation = models.CharField(max_length=20, choices=TypeConversation.choices, default=TypeConversation.INDIVIDUEL)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -565,7 +571,7 @@ class Conversation(models.Model):
         
         if not conv:
             # Créer une nouvelle conversation
-            conv = cls.objects.create()
+            conv = cls.objects.create(type_conversation=cls.TypeConversation.INDIVIDUEL)
             conv.participants.add(user1, user2)
             conv.refresh_from_db()
         
@@ -575,7 +581,12 @@ class Conversation(models.Model):
     def create_groupe_conversation(cls, createur, nom_groupe, participants):
         conv = cls.objects.filter(nom=nom_groupe, is_groupe=True).first()
         if not conv:
-            conv = cls.objects.create(nom=nom_groupe, is_groupe=True)
+            # Définir le type selon si c'est un service
+            if nom_groupe.startswith('Service:'):
+                conv_type = cls.TypeConversation.SERVICE
+            else:
+                conv_type = cls.TypeConversation.GROUPE
+            conv = cls.objects.create(nom=nom_groupe, is_groupe=True, type_conversation=conv_type)
             conv.participants.add(createur)
             for participant in participants:
                 conv.participants.add(participant)
