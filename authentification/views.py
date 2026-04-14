@@ -21,20 +21,20 @@ from .models import Utilisateur, log_audit, Notification, Message, TentativeConn
 from .forms import UserRegistrationForm, UserCreationForm, UserChangeForm
 
 
-def send_message_notification(auteur, destinataire, contenu, type_message, conversation=None):
+def send_message_notification(auteur, destinataire, contenu, type_message, conversation=None, message_id=None, refresh_url=None):
     """Diffuse un événement de message sans l'ajouter à la liste des notifications."""
     if not destinataire:
         return
 
     titre = f"Nouveau message de {auteur.get_full_name() or auteur.username}"
     message_preview = contenu[:100] + "..." if len(contenu) > 100 else contenu
-    lien = "/authentification/messages/"
-    if conversation:
+    lien = refresh_url or "/authentification/messages/"
+    if not lien and conversation:
         lien = f"/authentification/messages/{conversation.id}/"
 
     from authentification.consumers import send_message_to_user
 
-    send_message_to_user(destinataire.id, {
+    message_data = {
         'type': 'message',
         'titre': titre,
         'message': message_preview,
@@ -45,7 +45,16 @@ def send_message_notification(auteur, destinataire, contenu, type_message, conve
             'name': auteur.get_full_name() or auteur.username,
         },
         'date_creation': timezone.now().isoformat()
-    })
+    }
+    
+    if message_id:
+        message_data['id'] = message_id
+    
+    if type_message == 'service':
+        message_data['type_message'] = 'service'
+        message_data['contenu'] = contenu
+    
+    send_message_to_user(destinataire.id, message_data)
 
 
 def serialize_chat_message(message):
@@ -457,21 +466,53 @@ def notification_detail(request, pk):
 def message_list(request, conversation_id=None):
     filter_type = request.GET.get('filter', 'all')
     
-    conversations = request.user.conversations.all().prefetch_related('participants', 'messages')
+    conversations = request.user.conversations.all().prefetch_related('participants', 'messages').distinct()
     conversations_data = []
     total_unread = 0
+    
+    # Définir le type de chaque conversation
     for conv in conversations:
-        other = conv.get_other_participant(request.user)
+        is_service = conv.is_groupe and conv.nom and conv.nom.startswith('Service:')
+        is_groupe = conv.is_groupe and not is_service
+        
+        # Filtrer selon filter_type
+        if filter_type == 'individuel' and (is_service or is_groupe):
+            continue
+        if filter_type == 'service' and not is_service:
+            continue
+        if filter_type == 'groupe' and not is_groupe:
+            continue
+            
         last_msg = conv.get_last_message()
+        if not last_msg:
+            continue
+            
         unread = conv.get_unread_count(request.user)
         total_unread += unread
-        conversations_data.append({
-            'conversation': conv,
-            'other_user': other,
-            'last_message': last_msg,
-            'unread_count': unread
-        })
-    conversations_data.sort(key=lambda x: x['last_message'].date_envoi if x['last_message'] else x['conversation'].updated_at, reverse=True)
+        
+        if is_service:
+            service_name = conv.nom.replace('Service: ', '')
+            service_key = last_msg.service if last_msg.service else 'general'
+            conversations_data.append({
+                'conversation': conv,
+                'other_user': None,
+                'last_message': last_msg,
+                'unread_count': unread,
+                'type': 'service',
+                'service_name': service_name,
+                'service_key': service_key
+            })
+        else:
+            other = conv.get_other_participant(request.user)
+            conversations_data.append({
+                'conversation': conv,
+                'other_user': other,
+                'last_message': last_msg,
+                'unread_count': unread,
+                'type': 'conversation'
+            })
+    
+    conversations_data.sort(key=lambda x: x['last_message'].date_envoi if x['last_message'] else timezone.now(), reverse=True)
     
     selected_conversation = None
     chat_messages = []
@@ -490,11 +531,16 @@ def message_list(request, conversation_id=None):
             messages.error(request, "Vous n'avez pas accès à cette conversation.")
             return redirect('authentification:message_list')
         else:
+            chat_messages = selected_conversation.messages.all().order_by('date_envoi')
+            
+            # Marquer les messages comme lus selon le type de conversation
             if selected_conversation.is_groupe:
-                chat_messages = selected_conversation.messages.all().order_by('date_envoi')
+                # Pour les groupes: marquer tous les messages non lus sauf ceux de l'utilisateur
+                selected_conversation.messages.filter(est_lu=False).exclude(auteur=request.user).update(est_lu=True)
             else:
-                chat_messages = selected_conversation.messages.all().order_by('date_envoi')
-            selected_conversation.messages.filter(destinataire=request.user, est_lu=False).update(est_lu=True)
+                # Pour les conversations individuelles
+                selected_conversation.messages.filter(destinataire=request.user, est_lu=False).update(est_lu=True)
+            
             other_user = selected_conversation.get_other_participant(request.user)
             display_name = selected_conversation.get_display_name(request.user)
     elif filter_type == 'recus':
@@ -502,10 +548,31 @@ def message_list(request, conversation_id=None):
         chat_messages = messages_recus_base.filter(est_lu=False).order_by('-date_envoi')[:50]
     elif filter_type == 'envoyes':
         chat_messages = request.user.messages_envoyes.exclude(type_message__in=['service', 'groupe']).order_by('-date_envoi')[:50]
+    elif filter_type == 'individuel':
+        # Messages individuels: conversations à deux (pas de groupe)
+        chat_messages = Message.objects.filter(
+            type_message='individuel'
+        ).filter(
+            models.Q(auteur=request.user) | models.Q(destinataire=request.user)
+        ).order_by('-date_envoi')[:50]
     elif filter_type == 'service':
-        chat_messages = Message.objects.filter(type_message='service').order_by('-date_envoi')[:50]
+        # Messages de service: maintenant gérés comme conversations de groupe
+        service_conversations = Conversation.objects.filter(
+            participants=request.user,
+            is_groupe=True,
+            nom__startswith='Service:'
+        )
+        chat_messages = Message.objects.filter(
+            conversation__in=service_conversations
+        ).order_by('-date_envoi')[:50]
     elif filter_type == 'groupe':
-        chat_messages = Message.objects.filter(type_message='groupe').order_by('-date_envoi')[:50]
+        # Messages de groupe: uniquement des conversations où l'utilisateur participe
+        chat_messages = Message.objects.filter(
+            type_message='groupe',
+            conversation__participants=request.user
+        ).exclude(
+            auteur=request.user  # Exclure ses propres messages pour voir ceux des autres
+        ).order_by('-date_envoi')[:50]
     
     available_users = Utilisateur.objects.filter(is_active=True).exclude(pk=request.user.pk).order_by('first_name', 'username')
     
@@ -580,20 +647,37 @@ def message_create(request):
             
             destinataires_ids = Utilisateur.objects.filter(role=service, is_active=True).values_list('id', flat=True)
             
+            if not destinataires_ids.exists():
+                messages.error(request, f'Aucun utilisateur trouvé pour le service {service}.')
+                return redirect(f"{reverse('authentification:message_list')}?filter=service")
+            
+            service_name = dict(Utilisateur.Role.choices).get(service, service)
+            nom_groupe = f"Service: {service_name}"
+            
+            participants = [request.user]
+            for dest_id in destinataires_ids:
+                participants.append(Utilisateur.objects.get(id=dest_id))
+            
+            conversation = Conversation.create_groupe_conversation(request.user, nom_groupe, participants)
+            
+            message = Message.objects.create(
+                auteur=request.user,
+                destinataire=None,
+                conversation=conversation,
+                contenu=contenu,
+                sujet=sujet,
+                type_message='service',
+                service=service
+            )
+            
+            refresh_url = f"/authentification/messages/{conversation.id}/"
+            
             for dest_id in destinataires_ids:
                 dest = Utilisateur.objects.get(id=dest_id)
-                Message.objects.create(
-                    auteur=request.user,
-                    destinataire=dest,
-                    contenu=contenu,
-                    sujet=sujet,
-                    type_message='service',
-                    service=service
-                )
-                send_message_notification(request.user, dest, contenu, 'service', None)
+                send_message_notification(request.user, dest, contenu, 'service', conversation, message.id, refresh_url)
             
             messages.success(request, f'Message envoyé à tous les utilisateurs du service.')
-            return redirect(f"{reverse('authentification:message_list')}?filter=service")
+            return redirect('authentification:message_conversation', conversation_id=conversation.id)
         
         elif type_message == 'groupe':
             nom_groupe = request.POST.get('nom_groupe', '').strip()
@@ -617,18 +701,24 @@ def message_create(request):
             
             conversation = Conversation.create_groupe_conversation(request.user, nom_groupe, participants)
             
+            # Créer UN SEUL message de groupe (pas un par destinataire)
+            message = Message.objects.create(
+                auteur=request.user,
+                destinataire=None,  # Message de groupe : pas de destinataire individuel
+                conversation=conversation,
+                contenu=contenu,
+                sujet=sujet,
+                type_message='groupe',
+                groupe=groupe
+            )
+            
+            # Envoyer des notifications à tous les participants (sauf l'auteur)
             for dest_id in destinataires_ids:
                 dest = Utilisateur.objects.get(id=dest_id)
-                Message.objects.create(
-                    auteur=request.user,
-                    destinataire=dest,
-                    conversation=conversation,
-                    contenu=contenu,
-                    sujet=sujet,
-                    type_message='groupe',
-                    groupe=groupe
-                )
                 send_message_notification(request.user, dest, contenu, 'groupe', conversation)
+            
+            # Diffuser le message à tous les participants connectés via WebSocket
+            broadcast_conversation_message(message)
             
             messages.success(request, f'Message de groupe "{nom_groupe}" envoyé à {len(destinataires_ids)} participants.')
             return redirect('authentification:message_conversation', conversation_id=conversation.id)
@@ -711,7 +801,7 @@ def api_updates(request):
         ).order_by('-date_creation')[:20])
         
         from django.db.models import Q
-        # Messages non lus : individuels OU groupe (où l'utilisateur est participant mais pas auteur)
+        # Messages non lus : individuels OU groupe OU service (où l'utilisateur est participant mais pas auteur)
         new_messages = list(Message.objects.filter(
             Q(
                 destinataire=request.user,
@@ -720,15 +810,19 @@ def api_updates(request):
                 conversation__participants=request.user,
                 type_message=Message.TypeMessage.GROUPE,
                 auteur__isnull=False
+            ) | Q(
+                conversation__participants=request.user,
+                conversation__is_groupe=True,
+                conversation__nom__startswith='Service:',
+                type_message=Message.TypeMessage.SERVICE
             ),
             est_lu=False,
             id__gt=last_message_id
         ).exclude(
-            type_message=Message.TypeMessage.GROUPE,
             auteur=request.user
         ).select_related('auteur', 'conversation').order_by('-date_envoi')[:20])
         
-        conversations_qs = request.user.conversations.all().prefetch_related('messages')
+        conversations_qs = request.user.conversations.all().prefetch_related('messages').distinct()
         conversations_data = []
         max_conv_id = last_conversation_id
         all_conversations = []
@@ -797,6 +891,7 @@ def api_updates(request):
             messages_data.append({
                 'id': m.id,
                 'contenu': (m.contenu or '')[:100],
+                'type_message': m.type_message,
                 'auteur': {
                     'id': m.auteur.id,
                     'name': m.auteur.get_full_name() or m.auteur.username
@@ -821,7 +916,14 @@ def api_updates(request):
             est_lu=False,
             type_message=Message.TypeMessage.GROUPE
         ).exclude(auteur=request.user).count()
-        total_messages = total_individual + total_group
+        total_service = Message.objects.filter(
+            conversation__participants=request.user,
+            conversation__is_groupe=True,
+            conversation__nom__startswith='Service:',
+            est_lu=False,
+            type_message=Message.TypeMessage.SERVICE
+        ).exclude(auteur=request.user).count()
+        total_messages = total_individual + total_group + total_service
         
         return JsonResponse({
             'notifications': notifications_data,
@@ -842,7 +944,7 @@ def api_updates(request):
 
 @login_required
 def conversation_list(request):
-    conversations = request.user.conversations.all().prefetch_related('participants', 'messages')
+    conversations = request.user.conversations.all().prefetch_related('participants', 'messages').distinct()
     conversations_data = []
     for conv in conversations:
         other = conv.get_other_participant(request.user)

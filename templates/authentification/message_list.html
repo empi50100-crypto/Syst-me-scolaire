@@ -49,13 +49,64 @@
     color: white;
     padding: 6px 12px;
     border-radius: 6px;
-    cursor: pointer;
     font-size: 0.85rem;
-    width: 100%;
+    cursor: pointer;
+    transition: all 0.2s;
 }
 
 .header-actions .btn:hover {
     background: rgba(255,255,255,0.3);
+}
+
+/* Styles des onglets de filtre */
+.filter-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 10px 12px;
+    background: #f8fafc;
+    border-bottom: 1px solid var(--border);
+    min-height: auto;
+}
+
+.filter-tab {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px;
+    border-radius: 16px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    background: white;
+    border: 1px solid var(--border);
+    text-decoration: none;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.filter-tab:hover {
+    background: var(--bg-light);
+    color: var(--text-dark);
+    border-color: var(--primary);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.15);
+}
+
+.filter-tab.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
+}
+
+.filter-tab i {
+    font-size: 0.9rem;
+}
+
+.filter-tab.active i {
+    color: white;
 }
 
 .conversations-list {
@@ -330,32 +381,81 @@
             </div>
         </div>
         
+        <div class="filter-tabs">
+            <a href="{% url 'authentification:message_list' %}" class="filter-tab {% if not filter_type or filter_type == 'all' %}active{% endif %}">
+                <i class="fas fa-inbox"></i> Tous
+            </a>
+            <a href="{% url 'authentification:message_list' %}?filter=individuel" class="filter-tab {% if filter_type == 'individuel' %}active{% endif %}">
+                <i class="fas fa-user"></i> Individuel
+            </a>
+            <a href="{% url 'authentification:message_list' %}?filter=service" class="filter-tab {% if filter_type == 'service' %}active{% endif %}">
+                <i class="fas fa-building"></i> Service
+            </a>
+            <a href="{% url 'authentification:message_list' %}?filter=groupe" class="filter-tab {% if filter_type == 'groupe' %}active{% endif %}">
+                <i class="fas fa-users"></i> Groupes
+            </a>
+        </div>
+        
+        <div class="search-box" style="padding: 10px 15px; border-bottom: 1px solid var(--border);">
+            <input type="text" id="searchConversations" placeholder="Rechercher une conversation..." 
+                   style="width: 100%; padding: 10px 15px; border: 1px solid var(--border); border-radius: 20px; font-size: 0.9rem;">
+        </div>
+        
         <div class="conversations-list">
             {% for item in conversations %}
-            <a href="{% url 'authentification:message_conversation' item.conversation.id %}" 
-               class="conversation-item {% if selected_conversation.id == item.conversation.id %}active{% endif %}"
-               data-conversation-id="{{ item.conversation.id }}">
-                <div class="conv-avatar">
-                    {% if item.conversation.is_groupe %}<i class="fas fa-users"></i>{% else %}{{ item.other_user.get_full_name|default:item.other_user.username|slice:":1"|upper }}{% endif %}
-                </div>
-                <div class="conv-info">
-                    <div class="conv-name">
-                        {% if item.conversation.is_groupe %}{{ item.conversation.nom }}{% else %}{{ item.other_user.get_full_name|default:item.other_user.username }}{% endif %}
-                        {% if item.unread_count > 0 %}
-                        <span class="badge-unread">{{ item.unread_count }}</span>
-                        {% endif %}
+                {% if item.type == 'service' %}
+                {# Affichage pour les messages de service #}
+                <a href="{% url 'authentification:message_conversation' item.conversation.id %}" 
+                   class="conversation-item {% if selected_conversation.id == item.conversation.id %}active{% endif %}"
+                   data-conversation-id="{{ item.conversation.id }}">
+                    <div class="conv-avatar" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                        <i class="fas fa-building" style="color: white;"></i>
                     </div>
-                    <div class="conv-preview">
-                        {% if item.last_message %}
-                            {% if item.last_message.auteur == user %}<span style="color: var(--primary);">Vous:</span>{% endif %}
-                            {{ item.last_message.contenu|truncatechars:40 }}
-                        {% endif %}
+                    <div class="conv-info">
+                        <div class="conv-name">
+                            {{ item.service_name }}
+                            {% if item.unread_count > 0 %}
+                            <span class="badge-unread">{{ item.unread_count }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="conv-preview">
+                            {% if item.last_message %}
+                                {% if item.last_message.auteur == user %}<span style="color: var(--primary);">Vous:</span>{% endif %}
+                                {{ item.last_message.contenu|truncatechars:40 }}
+                            {% endif %}
+                        </div>
                     </div>
-                </div>
-                {% if item.last_message %}
-                <div class="conv-time">{{ item.last_message.date_envoi|date:"H:i" }}</div>
+                    {% if item.last_message %}
+                    <div class="conv-time">{{ item.last_message.date_envoi|date:"H:i" }}</div>
+                    {% endif %}
+                </a>
+                {% else %}
+                {# Affichage normal pour les conversations #}
+                <a href="{% url 'authentification:message_conversation' item.conversation.id %}" 
+                   class="conversation-item {% if selected_conversation.id == item.conversation.id %}active{% endif %}"
+                   data-conversation-id="{{ item.conversation.id }}">
+                    <div class="conv-avatar">
+                        {% if item.conversation.is_groupe %}<i class="fas fa-users"></i>{% else %}{{ item.other_user.get_full_name|default:item.other_user.username|slice:":1"|upper }}{% endif %}
+                    </div>
+                    <div class="conv-info">
+                        <div class="conv-name">
+                            {% if item.conversation.is_groupe %}{{ item.conversation.nom }}{% else %}{{ item.other_user.get_full_name|default:item.other_user.username }}{% endif %}
+                            {% if item.unread_count > 0 %}
+                            <span class="badge-unread">{{ item.unread_count }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="conv-preview">
+                            {% if item.last_message %}
+                                {% if item.last_message.auteur == user %}<span style="color: var(--primary);">Vous:</span>{% endif %}
+                                {{ item.last_message.contenu|truncatechars:40 }}
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% if item.last_message %}
+                    <div class="conv-time">{{ item.last_message.date_envoi|date:"H:i" }}</div>
+                    {% endif %}
+                </a>
                 {% endif %}
-            </a>
             {% endfor %}
         </div>
     </div>
@@ -728,6 +828,31 @@ function markAllMessagesAsRead() {
 document.addEventListener('DOMContentLoaded', function() {
     scrollToBottom();
     connectWebSocket();
+    
+    // Recherche de conversations
+    const searchInput = document.getElementById('searchConversations');
+    if (searchInput) {
+        searchInput.addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase().trim();
+            const conversationItems = document.querySelectorAll('.conversation-item');
+            
+            conversationItems.forEach(item => {
+                const nameEl = item.querySelector('.conv-name');
+                const previewEl = item.querySelector('.conv-preview');
+                
+                if (nameEl && previewEl) {
+                    const name = nameEl.textContent.toLowerCase();
+                    const preview = previewEl.textContent.toLowerCase();
+                    
+                    if (name.includes(searchTerm) || preview.includes(searchTerm)) {
+                        item.style.display = 'flex';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                }
+            });
+        });
+    }
     
     // Marquer tous les messages comme lus au chargement
     setTimeout(markAllMessagesAsRead, 500);

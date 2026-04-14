@@ -552,18 +552,38 @@ class Conversation(models.Model):
     
     @classmethod
     def get_or_create_conversation(cls, user1, user2):
-        conv = cls.objects.filter(participants=user1).filter(participants=user2).filter(is_groupe=False).first()
+        # Rechercher une conversation existante entre ces deux utilisateurs
+        # Utiliser une approche plus fiable avec l'intersection des IDs de conversations
+        user1_conv_ids = set(cls.objects.filter(participants=user1, is_groupe=False).values_list('id', flat=True))
+        user2_conv_ids = set(cls.objects.filter(participants=user2, is_groupe=False).values_list('id', flat=True))
+        common_ids = user1_conv_ids & user2_conv_ids
+        
+        conv = None
+        if common_ids:
+            # Prendre la première conversation commune
+            conv = cls.objects.filter(id__in=common_ids).first()
+        
         if not conv:
+            # Créer une nouvelle conversation
             conv = cls.objects.create()
             conv.participants.add(user1, user2)
+            conv.refresh_from_db()
+        
         return conv
     
     @classmethod
     def create_groupe_conversation(cls, createur, nom_groupe, participants):
-        conv = cls.objects.create(nom=nom_groupe, is_groupe=True)
-        conv.participants.add(createur)
-        for participant in participants:
-            conv.participants.add(participant)
+        conv = cls.objects.filter(nom=nom_groupe, is_groupe=True).first()
+        if not conv:
+            conv = cls.objects.create(nom=nom_groupe, is_groupe=True)
+            conv.participants.add(createur)
+            for participant in participants:
+                conv.participants.add(participant)
+        else:
+            existing_participants = set(conv.participants.all())
+            for participant in participants:
+                if participant not in existing_participants:
+                    conv.participants.add(participant)
         return conv
     
     def get_other_participant(self, user):

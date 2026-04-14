@@ -685,6 +685,7 @@
         
         function updateBadge(elementId, count) {
             const el = document.getElementById(elementId);
+            console.log('[updateBadge]', elementId, count, 'el found:', !!el);
             if (!el) return;
             if (count > 0) {
                 el.textContent = count > 99 ? '99+' : count;
@@ -774,6 +775,7 @@
                     }
                     
                     // Mettre à jour les badges globaux
+                    console.log('[POLLING] updateBadge from totals:', data.totals);
                     updateBadge('notification-badge', data.totals.notifications);
                     updateBadge('message-badge', data.totals.messages);
                     
@@ -821,18 +823,19 @@
                         });
                     }
                     
-                    // Traiter les nouveaux messages
+                    // Traiter les nouveaux messages (incrémenter seulement si nouveau message arrive EN PLUS du total)
                     if (data.messages && data.messages.length > 0) {
                         data.messages.forEach(m => {
-                            if (m.id > lastMessageId) {
-                                lastMessageId = Math.max(lastMessageId, m.id);
+                            const isServiceMsg = m.type_message === 'service';
+                            if (isServiceMsg || m.id > lastMessageId) {
+                                if (m.id > 0) lastMessageId = Math.max(lastMessageId, m.id);
                                 
-                                // Afficher le toast
+                                // Afficher le toast (badge déjà mis à jour par totals)
                                 let msgType = 'message';
-                                if (m.type_message === 'service') msgType = 'info';
+                                if (isServiceMsg) msgType = 'info';
                                 
                                 showToast(
-                                    m.type_message === 'service' ? 'Message Service' : 'Nouveau message',
+                                    isServiceMsg ? 'Message Service' : 'Nouveau message',
                                     `${m.auteur.name}: ${m.contenu}`,
                                     msgType,
                                     m.conversation_id ? `/authentification/messages/${m.conversation_id}/` : null
@@ -1049,7 +1052,7 @@
                 try {
                     const data = JSON.parse(e.data);
                     const dataType = data.type;
-                    console.log('[NOTIF-WS] Message reçu - type:', dataType, 'data:', JSON.stringify(data.data).substring(0, 200));
+                    console.log('[NOTIF-WS] Message reçu - type:', dataType, 'full data:', JSON.stringify(data));
                     if (dataType === 'messages_read' && data.data) {
                         const count = data.data.count || 0;
                         const currentBadge = document.getElementById('message-badge');
@@ -1063,16 +1066,22 @@
                         const isMessageEvent = dataType === 'message' || (n && n.type === 'message') || (n && n.type_notification === 'message');
                         console.log('[NOTIF-WS] isMessageEvent:', isMessageEvent);
                         if (isMessageEvent) {
-                            console.log('[NOTIF-WS] Handling message event');
-                            if (!n.id || n.id > lastMessageId) {
-                                if (n.id) lastMessageId = Math.max(lastMessageId, n.id);
-                                console.log('[NOTIF-WS] Updating message badge, current text:', document.getElementById('message-badge')?.textContent);
-                                console.log('[NOTIF-WS] Calling updateBadge with count:', (parseInt(document.getElementById('message-badge')?.textContent) || 0) + 1);
-                                updateBadge('message-badge', (parseInt(document.getElementById('message-badge')?.textContent) || 0) + 1);
-                                console.log('[NOTIF-WS] Badge updated, new text:', document.getElementById('message-badge')?.textContent);
+                            console.log('[NOTIF-WS] Handling message event, data:', n);
+                            const msgId = n.id || 0;
+                            const isServiceMsg = n.type_message === 'service';
+                            if (isServiceMsg || msgId === 0 || msgId > lastMessageId) {
+                                if (msgId > 0) lastMessageId = Math.max(lastMessageId, msgId);
+                                const currentBadge = document.getElementById('message-badge');
+                                const currentCount = parseInt(currentBadge?.textContent) || 0;
+                                console.log('[NOTIF-WS] Updating message badge, current:', currentCount, '+1');
+                                updateBadge('message-badge', currentCount + 1);
+                                console.log('[NOTIF-WS] Badge updated to:', currentCount + 1);
                                 const auteurName = n.auteur ? n.auteur.name : 'Quelqu\'un';
-                                const convLink = n.conversation_id ? `/authentification/messages/${n.conversation_id}/` : '/authentification/messages/';
-                                showToast('Nouveau message', `${auteurName}: ${n.message || ''}`, 'message', convLink);
+                                const convLink = n.lien || (n.conversation_id ? `/authentification/messages/${n.conversation_id}/` : '/authentification/messages/');
+                                const toastType = isServiceMsg ? 'info' : 'message';
+                                const toastTitle = isServiceMsg ? 'Message Service' : 'Nouveau message';
+                                const msgPreview = n.contenu || n.message || '';
+                                showToast(toastTitle, `${auteurName}: ${msgPreview}`, toastType, convLink);
                                 setTimeout(function() { fetchUpdates(); }, 200);
                             }
                         } else {

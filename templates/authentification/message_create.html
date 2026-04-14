@@ -258,7 +258,7 @@ textarea.form-control {
         <div class="form-section" data-section="groupe">
             <div class="form-group">
                 <label class="form-label"><i class="fas fa-users me-2"></i>Nom du groupe</label>
-                <input type="text" name="nom_groupe" class="form-control" placeholder="Ex: Projet ABC, Équipe enseignants..." required>
+                <input type="text" name="nom_groupe" class="form-control" placeholder="Ex: Projet ABC, Équipe enseignants...">
                 <small class="text-muted">Ce nom apparaîtra dans la liste des conversations</small>
             </div>
             <div class="form-group">
@@ -315,6 +315,11 @@ document.querySelectorAll('.type-tab').forEach(tab => {
         document.querySelectorAll('.type-tab').forEach(t => t.classList.remove('active'));
         this.classList.add('active');
         
+        // Enlever required de tous les champs avant de changer d'onglet
+        document.querySelectorAll('.form-section input, .form-section select, .form-section textarea').forEach(field => {
+            field.removeAttribute('required');
+        });
+        
         document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
         document.querySelector(`[data-section="${type}"]`).classList.add('active');
         
@@ -325,53 +330,61 @@ document.querySelectorAll('.type-tab').forEach(tab => {
 document.getElementById('messageForm').addEventListener('submit', function(e) {
     const typeMessage = document.getElementById('typeMessage').value;
     const activeSection = document.querySelector(`.form-section[data-section="${typeMessage}"]`);
+    const contenu = document.querySelector('textarea[name="contenu"]');
+    
+    console.log('[FORM] Soumission - type:', typeMessage);
+    console.log('[FORM] Contenu trouvé:', contenu ? 'oui' : 'non');
+    console.log('[FORM] Valeur contenu:', contenu ? contenu.value : 'N/A');
+    
+    let isValid = true;
+    let errorMessage = '';
     
     if (typeMessage === 'individuel') {
         const destinataire = activeSection.querySelector('select[name="destinataire"]');
-        const contenu = document.querySelector('textarea[name="contenu"]');
-        if (!destinataire.value) {
-            e.preventDefault();
-            alert('Veuillez sélectionner un destinataire.');
-            return false;
-        }
-        if (!contenu.value.trim()) {
-            e.preventDefault();
-            alert('Le message ne peut pas être vide.');
-            return false;
+        console.log('[FORM] Destinataire trouvé:', destinataire ? 'oui' : 'non');
+        console.log('[FORM] Valeur destinataire:', destinataire ? destinataire.value : 'N/A');
+        if (!destinataire || !destinataire.value) {
+            isValid = false;
+            errorMessage = 'Veuillez sélectionner un destinataire.';
+        } else if (!contenu || !contenu.value.trim()) {
+            isValid = false;
+            errorMessage = 'Le message ne peut pas être vide.';
         }
     } else if (typeMessage === 'service') {
         const service = activeSection.querySelector('select[name="service"]');
-        const contenu = document.querySelector('textarea[name="contenu"]');
-        if (!service.value) {
-            e.preventDefault();
-            alert('Veuillez sélectionner un service.');
-            return false;
-        }
-        if (!contenu.value.trim()) {
-            e.preventDefault();
-            alert('Le message ne peut pas être vide.');
-            return false;
+        console.log('[FORM] Service trouvé:', service ? 'oui' : 'non');
+        console.log('[FORM] Valeur service:', service ? service.value : 'N/A');
+        if (!service || !service.value) {
+            isValid = false;
+            errorMessage = 'Veuillez sélectionner un service.';
+        } else if (!contenu || !contenu.value.trim()) {
+            isValid = false;
+            errorMessage = 'Le message ne peut pas être vide.';
         }
     } else if (typeMessage === 'groupe') {
         const nomGroupe = activeSection.querySelector('input[name="nom_groupe"]');
         const destinataires = activeSection.querySelectorAll('input[name="destinataires"]:checked');
-        const contenu = document.querySelector('textarea[name="contenu"]');
-        if (!nomGroupe.value.trim()) {
-            e.preventDefault();
-            alert('Veuillez entrer le nom du groupe.');
-            return false;
-        }
-        if (destinataires.length === 0) {
-            e.preventDefault();
-            alert('Veuillez sélectionner au moins un participant.');
-            return false;
-        }
-        if (!contenu.value.trim()) {
-            e.preventDefault();
-            alert('Le message ne peut pas être vide.');
-            return false;
+        if (!nomGroupe || !nomGroupe.value.trim()) {
+            isValid = false;
+            errorMessage = 'Veuillez entrer le nom du groupe.';
+        } else if (destinataires.length === 0) {
+            isValid = false;
+            errorMessage = 'Veuillez sélectionner au moins un participant.';
+        } else if (!contenu || !contenu.value.trim()) {
+            isValid = false;
+            errorMessage = 'Le message ne peut pas être vide.';
         }
     }
+    
+    if (!isValid) {
+        e.preventDefault();
+        alert(errorMessage);
+        console.log('[FORM] Validation échouée:', errorMessage);
+        return false;
+    }
+    
+    console.log('[FORM] Validation réussie, soumission...');
+    // Le formulaire se soumet normalement
 });
 </script>
 {% endblock %}
