@@ -398,3 +398,57 @@ def emploi_du_temps(request):
     classes = Classe.objects.filter(annee_scolaire=annee) if annee else []
     
     return render(request, 'enseignement/emploi_du_temps.html', {'classes': classes, 'annee': annee})
+
+
+@login_required
+def salle_create_view(request):
+    if not request.user.has_module_permission('salle_list', 'write'):
+        messages.error(request, "Vous n'avez pas l'autorisation d'ajouter des salles.")
+        return redirect('enseignement:salle_list')
+    
+    if request.method == 'POST':
+        form = SalleForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Salle créée avec succès.')
+            return redirect('enseignement:salle_list')
+    else:
+        form = SalleForm()
+    
+    return render(request, 'enseignement/salle_form.html', {'form': form, 'title': 'Nouvelle salle'})
+
+
+@login_required
+def salle_edit_view(request, pk):
+    salle = get_object_or_404(Salle, pk=pk)
+    
+    if not request.user.has_module_permission('salle_list', 'update'):
+        messages.error(request, "Vous n'avez pas l'autorisation de modifier cette salle.")
+        return redirect('enseignement:salle_list')
+    
+    if request.method == 'POST':
+        form = SalleForm(request.POST, instance=salle)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Salle modifiée avec succès.')
+            return redirect('enseignement:salle_list')
+    else:
+        form = SalleForm(instance=salle)
+    
+    return render(request, 'enseignement/salle_form.html', {'form': form, 'title': 'Modifier la salle', 'salle': salle})
+
+
+@login_required
+def salle_delete_view(request, pk):
+    salle = get_object_or_404(Salle, pk=pk)
+    
+    if not request.user.has_module_permission('salle_list', 'delete'):
+        messages.error(request, "Vous n'avez pas l'autorisation de supprimer cette salle.")
+        return redirect('enseignement:salle_list')
+    
+    if request.method == 'POST':
+        salle.delete()
+        messages.success(request, 'Salle supprimée avec succès.')
+        return redirect('enseignement:salle_list')
+    
+    return render(request, 'enseignement/salle_delete.html', {'salle': salle})

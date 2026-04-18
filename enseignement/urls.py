@@ -21,6 +21,9 @@ urlpatterns = [
     path('attributions/ajouter/', views.attribution_create_view, name='attribution_create'),
     
     path('salles/', views.salle_list_view, name='salle_list'),
+    path('salles/ajouter/', views.salle_create_view, name='salle_create'),
+    path('salles/<int:pk>/modifier/', views.salle_edit_view, name='salle_edit'),
+    path('salles/<int:pk>/supprimer/', views.salle_delete_view, name='salle_delete'),
     path('examens/', views.examen_list, name='examen_list'),
     path('examens/creer/', views.examen_create, name='examen_create'),
     path('examens/<int:pk>/', views.examen_detail, name='examen_detail'),
