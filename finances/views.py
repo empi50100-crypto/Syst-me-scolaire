@@ -378,6 +378,12 @@ def facture_list(request):
 
 
 @login_required
+def facture_create(request):
+    messages.info(request, "Les factures sont générées automatiquement lors des paiements.")
+    return redirect('finances:facture_list')
+
+
+@login_required
 def bourse_list(request):
     if not request.user.has_module_permission('bourses', 'read'):
         messages.error(request, "Vous n'avez pas l'autorisation.")

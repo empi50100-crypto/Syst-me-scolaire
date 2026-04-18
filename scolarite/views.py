@@ -90,11 +90,12 @@ def eleve_create(request):
             eleve.save()
             
             annee_id = form.cleaned_data.get('annee_scolaire')
-            if annee_id:
+            classe = form.cleaned_data.get('classe')
+            if annee_id and classe:
                 EleveInscription.objects.create(
                     eleve=eleve,
+                    classe=classe,
                     annee_scolaire=annee_id,
-                    # Note: classe can be added later or via another form
                 )
             
             log_audit_helper(request.user, 'create', 'Eleve', eleve, f"Création de l'élève {eleve.nom_complet}", request)

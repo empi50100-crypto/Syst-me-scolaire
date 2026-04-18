@@ -34,4 +34,13 @@ urlpatterns = [
     path('chat/<int:conversation_id>/supprimer/', views.conversation_delete, name='conversation_delete'),
     path('messages/<int:pk>/supprimer/', views.message_delete, name='message_delete'),
     path('api/updates/', views.api_updates, name='api_updates'),
+    path('permissions-utilisateur/', views.permissions_utilisateur, name='permissions_utilisateur'),
+    path('permissions-utilisateur/nouvelle/', views.permission_utilisateur_create, name='permission_utilisateur_create'),
+    path('permissions-utilisateur/<int:pk>/modifier/', views.permission_utilisateur_edit, name='permission_utilisateur_edit'),
+    path('permissions-utilisateur/<int:pk>/supprimer/', views.permission_utilisateur_delete, name='permission_utilisateur_delete'),
+    path('demandes/', views.demandes_list, name='demandes_list'),
+    path('demandes/<int:pk>/', views.demande_detail, name='demande_detail'),
+    path('demandes/<int:pk>/approuver/', views.demande_approuver, name='demande_approuver'),
+    path('demandes/<int:pk>/rejeter/', views.demande_rejeter, name='demande_rejeter'),
+    path('journal-audit/', views.audit_log, name='audit_log'),
 ]

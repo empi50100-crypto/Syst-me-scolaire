@@ -33,6 +33,30 @@ class FraisScolaire(models.Model):
     
     def __str__(self):
         return f"{self.get_type_frais_display()} - {self.montant} FCFA"
+    
+    def get_classes_concernees(self):
+        from enseignement.models import Classe
+        if self.mode_application == self.ModeApplication.GENERAL:
+            return Classe.objects.filter(annee_scolaire=self.annee_scolaire)
+        elif self.mode_application == self.ModeApplication.NIVEAU and self.niveau:
+            return Classe.objects.filter(niveau=self.niveau, annee_scolaire=self.annee_scolaire)
+        elif self.classe:
+            return Classe.objects.filter(pk=self.classe.pk)
+        else:
+            return Classe.objects.filter(annee_scolaire=self.annee_scolaire)
+    
+    @classmethod
+    def get_total_frais_classe(cls, classe, annee):
+        from django.db.models import Q
+        frais_list = cls.objects.filter(
+            Q(annee_scolaire=annee) | Q(annee_scolaire__isnull=True)
+        )
+        total = 0
+        for frais in frais_list:
+            classes_concernees = frais.get_classes_concernees()
+            if classe in classes_concernees:
+                total += float(frais.montant)
+        return total
 
 
 class Paiement(models.Model):
@@ -58,6 +82,14 @@ class Paiement(models.Model):
     
     def __str__(self):
         return f"{self.eleve} - {self.montant} ({self.date_paiement})"
+    
+    @classmethod
+    def get_total_paye(cls, eleve, annee):
+        total = cls.objects.filter(
+            eleve=eleve,
+            frais__annee_scolaire=annee
+        ).aggregate(total=Sum('montant'))['total'] or 0
+        return float(total)
 
 
 class OperationCaisse(models.Model):

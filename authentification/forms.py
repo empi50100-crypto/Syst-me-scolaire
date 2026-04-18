@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm as DjangoUserCreationForm
-from .models import Utilisateur
+from .models import Utilisateur, PermissionPersonnalisee, Module
 
 
 class LoginForm(AuthenticationForm):
@@ -128,4 +128,20 @@ class UserChangeForm(forms.ModelForm):
             'matiere': forms.Select(attrs={'class': 'form-select', 'id': 'id_matiere'}),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'est_approuve': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+
+
+class PermissionPersonnaliseeForm(forms.ModelForm):
+    class Meta:
+        model = PermissionPersonnalisee
+        fields = ['utilisateur', 'module', 'actions', 'niveau', 'est_actif', 'est_temporaire', 'date_debut', 'date_fin']
+        widgets = {
+            'utilisateur': forms.Select(attrs={'class': 'form-select'}),
+            'module': forms.Select(attrs={'class': 'form-select'}),
+            'actions': forms.SelectMultiple(attrs={'class': 'form-select', 'size': '5'}),
+            'niveau': forms.Select(attrs={'class': 'form-select'}),
+            'est_actif': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'est_temporaire': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'date_debut': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'date_fin': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
         }

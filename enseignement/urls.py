@@ -22,6 +22,10 @@ urlpatterns = [
     
     path('salles/', views.salle_list_view, name='salle_list'),
     path('examens/', views.examen_list, name='examen_list'),
+    path('examens/creer/', views.examen_create, name='examen_create'),
+    path('examens/<int:pk>/', views.examen_detail, name='examen_detail'),
+    path('examens/<int:pk>/modifier/', views.examen_edit, name='examen_edit'),
+    path('examens/<int:pk>/supprimer/', views.examen_delete, name='examen_delete'),
     path('contraintes/', views.contrainte_list, name='contrainte_list'),
     path('emploi-du-temps/', views.emploi_du_temps, name='emploi_du_temps'),
     

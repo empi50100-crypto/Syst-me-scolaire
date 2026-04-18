@@ -3,10 +3,23 @@
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1><i class="bi bi-person-check"></i> Permissions Utilisateur</h1>
+    <div>
+        <h1><i class="bi bi-person-check text-primary me-2"></i>Permissions Utilisateur</h1>
+        <p class="text-muted mb-0">Gérez les permissions personnalisées et les exceptions aux permissions par rôle</p>
+    </div>
     <a href="{% url 'authentification:permission_utilisateur_create' %}" class="btn btn-primary">
-        <i class="bi bi-plus-circle"></i> Nouvelle permission
+        <i class="bi bi-plus-circle me-1"></i>Nouvelle permission personnalisée
     </a>
+</div>
+
+<!-- Info alert about role-based permissions -->
+<div class="alert alert-info d-flex align-items-start mb-4">
+    <i class="bi bi-info-circle-fill me-2 mt-1"></i>
+    <div>
+        <strong>Permissions par défaut :</strong> Chaque rôle dispose déjà de permissions prédéfinies sur tous les modules. 
+        Cette page permet de créer des <strong>permissions personnalisées</strong> (exceptions) pour des utilisateurs spécifiques.
+        <br><small class="text-muted">Exemple : Donner un accès supplémentaire à un professeur sur le module Finances.</small>
+    </div>
 </div>
 
 <div class="card mb-4">
@@ -17,8 +30,8 @@
                 <select name="utilisateur" class="form-select" onchange="this.form.submit()">
                     <option value="">Tous les utilisateurs</option>
                     {% for user in all_users %}
-                    <option value="{{ user.pk }}" {% if utilisateur_id == user.pk|stringformat:"s" %}selected{% endif %}>
-                        {{ user.get_full_name|default:user.username }}
+                    <option value="{{ user.pk }}" {% if utilisateur_id == user.pk %}selected{% endif %}>
+                        {{ user.get_full_name|default:user.username }} ({{ user.get_role_display }})
                     </option>
                     {% endfor %}
                 </select>
@@ -90,9 +103,20 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="8" class="text-center text-muted py-4">
-                            <i class="bi bi-shield-exclamation" style="font-size: 2rem;"></i>
-                            <p class="mb-0 mt-2">Aucune permission utilisateur</p>
+                        <td colspan="8" class="text-center py-5">
+                            <div class="mb-3">
+                                <i class="bi bi-shield-check text-success" style="font-size: 3rem;"></i>
+                            </div>
+                            <h5 class="text-muted">Aucune permission personnalisée</h5>
+                            <p class="text-muted mb-3">
+                                Les utilisateurs utilisent les permissions par défaut de leur rôle.<br>
+                                {% if utilisateur_id %}
+                                L'utilisateur sélectionné n'a pas de permissions personnalisées.
+                                {% endif %}
+                            </p>
+                            <a href="{% url 'authentification:permission_utilisateur_create' %}{% if utilisateur_id %}?utilisateur={{ utilisateur_id }}{% endif %}" class="btn btn-primary">
+                                <i class="bi bi-plus-circle me-1"></i>Créer une permission personnalisée
+                            </a>
                         </td>
                     </tr>
                     {% endfor %}

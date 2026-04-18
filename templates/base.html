@@ -309,7 +309,7 @@
     {% block extra_js %}{% endblock %}
     {% block extra_css %}{% endblock %}
 </head>
-<body>
+<body{% if user.is_authenticated %} data-user-id="{{ request.user.id }}"{% endif %}>
     {% if user.is_authenticated %}
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg">
@@ -331,13 +331,13 @@
             <!-- Notifications -->
             <a class="nav-icon-btn position-relative" href="{% url 'authentification:notification_list' %}" title="Notifications">
                 <i class="bi bi-bell"></i>
-                <span class="nav-badge" id="notification-badge" {% if not unread_notifications_count %}style="display:none;"{% endif %}>{{ unread_notifications_count|default:0 }}</span>
+                <span class="nav-badge{% if not unread_notifications_count %} d-none{% endif %}" id="notification-badge">{{ unread_notifications_count|default:0 }}</span>
             </a>
 
             <!-- Messages -->
             <a class="nav-icon-btn position-relative" href="{% url 'authentification:chat_inbox' %}" title="Messages">
                 <i class="bi bi-chat-dots"></i>
-                <span class="nav-badge" id="message-badge" style="background: #10b981;{% if not unread_messages_count %}display:none;{% endif %}">{{ unread_messages_count|default:0 }}</span>
+                <span class="nav-badge{% if not unread_messages_count %} d-none{% endif %}" id="message-badge" data-bg="#10b981">{{ unread_messages_count|default:0 }}</span>
             </a>
 
             <!-- Theme Toggle -->
@@ -669,7 +669,8 @@
         let pollInterval = 3000;
         let currentConversationId = null;
         let pollCount = 0;
-        const userId = {{ request.user.id }};
+        /* userId value set via data attribute below */
+        const userId = parseInt(document.body.dataset.userId || '0');
         
         // Détecter si on est sur la page de conversation
         function detectCurrentPage() {
@@ -689,9 +690,9 @@
             if (!el) return;
             if (count > 0) {
                 el.textContent = count > 99 ? '99+' : count;
-                el.style.display = '';
+                el.classList.remove('d-none');
             } else {
-                el.style.display = 'none';
+                el.classList.add('d-none');
             }
         }
         

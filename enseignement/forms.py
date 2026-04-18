@@ -19,7 +19,7 @@ class ClasseForm(forms.ModelForm):
     
     class Meta:
         model = Classe
-        fields = ['nom', 'niveau', 'serie', 'domaine', 'subdivision', 'capacite', 'professeur_principal', 'matieres']
+        fields = ['nom', 'niveau', 'serie', 'domaine', 'subdivision', 'capacite', 'professeur_principal', 'annee_scolaire', 'matieres']
         widgets = {
             'nom': forms.TextInput(attrs={'class': 'form-control'}),
             'niveau': forms.Select(attrs={'class': 'form-select'}),
@@ -28,11 +28,16 @@ class ClasseForm(forms.ModelForm):
             'subdivision': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ex: 1, 2, A, B...'}),
             'capacite': forms.NumberInput(attrs={'class': 'form-control'}),
             'professeur_principal': forms.Select(attrs={'class': 'form-select'}),
+            'annee_scolaire': forms.Select(attrs={'class': 'form-select'}),
         }
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.annee_active = AnneeScolaire.objects.filter(est_active=True).first()
+        
+        if not self.instance.pk:
+            if self.annee_active:
+                self.initial['annee_scolaire'] = self.annee_active
         
         if self.instance.pk:
             self.initial['matieres'] = self.instance.matieres.all()
@@ -62,12 +67,13 @@ class AttributionForm(forms.ModelForm):
 class EvaluationForm(forms.ModelForm):
     class Meta:
         model = Evaluation
-        fields = ['eleve', 'matiere', 'classe', 'periode', 'note', 'coefficient', 'date_eval']
+        fields = ['eleve', 'matiere', 'classe', 'periode', 'annee_scolaire', 'note', 'coefficient', 'date_eval']
         widgets = {
             'eleve': forms.Select(attrs={'class': 'form-select'}),
             'matiere': forms.Select(attrs={'class': 'form-select'}),
             'classe': forms.Select(attrs={'class': 'form-select'}),
             'periode': forms.Select(attrs={'class': 'form-select'}),
+            'annee_scolaire': forms.Select(attrs={'class': 'form-select'}),
             'note': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
             'coefficient': forms.NumberInput(attrs={'class': 'form-control'}),
             'date_eval': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),

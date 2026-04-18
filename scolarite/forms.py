@@ -2,7 +2,7 @@ from django import forms
 from django.forms import formset_factory
 from .models import Eleve, EleveInscription, DocumentEleve
 from enseignement.models import Classe
-from core.models import AnneeScolaire
+from core.models import AnneeScolaire, NiveauScolaire
 
 
 class DocumentForm(forms.Form):
@@ -39,6 +39,12 @@ class EleveForm(forms.ModelForm):
         label='Année scolaire',
         widget=forms.Select(attrs={'class': 'form-select'})
     )
+    classe = forms.ModelChoiceField(
+        queryset=Classe.objects.none(),
+        required=True,
+        label='Classe',
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
     
     class Meta:
         model = Eleve
@@ -64,10 +70,17 @@ class EleveForm(forms.ModelForm):
         if self.fields['annee_scolaire'].queryset.count() == 1:
             self.fields['annee_scolaire'].initial = self.fields['annee_scolaire'].queryset.first()
         
+        # Update classe queryset based on active year
+        annee_active = AnneeScolaire.objects.filter(est_active=True).first()
+        if annee_active:
+            self.fields['classe'].queryset = Classe.objects.filter(annee_scolaire=annee_active).order_by('niveau', 'nom', 'subdivision')
+        
         if self.instance and self.instance.pk:
             inscription = self.instance.inscriptions.order_by('-annee_scolaire__date_debut').first()
             if inscription:
                 self.initial['annee_scolaire'] = inscription.annee_scolaire_id
+                self.initial['classe'] = inscription.classe_id
+                self.fields['classe'].queryset = Classe.objects.filter(annee_scolaire_id=inscription.annee_scolaire_id).order_by('niveau', 'nom', 'subdivision')
             
             if self.instance.date_naissance:
                 self.initial['date_naissance'] = self.instance.date_naissance

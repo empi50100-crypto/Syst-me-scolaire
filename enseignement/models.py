@@ -153,6 +153,7 @@ class Evaluation(models.Model):
     matiere = models.ForeignKey(Matiere, on_delete=models.CASCADE, related_name='evaluations')
     classe = models.ForeignKey(Classe, on_delete=models.CASCADE, related_name='evaluations')
     periode = models.ForeignKey(PeriodeEvaluation, on_delete=models.CASCADE, related_name='evaluations')
+    annee_scolaire = models.ForeignKey(AnneeScolaire, on_delete=models.CASCADE, related_name='evaluations', verbose_name='Année scolaire', null=True, blank=True)
     type_eval = models.CharField(max_length=20, choices=TypeEval.choices, default=TypeEval.INTERROGATION)
     titre = models.CharField(max_length=200, blank=True)
     note = models.DecimalField(max_digits=5, decimal_places=2)
@@ -171,7 +172,10 @@ class Evaluation(models.Model):
 class FicheNote(models.Model):
     eleve = models.ForeignKey('scolarite.Eleve', on_delete=models.CASCADE, related_name='fiches_notes')
     classe = models.ForeignKey(Classe, on_delete=models.CASCADE, related_name='fiches_notes')
-    periode = models.ForeignKey(PeriodeEvaluation, on_delete=models.CASCADE, related_name='fiches_notes')
+    matiere = models.ForeignKey(Matiere, on_delete=models.CASCADE, related_name='fiches_notes', null=True, blank=True)
+    periode = models.ForeignKey(PeriodeEvaluation, on_delete=models.CASCADE, related_name='fiches_notes', null=True, blank=True)
+    cycle = models.ForeignKey(Cycle, on_delete=models.CASCADE, related_name='fiches_notes', null=True, blank=True)
+    annee_scolaire = models.ForeignKey(AnneeScolaire, on_delete=models.CASCADE, related_name='fiches_notes', null=True, blank=True, verbose_name='Année scolaire')
     moyenne = models.DecimalField(max_digits=5, decimal_places=2)
     rang = models.PositiveIntegerField()
     
@@ -185,6 +189,9 @@ class FicheNote(models.Model):
 
 class ContrainteHoraire(models.Model):
     professeur = models.ForeignKey(ProfilProfesseur, on_delete=models.CASCADE, related_name='contraintes')
+    classe = models.ForeignKey(Classe, on_delete=models.CASCADE, related_name='contraintes', null=True, blank=True)
+    annee_scolaire = models.ForeignKey(AnneeScolaire, on_delete=models.CASCADE, related_name='contraintes', null=True, blank=True, verbose_name='Année scolaire')
+    periode = models.ForeignKey(PeriodeEvaluation, on_delete=models.CASCADE, related_name='contraintes', null=True, blank=True)
     jour = models.CharField(max_length=10)
     heure_debut = models.TimeField()
     heure_fin = models.TimeField()

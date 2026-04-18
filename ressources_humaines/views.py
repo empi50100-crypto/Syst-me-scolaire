@@ -9,6 +9,9 @@ from .forms import MembrePersonnelForm, SalaireForm, FichePosteForm, ContratEmpl
 
 @login_required
 def liste_personnel(request):
+    if not request.user.has_module_permission('personnel_list', 'read'):
+        messages.error(request, "Vous n'avez pas l'autorisation.")
+        return redirect('dashboard')
     fonction_filter = request.GET.get('fonction')
     personnel_list = MembrePersonnel.objects.select_related('utilisateur', 'poste').all()
     
@@ -30,6 +33,9 @@ def liste_personnel(request):
 
 @login_required
 def creer_personnel(request):
+    if not request.user.has_module_permission('personnel_list', 'write'):
+        messages.error(request, "Vous n'avez pas l'autorisation.")
+        return redirect('ressources_humaines:liste_personnel')
     if request.method == 'POST':
         form = MembrePersonnelForm(request.POST)
         if form.is_valid():
@@ -43,6 +49,9 @@ def creer_personnel(request):
 
 @login_required
 def modifier_personnel(request, pk):
+    if not request.user.has_module_permission('personnel_list', 'write'):
+        messages.error(request, "Vous n'avez pas l'autorisation.")
+        return redirect('ressources_humaines:liste_personnel')
     personnel = get_object_or_404(MembrePersonnel, pk=pk)
     if request.method == 'POST':
         form = MembrePersonnelForm(request.POST, instance=personnel)
@@ -57,6 +66,9 @@ def modifier_personnel(request, pk):
 
 @login_required
 def supprimer_personnel(request, pk):
+    if not request.user.has_module_permission('personnel_list', 'delete'):
+        messages.error(request, "Vous n'avez pas l'autorisation.")
+        return redirect('ressources_humaines:liste_personnel')
     personnel = get_object_or_404(MembrePersonnel, pk=pk)
     if request.method == 'POST':
         personnel.delete()
@@ -67,6 +79,9 @@ def supprimer_personnel(request, pk):
 
 @login_required
 def liste_salaires(request):
+    if not request.user.has_module_permission('salaires', 'read'):
+        messages.error(request, "Vous n'avez pas l'autorisation.")
+        return redirect('dashboard')
     annee_filter = request.GET.get('annee')
     employe_filter = request.GET.get('employe')
     
@@ -95,6 +110,9 @@ def liste_salaires(request):
 
 @login_required
 def creer_salaire(request):
+    if not request.user.has_module_permission('salaires', 'write'):
+        messages.error(request, "Vous n'avez pas l'autorisation.")
+        return redirect('ressources_humaines:liste_salaires')
     if request.method == 'POST':
         form = SalaireForm(request.POST)
         if form.is_valid():
@@ -111,18 +129,27 @@ def creer_salaire(request):
 
 @login_required
 def detail_salaire(request, pk):
+    if not request.user.has_module_permission('salaires', 'read'):
+        messages.error(request, "Vous n'avez pas l'autorisation.")
+        return redirect('dashboard')
     salaire = get_object_or_404(Salaire, pk=pk)
     return render(request, 'ressources_humaines/salaire_detail.html', {'salaire': salaire})
 
 
 @login_required
 def liste_postes(request):
+    if not request.user.has_module_permission('postes', 'read'):
+        messages.error(request, "Vous n'avez pas l'autorisation.")
+        return redirect('dashboard')
     postes = FichePoste.objects.all().order_by('-est_active', '-date_creation')
     return render(request, 'ressources_humaines/postes_list.html', {'postes': postes})
 
 
 @login_required
 def creer_poste(request):
+    if not request.user.has_module_permission('postes', 'write'):
+        messages.error(request, "Vous n'avez pas l'autorisation.")
+        return redirect('ressources_humaines:liste_postes')
     if request.method == 'POST':
         form = FichePosteForm(request.POST)
         if form.is_valid():
@@ -136,6 +163,9 @@ def creer_poste(request):
 
 @login_required
 def modifier_poste(request, pk):
+    if not request.user.has_module_permission('postes', 'write'):
+        messages.error(request, "Vous n'avez pas l'autorisation.")
+        return redirect('ressources_humaines:liste_postes')
     poste = get_object_or_404(FichePoste, pk=pk)
     if request.method == 'POST':
         form = FichePosteForm(request.POST, instance=poste)
@@ -150,6 +180,9 @@ def modifier_poste(request, pk):
 
 @login_required
 def liste_contrats(request):
+    if not request.user.has_module_permission('contrats', 'read'):
+        messages.error(request, "Vous n'avez pas l'autorisation.")
+        return redirect('dashboard')
     statut_filter = request.GET.get('statut')
     contrats = ContratEmploye.objects.select_related('employe__utilisateur', 'poste').order_by('-date_debut')
     
@@ -161,6 +194,9 @@ def liste_contrats(request):
 
 @login_required
 def creer_contrat(request):
+    if not request.user.has_module_permission('contrats', 'write'):
+        messages.error(request, "Vous n'avez pas l'autorisation.")
+        return redirect('ressources_humaines:liste_contrats')
     if request.method == 'POST':
         form = ContratEmployeForm(request.POST)
         if form.is_valid():

@@ -53,7 +53,8 @@ def classe_list_view(request):
         
     annees = AnneeScolaire.objects.all().order_by('-date_debut')
     from core.models import NiveauScolaire
-    niveaux = NiveauScolaire.objects.all()
+    niveaux = [(n.id, str(n)) for n in NiveauScolaire.objects.all()]
+    series = []  # À remplir si nécessaire
     
     return render(request, 'enseignement/classe_list.html', {
         'classes': classes_qs,
@@ -64,6 +65,7 @@ def classe_list_view(request):
         'serie_filter': serie,
         'annees': annees,
         'niveaux': niveaux,
+        'series': series,
     })
 
 
@@ -322,6 +324,7 @@ def saisie_notes_detail_view(request, classe_pk, matiere_pk):
                     matiere=matiere,
                     classe=classe,
                     periode_id=periode_id,
+                    annee_scolaire=classe.annee_scolaire,
                     type_eval=type_eval,
                     note=note,
                     date_eval=date_eval
@@ -347,6 +350,30 @@ def examen_list(request):
     examens = Examen.objects.select_related('classe', 'matiere').filter(annee_scolaire=annee) if annee else Examen.objects.none()
     
     return render(request, 'enseignement/examen_list.html', {'examens': examens, 'annee': annee})
+
+
+@login_required
+def examen_create(request):
+    messages.info(request, "La création d'examens sera bientôt disponible.")
+    return redirect('enseignement:examen_list')
+
+
+@login_required
+def examen_detail(request, pk):
+    messages.info(request, "La détail des examens sera bientôt disponible.")
+    return redirect('enseignement:examen_list')
+
+
+@login_required
+def examen_edit(request, pk):
+    messages.info(request, "La modification des examens sera bientôt disponible.")
+    return redirect('enseignement:examen_list')
+
+
+@login_required
+def examen_delete(request, pk):
+    messages.info(request, "La suppression des examens sera bientôt disponible.")
+    return redirect('enseignement:examen_list')
 
 
 @login_required

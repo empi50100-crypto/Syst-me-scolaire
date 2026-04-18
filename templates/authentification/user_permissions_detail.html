@@ -150,7 +150,7 @@ function toggleModule(userId, moduleCode, shouldEnable) {
     
     var form = document.createElement('form');
     form.method = 'POST';
-    form.action = '/authentification/utilisateur/' + userId + '/permissions/' + moduleCode + '/';
+    form.action = '/authentification/users/' + userId + '/permission/' + moduleCode + '/toggle/';
     
     var csrfInput = document.createElement('input');
     csrfInput.type = 'hidden';
@@ -178,7 +178,7 @@ function showActionsModal(userId, moduleCode, moduleName, currentActions) {
     document.getElementById('actionsModalTitle').textContent = 'Modifier les actions - ' + moduleName;
     document.getElementById('modalUserId').value = userId;
     document.getElementById('modalModuleId').value = moduleCode;
-    document.getElementById('actionsForm').action = '/authentification/utilisateur/' + userId + '/permissions/' + moduleCode + '/';
+    document.getElementById('actionsForm').action = '/authentification/users/' + userId + '/permission/' + moduleCode + '/toggle/';
     
     document.getElementById('action_read').checked = currentActions.includes('read');
     document.getElementById('action_write').checked = currentActions.includes('write');
@@ -192,7 +192,7 @@ function removeCustom(userId, moduleCode) {
     if (confirm('Retirer ce module de l\'utilisateur?')) {
         const form = document.createElement('form');
         form.method = 'POST';
-        form.action = '/authentification/utilisateur/' + userId + '/permissions/' + moduleCode + '/';
+        form.action = '/authentification/users/' + userId + '/permission/' + moduleCode + '/toggle/';
         
         const csrf = document.createElement('input');
         csrf.type = 'hidden';

@@ -32,6 +32,7 @@ urlpatterns = [
     path('cycles/', views.cycle_list, name='cycle_list'),
     path('eleves-en-retard/', views.eleves_en_retard, name='eleves_en_retard'),
     path('factures/', views.facture_list, name='facture_list'),
+    path('factures/creer/', views.facture_create, name='facture_create'),
     path('bourses/', views.bourse_list, name='bourse_list'),
     path('rapport-financier/', views.rapport_financier, name='rapport_financier'),
     path('rappels/', views.rappel_list, name='rappel_list'),

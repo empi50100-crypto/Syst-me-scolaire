@@ -104,7 +104,7 @@ def generate_bulletin_pdf(eleve, notes, periode):
     for note in notes:
         data.append([
             note.matiere.nom if note.matiere else '',
-            str(note.matiere.coefficient) if note.matiere and note.matiere.coefficient else '1',
+            str(note.matiere.coefficients.first().coefficient) if note.matiere and note.matiere.coefficients.exists() else '1',
             f"{note.note}/{note.note_sur}",
             f"{note.note / note.note_sur * 20:.2f}/20"
         ])

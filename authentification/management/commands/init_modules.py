@@ -97,7 +97,7 @@ class Command(BaseCommand):
             
             # Administration
             {'service': 'administration', 'nom': 'Utilisateurs', 'code': 'user_list', 'url': '/authentification/users/', 'icon': 'bi bi-person-badge', 'ordre': 1},
-            {'service': 'administration', 'nom': 'Journal d\'Audit', 'code': 'audit_log', 'url': '/admin/authentification/journalaudit/', 'icon': 'bi bi-journal-text', 'ordre': 2},
+            {'service': 'administration', 'nom': 'Journal d\'Audit', 'code': 'audit_log', 'url': '/authentification/journal-audit/', 'icon': 'bi bi-journal-text', 'ordre': 2},
             {'service': 'administration', 'nom': 'Gestion Permissions', 'code': 'permissions_utilisateur', 'url': '/authentification/permissions-utilisateur/', 'icon': 'bi bi-shield-lock', 'ordre': 3},
             {'service': 'administration', 'nom': 'Admin Django', 'code': 'admin_django', 'url': '/admin/', 'icon': 'bi bi-hdd', 'ordre': 4},
             {'service': 'administration', 'nom': 'Approbations', 'code': 'approbations', 'url': '/authentification/demandes/', 'icon': 'bi bi-shield-check', 'ordre': 5},
@@ -124,4 +124,45 @@ class Command(BaseCommand):
                 )
                 self.stdout.write(f'  - {module.nom} ({module.service.nom})')
         
+        # Créer les permissions par défaut pour chaque rôle
+        self.stdout.write('\nCréation des permissions par rôle...')
+        self.create_default_permissions()
+        
         self.stdout.write('\nInitialisation terminée avec succès.')
+    
+    def create_default_permissions(self):
+        """Crée les permissions par défaut pour chaque rôle sur tous les modules"""
+        from authentification.models import Permission, Module, Utilisateur
+        
+        # Définition des permissions par rôle
+        role_permissions = {
+            'superadmin': ['create', 'read', 'update', 'delete', 'export', 'import', 'validate'],
+            'direction': ['create', 'read', 'update', 'delete', 'export', 'import', 'validate'],
+            'secretaire': ['create', 'read', 'update', 'export'],
+            'comptable': ['create', 'read', 'update', 'delete', 'export', 'import'],
+            'professeur': ['create', 'read', 'update', 'export'],
+            'surveillance': ['read', 'update', 'export'],
+            'agent_securite': ['read'],
+            'responsable_stock': ['create', 'read', 'update', 'export'],
+        }
+        
+        modules = Module.objects.filter(est_actif=True)
+        created_count = 0
+        
+        for role_code, actions in role_permissions.items():
+            for module in modules:
+                permission, created = Permission.objects.get_or_create(
+                    module=module,
+                    role=role_code,
+                    defaults={'actions': actions}
+                )
+                if created:
+                    created_count += 1
+                    self.stdout.write(f'  + {module.nom} -> {role_code}: {actions}')
+                else:
+                    # Mettre à jour si nécessaire
+                    if set(permission.actions) != set(actions):
+                        permission.actions = actions
+                        permission.save()
+        
+        self.stdout.write(f'\n{created_count} permissions créées.')

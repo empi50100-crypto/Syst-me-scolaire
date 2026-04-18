@@ -1085,6 +1085,7 @@ def user_permissions_detail(request, pk):
     
     if request.method == 'POST':
         # Mise à jour des permissions personnalisées
+        from .models import Module
         permission_codes = request.POST.getlist('permissions')
         
         # Supprimer les anciennes permissions
@@ -1092,21 +1093,37 @@ def user_permissions_detail(request, pk):
         
         # Créer les nouvelles permissions
         for code in permission_codes:
-            PermissionPersonnalisee.objects.create(
-                utilisateur=utilisateur,
-                module_code=code,
-                peut_lire='lecture' in request.POST.get(f'perm_{code}', ''),
-                peut_creer='creation' in request.POST.get(f'perm_{code}', ''),
-                peut_modifier='modification' in request.POST.get(f'perm_{code}', ''),
-                peut_supprimer='suppression' in request.POST.get(f'perm_{code}', '')
-            )
+            try:
+                module = Module.objects.get(code=code)
+                # Construire la liste des actions
+                actions = []
+                perm_value = request.POST.get(f'perm_{code}', '')
+                if 'lecture' in perm_value:
+                    actions.append('read')
+                if 'creation' in perm_value:
+                    actions.append('create')
+                if 'modification' in perm_value:
+                    actions.append('update')
+                if 'suppression' in perm_value:
+                    actions.append('delete')
+                
+                if actions:
+                    PermissionPersonnalisee.objects.create(
+                        utilisateur=utilisateur,
+                        module=module,
+                        actions=actions,
+                        niveau='utilisateur',
+                        est_actif=True
+                    )
+            except Module.DoesNotExist:
+                continue
         
-        messages.success(request, f'Permissions de {utilisateur.get_full_name} mises à jour.')
+        messages.success(request, f'Permissions de {utilisateur.get_full_name()} mises à jour.')
         return redirect('authentification:user_list')
     
     # Récupérer les permissions actuelles
     permissions_existantes = {
-        p.module_code: p for p in PermissionPersonnalisee.objects.filter(utilisateur=utilisateur)
+        p.module.code: p for p in PermissionPersonnalisee.objects.filter(utilisateur=utilisateur).select_related('module')
     }
     
     # Pour superadmin/direction, simuler des permissions complètes si pas de custom permissions
@@ -1176,18 +1193,11 @@ def user_permissions_detail(request, pk):
             actions = []
             if has_perm:
                 if perm:
-                    # Permissions personnalisées définies
-                    if perm.peut_lire:
-                        actions.append('read')
-                    if perm.peut_creer:
-                        actions.append('write')
-                    if perm.peut_modifier:
-                        actions.append('update')
-                    if perm.peut_supprimer:
-                        actions.append('delete')
+                    # Permissions personnalisées définies - utiliser la liste actions
+                    actions = perm.actions if perm.actions else []
                 elif is_superadmin_or_direction:
                     # Superadmin/Direction sans custom permission = full access
-                    actions = ['read', 'write', 'update', 'delete']
+                    actions = ['read', 'create', 'update', 'delete', 'export']
             
             modules_list.append({
                 'module': module,
@@ -1217,40 +1227,44 @@ def user_permission_toggle(request, user_pk, module_code):
         return redirect('authentification:user_list')
     
     utilisateur = get_object_or_404(Utilisateur, pk=user_pk)
+    from .models import Module
     
     if request.method == 'POST':
         action = request.POST.get('action')
+        
+        try:
+            module = Module.objects.get(code=module_code)
+        except Module.DoesNotExist:
+            messages.error(request, f"Module {module_code} introuvable.")
+            return redirect('authentification:user_permissions_detail', pk=user_pk)
         
         if action == 'toggle_module':
             # Activer/désactiver l'accès à un module
             perm, created = PermissionPersonnalisee.objects.get_or_create(
                 utilisateur=utilisateur,
-                module_code=module_code,
-                defaults={'peut_lire': True, 'est_actif': True}
+                module=module,
+                defaults={'actions': ['read'], 'est_actif': True, 'niveau': 'utilisateur'}
             )
             if not created:
                 perm.est_actif = not perm.est_actif
                 perm.save()
             
             status = 'activé' if perm.est_actif else 'désactivé'
-            messages.success(request, f"Accès au module {module_code} {status} pour {utilisateur.get_full_name}.")
+            messages.success(request, f"Accès au module {module.nom} {status} pour {utilisateur.get_full_name()}.")
         
         elif action == 'update_actions':
             # Mettre à jour les actions (lecture, création, modification, suppression)
             perm, created = PermissionPersonnalisee.objects.get_or_create(
                 utilisateur=utilisateur,
-                module_code=module_code,
-                defaults={'est_actif': True}
+                module=module,
+                defaults={'est_actif': True, 'niveau': 'utilisateur'}
             )
             
             actions = request.POST.getlist('actions')
-            perm.peut_lire = 'read' in actions
-            perm.peut_creer = 'create' in actions
-            perm.peut_modifier = 'update' in actions
-            perm.peut_supprimer = 'delete' in actions
+            perm.actions = actions if actions else ['read']
             perm.save()
             
-            messages.success(request, f"Permissions du module {module_code} mises à jour pour {utilisateur.get_full_name}.")
+            messages.success(request, f"Permissions du module {module.nom} mises à jour pour {utilisateur.get_full_name()}.")
     
     return redirect('authentification:user_permissions_detail', pk=user_pk)
 
@@ -1319,3 +1333,210 @@ def message_delete(request, pk):
     if conversation_id:
         return redirect('authentification:message_conversation', conversation_id=conversation_id)
     return redirect('authentification:message_list')
+
+
+@login_required
+def permissions_utilisateur(request):
+    if not request.user.has_module_permission('permissions_utilisateur', 'read'):
+        messages.error(request, "Accès refusé.")
+        return redirect('dashboard')
+    from .models import PermissionPersonnalisee, Service, Module
+    services = Service.objects.filter(est_actif=True).order_by('ordre')
+    modules = Module.objects.filter(est_actif=True).order_by('service__ordre', 'ordre')
+    all_users = Utilisateur.objects.filter(is_active=True).order_by('first_name', 'last_name', 'username')
+    
+    utilisateur_id = request.GET.get('utilisateur')
+    # Convertir en int pour comparaison
+    utilisateur_id_int = int(utilisateur_id) if utilisateur_id and utilisateur_id.isdigit() else None
+    
+    # Récupérer toutes les permissions personnalisées actives
+    perms_qs = PermissionPersonnalisee.objects.select_related(
+        'utilisateur', 'module', 'module__service'
+    ).filter(est_actif=True).order_by('utilisateur__first_name', 'module__nom')
+    
+    if utilisateur_id_int:
+        perms_qs = perms_qs.filter(utilisateur_id=utilisateur_id_int)
+    
+    return render(request, 'authentification/permission_utilisateur_list.html', {
+        'services': services,
+        'modules': modules,
+        'permissions': perms_qs,
+        'all_users': all_users,
+        'utilisateur_id': utilisateur_id_int,
+        'utilisateur_id_str': str(utilisateur_id_int) if utilisateur_id_int else '',
+    })
+
+
+@login_required
+def demandes_list(request):
+    if not request.user.has_module_permission('demandes', 'read'):
+        messages.error(request, "Accès refusé.")
+        return redirect('dashboard')
+    utilisateurs_en_attente = Utilisateur.objects.filter(is_active=False, is_approved=False).order_by('-date_joined')
+    from .models import DemandeApprobation
+    demandes = DemandeApprobation.objects.filter(statut='en_attente').order_by('-date_creation')
+    demandes_traitees = DemandeApprobation.objects.exclude(statut='en_attente').order_by('-date_creation')[:50]
+    return render(request, 'authentification/demande_list.html', {
+        'demandes': demandes,
+        'demandes_traitees': demandes_traitees,
+    })
+
+
+@login_required
+def demande_detail(request, pk):
+    from .models import DemandeApprobation
+    demande = get_object_or_404(DemandeApprobation, pk=pk)
+    return render(request, 'authentification/demande_detail.html', {'demande': demande})
+
+
+@login_required
+def demande_approuver(request, pk):
+    from .models import DemandeApprobation
+    if not request.user.est_direction() and not request.user.est_superadmin():
+        messages.error(request, "Accès refusé.")
+        return redirect('authentification:demandes_list')
+    demande = get_object_or_404(DemandeApprobation, pk=pk)
+    if request.method == 'POST' or request.GET.get('confirm') == '1':
+        demande.statut = 'approuve'
+        demande.approbateur = request.user
+        demande.save()
+        messages.success(request, "Demande approuvée avec succès.")
+        return redirect('authentification:demandes_list')
+    return render(request, 'authentification/demande_detail.html', {'demande': demande, 'action': 'approuver'})
+
+
+@login_required
+def demande_rejeter(request, pk):
+    from .models import DemandeApprobation
+    if not request.user.est_direction() and not request.user.est_superadmin():
+        messages.error(request, "Accès refusé.")
+        return redirect('authentification:demandes_list')
+    demande = get_object_or_404(DemandeApprobation, pk=pk)
+    if request.method == 'POST' or request.GET.get('confirm') == '1':
+        demande.statut = 'rejete'
+        demande.approbateur = request.user
+        motif = request.POST.get('motif', '')
+        if motif:
+            demande.motif = motif
+        demande.save()
+        messages.success(request, "Demande rejetée.")
+        return redirect('authentification:demandes_list')
+    return render(request, 'authentification/demande_detail.html', {'demande': demande, 'action': 'rejeter'})
+
+
+@login_required
+def permission_utilisateur_create(request):
+    from .models import PermissionPersonnalisee, Module
+    from .forms import PermissionPersonnaliseeForm
+    if not request.user.has_module_permission('permissions_utilisateur', 'write'):
+        messages.error(request, "Accès refusé.")
+        return redirect('authentification:permissions_utilisateur')
+    if request.method == 'POST':
+        form = PermissionPersonnaliseeForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Permission créée avec succès.")
+            return redirect('authentification:permissions_utilisateur')
+    else:
+        form = PermissionPersonnaliseeForm()
+    return render(request, 'authentification/permission_utilisateur_form.html', {'form': form})
+
+
+@login_required
+def permission_utilisateur_edit(request, pk):
+    from .models import PermissionPersonnalisee
+    from .forms import PermissionPersonnaliseeForm
+    if not request.user.has_module_permission('permissions_utilisateur', 'write'):
+        messages.error(request, "Accès refusé.")
+        return redirect('authentification:permissions_utilisateur')
+    perm = get_object_or_404(PermissionPersonnalisee, pk=pk)
+    if request.method == 'POST':
+        form = PermissionPersonnaliseeForm(request.POST, instance=perm)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Permission modifiée avec succès.")
+            return redirect('authentification:permissions_utilisateur')
+    else:
+        form = PermissionPersonnaliseeForm(instance=perm)
+    return render(request, 'authentification/permission_utilisateur_form.html', {'form': form, 'permission': perm})
+
+
+@login_required
+def permission_utilisateur_delete(request, pk):
+    from .models import PermissionPersonnalisee
+    if not request.user.has_module_permission('permissions_utilisateur', 'delete'):
+        messages.error(request, "Accès refusé.")
+        return redirect('authentification:permissions_utilisateur')
+    perm = get_object_or_404(PermissionPersonnalisee, pk=pk)
+    if request.method == 'POST':
+        perm.delete()
+        messages.success(request, "Permission supprimée avec succès.")
+        return redirect('authentification:permissions_utilisateur')
+    return render(request, 'authentification/permission_utilisateur_form.html', {'permission': perm, 'confirm_delete': True})
+
+
+@login_required
+def audit_log(request):
+    """Vue pour le Journal d'Audit - Affiche les logs de toutes les actions"""
+    from django.core.paginator import Paginator
+    from .models import JournalAudit
+    
+    # Vérifier les permissions
+    if not request.user.is_superuser and not request.user.est_direction():
+        messages.error(request, "Accès refusé. Réservé aux administrateurs.")
+        return redirect('dashboard')
+    
+    # Récupérer tous les logs avec filtres optionnels
+    logs = JournalAudit.objects.all().select_related('utilisateur')
+    
+    # Filtres
+    action_filter = request.GET.get('action', '')
+    user_filter = request.GET.get('utilisateur', '')
+    date_debut = request.GET.get('date_debut', '')
+    date_fin = request.GET.get('date_fin', '')
+    search = request.GET.get('search', '')
+    
+    if action_filter:
+        logs = logs.filter(action=action_filter)
+    if user_filter:
+        logs = logs.filter(utilisateur__username__icontains=user_filter)
+    if date_debut:
+        logs = logs.filter(created_at__date__gte=date_debut)
+    if date_fin:
+        logs = logs.filter(created_at__date__lte=date_fin)
+    if search:
+        logs = logs.filter(
+            models.Q(object_repr__icontains=search) |
+            models.Q(details__icontains=search) |
+            models.Q(model__icontains=search)
+        )
+    
+    # Pagination
+    paginator = Paginator(logs, 25)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+    
+    # Statistiques
+    stats = {
+        'total': JournalAudit.objects.count(),
+        'today': JournalAudit.objects.filter(created_at__date=timezone.now().date()).count(),
+        'create': JournalAudit.objects.filter(action='create').count(),
+        'update': JournalAudit.objects.filter(action='update').count(),
+        'delete': JournalAudit.objects.filter(action='delete').count(),
+        'login': JournalAudit.objects.filter(action='login').count(),
+    }
+    
+    # Liste des actions pour le filtre
+    actions = JournalAudit.Action.choices
+    
+    context = {
+        'page_obj': page_obj,
+        'stats': stats,
+        'actions': actions,
+        'action_filter': action_filter,
+        'user_filter': user_filter,
+        'date_debut': date_debut,
+        'date_fin': date_fin,
+        'search': search,
+    }
+    return render(request, 'authentification/audit_log.html', context)
