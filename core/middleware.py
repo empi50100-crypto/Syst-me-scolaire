@@ -29,7 +29,7 @@ class ActiveAnneeMiddleware:
 
 
 class SessionTimeoutMiddleware:
-    SESSION_TIMEOUT_SECONDS = 300
+    SESSION_TIMEOUT_SECONDS = 600
     
     def __init__(self, get_response):
         self.get_response = get_response
