@@ -30,6 +30,9 @@ urlpatterns = [
     path('examens/<int:pk>/modifier/', views.examen_edit, name='examen_edit'),
     path('examens/<int:pk>/supprimer/', views.examen_delete, name='examen_delete'),
     path('contraintes/', views.contrainte_list, name='contrainte_list'),
+    path('contraintes/ajouter/', views.contrainte_create, name='contrainte_create'),
+    path('contraintes/<int:pk>/modifier/', views.contrainte_edit, name='contrainte_edit'),
+    path('contraintes/<int:pk>/supprimer/', views.contrainte_delete, name='contrainte_delete'),
     path('emploi-du-temps/', views.emploi_du_temps, name='emploi_du_temps'),
     
     path('mes-classes/', views.mes_classes_view, name='mes_classes'),

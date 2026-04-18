@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}Supprimer la contrainte{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="bi bi-calendar-week"></i> Supprimer la contrainte</h1>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <strong>Êtes-vous sûr de vouloir supprimer cette contrainte ?</strong>
+        </div>
+        
+        <div class="mb-4">
+            <h5>Contrainte #{{ contrainte.id }}</h5>
+            <p class="text-muted">
+                Classe : {{ contrainte.classe }}<br>
+                Professeur : {{ contrainte.professeur }}<br>
+                Jour : {{ contrainte.get_jour_display }}<br>
+                Créneau : {{ contrainte.heure_debut }} - {{ contrainte.heure_fin }}
+            </p>
+        </div>
+        
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">
+                <i class="bi bi-trash"></i> Supprimer
+            </button>
+            <a href="{% url 'enseignement:contrainte_list' %}" class="btn btn-outline-secondary">Annuler</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

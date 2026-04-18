@@ -389,6 +389,60 @@ def contrainte_list(request):
 
 
 @login_required
+def contrainte_create(request):
+    if not request.user.has_module_permission('contrainte_list', 'write'):
+        messages.error(request, "Vous n'avez pas l'autorisation de créer des contraintes.")
+        return redirect('enseignement:contrainte_list')
+    
+    if request.method == 'POST':
+        form = ContrainteHoraireForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Contrainte horaire créée avec succès.')
+            return redirect('enseignement:contrainte_list')
+    else:
+        form = ContrainteHoraireForm()
+    
+    return render(request, 'enseignement/contrainte_form.html', {'form': form, 'title': 'Nouvelle contrainte'})
+
+
+@login_required
+def contrainte_edit(request, pk):
+    contrainte = get_object_or_404(ContrainteHoraire, pk=pk)
+    
+    if not request.user.has_module_permission('contrainte_list', 'update'):
+        messages.error(request, "Vous n'avez pas l'autorisation de modifier cette contrainte.")
+        return redirect('enseignement:contrainte_list')
+    
+    if request.method == 'POST':
+        form = ContrainteHoraireForm(request.POST, instance=contrainte)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Contrainte horaire modifiée avec succès.')
+            return redirect('enseignement:contrainte_list')
+    else:
+        form = ContrainteHoraireForm(instance=contrainte)
+    
+    return render(request, 'enseignement/contrainte_form.html', {'form': form, 'title': 'Modifier la contrainte', 'contrainte': contrainte})
+
+
+@login_required
+def contrainte_delete(request, pk):
+    contrainte = get_object_or_404(ContrainteHoraire, pk=pk)
+    
+    if not request.user.has_module_permission('contrainte_list', 'delete'):
+        messages.error(request, "Vous n'avez pas l'autorisation de supprimer cette contrainte.")
+        return redirect('enseignement:contrainte_list')
+    
+    if request.method == 'POST':
+        contrainte.delete()
+        messages.success(request, 'Contrainte horaire supprimée avec succès.')
+        return redirect('enseignement:contrainte_list')
+    
+    return render(request, 'enseignement/contrainte_delete.html', {'contrainte': contrainte})
+
+
+@login_required
 def emploi_du_temps(request):
     if not request.user.has_module_permission('emploi_du_temps', 'read'):
         messages.error(request, "Vous n'avez pas l'autorisation de voir les emplois du temps.")
