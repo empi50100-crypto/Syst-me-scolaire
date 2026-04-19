@@ -131,38 +131,164 @@ class Command(BaseCommand):
         self.stdout.write('\nInitialisation terminée avec succès.')
     
     def create_default_permissions(self):
-        """Crée les permissions par défaut pour chaque rôle sur tous les modules"""
+        """Crée les permissions par défaut pour chaque rôle sur les modules pertinents"""
         from authentification.models import Permission, Module, Utilisateur
         
-        # Définition des permissions par rôle
-        role_permissions = {
-            'superadmin': ['create', 'read', 'update', 'delete', 'export', 'import', 'validate'],
-            'direction': ['create', 'read', 'update', 'delete', 'export', 'import', 'validate'],
-            'secretaire': ['create', 'read', 'update', 'export'],
-            'comptable': ['create', 'read', 'update', 'delete', 'export', 'import'],
-            'professeur': ['create', 'read', 'update', 'export'],
-            'surveillance': ['read', 'update', 'export'],
-            'agent_securite': ['read'],
-            'responsable_stock': ['create', 'read', 'update', 'export'],
+        # Définition des modules accessibles par rôle avec leurs actions
+        # Chaque rôle n'accède qu'aux modules qui le concernent
+        role_module_permissions = {
+            'superadmin': {
+                '_all': True,
+                '_actions': ['create', 'read', 'update', 'delete', 'export', 'import', 'validate'],
+            },
+            'direction': {
+                '_all': True,
+                '_actions': ['create', 'read', 'update', 'delete', 'export', 'import', 'validate'],
+            },
+            'secretaire': {
+                # Scolarité
+                'eleve_list': ['create', 'read', 'update', 'export'],
+                'inscriptions': ['create', 'read', 'update', 'export'],
+                'discipline': ['create', 'read', 'update', 'export'],
+                'periode_cloture': ['read', 'update'],
+                'note_cloture': ['read', 'update'],
+                'dossiers_medicaux': ['read'],
+                'documents_eleve': ['create', 'read', 'update', 'export'],
+                # Enseignement
+                'classe_list': ['read'],
+                'professeur_list': ['read'],
+                'matiere_list': ['read'],
+                'salle_list': ['read'],
+                # Présences
+                'presence_list': ['read'],
+                'statistiques_presence': ['read'],
+                # Rapports
+                'bulletins': ['create', 'read', 'update', 'export'],
+                'fiche_notes': ['read', 'export'],
+                'stats_globales': ['read', 'export'],
+                # Communication
+                'notifications': ['read'],
+                'messages': ['create', 'read', 'update'],
+                # Configuration
+                'annee_scolaire': ['create', 'read', 'update'],
+                # Administration
+                'user_list': ['read'],
+                'approbations': ['read', 'update'],
+            },
+            'comptable': {
+                # Finances - accès complet
+                'frais': ['create', 'read', 'update', 'delete', 'export'],
+                'paiements': ['create', 'read', 'update', 'delete', 'export'],
+                'tableau_bord_financier': ['read', 'export'],
+                'caisse': ['create', 'read', 'update', 'export'],
+                'charges': ['create', 'read', 'update', 'delete', 'export'],
+                'cycles': ['create', 'read', 'update', 'export'],
+                'eleves_retard': ['read', 'export'],
+                'factures': ['create', 'read', 'update', 'export'],
+                'bourses': ['create', 'read', 'update', 'export'],
+                'rapport_financier': ['read', 'export'],
+                'rappels': ['create', 'read', 'update', 'export'],
+                # Scolarité - lecture seule pour référence
+                'eleve_list': ['read'],
+                'inscriptions': ['read'],
+                # Rapports
+                'stats_globales': ['read'],
+                # Configuration
+                'annee_scolaire': ['read'],
+            },
+            'professeur': {
+                # Espace Enseignant
+                'mes_classes': ['read', 'export'],
+                'emploi_du_temps': ['read'],
+                'mes_seances': ['read', 'update'],
+                'saisie_notes': ['create', 'read', 'update', 'export'],
+                # Enseignement
+                'attribution_list': ['read'],
+                'classe_list': ['read'],
+                'matiere_list': ['read'],
+                # Présences (ses propres séances)
+                'presence_list': ['read', 'update'],
+                # Communication
+                'notifications': ['read'],
+                'messages': ['create', 'read', 'update'],
+            },
+            'surveillance': {
+                # Présences - accès complet
+                'presence_list': ['create', 'read', 'update', 'export'],
+                'statistiques_presence': ['read', 'export'],
+                'rapport_retards': ['read', 'export'],
+                # Scolarité
+                'eleve_list': ['read'],
+                'discipline': ['create', 'read', 'update', 'export'],
+                # Communication
+                'notifications': ['read'],
+                'messages': ['read'],
+            },
+            'agent_securite': {
+                # Accès très limité
+                'notifications': ['read'],
+                'messages': ['read'],
+            },
+            'responsable_stock': {
+                # Accès limité
+                'notifications': ['read'],
+                'messages': ['read'],
+            },
         }
         
         modules = Module.objects.filter(est_actif=True)
         created_count = 0
+        updated_count = 0
         
-        for role_code, actions in role_permissions.items():
-            for module in modules:
-                permission, created = Permission.objects.get_or_create(
-                    module=module,
+        for role_code, config in role_module_permissions.items():
+            if config.get('_all'):
+                # Superadmin et Direction: accès à tous les modules
+                actions = config['_actions']
+                for module in modules:
+                    permission, created = Permission.objects.get_or_create(
+                        module=module,
+                        role=role_code,
+                        defaults={'actions': actions}
+                    )
+                    if created:
+                        created_count += 1
+                        self.stdout.write(f'  + {module.nom} -> {role_code}: {actions}')
+                    else:
+                        if set(permission.actions) != set(actions):
+                            permission.actions = actions
+                            permission.save()
+                            updated_count += 1
+            else:
+                # Autres rôles: accès uniquement aux modules listés
+                # D'abord supprimer les permissions sur les modules qui ne sont plus pertinents
+                module_codes = set(config.keys())
+                removed = Permission.objects.filter(
+                    module__est_actif=True,
                     role=role_code,
-                    defaults={'actions': actions}
-                )
-                if created:
-                    created_count += 1
-                    self.stdout.write(f'  + {module.nom} -> {role_code}: {actions}')
-                else:
-                    # Mettre à jour si nécessaire
-                    if set(permission.actions) != set(actions):
-                        permission.actions = actions
-                        permission.save()
+                ).exclude(module__code__in=module_codes).delete()
+                if removed[0] > 0:
+                    self.stdout.write(f'  - {role_code}: {removed[0]} permissions retirées (modules non pertinents)')
+                
+                # Créer/mettre à jour les permissions pour les modules pertinents
+                for module_code, actions in config.items():
+                    try:
+                        module = modules.get(code=module_code)
+                    except Module.DoesNotExist:
+                        self.stdout.write(self.style.WARNING(f'  ! Module {module_code} introuvable, ignoré pour {role_code}'))
+                        continue
+                    
+                    permission, created = Permission.objects.get_or_create(
+                        module=module,
+                        role=role_code,
+                        defaults={'actions': actions}
+                    )
+                    if created:
+                        created_count += 1
+                        self.stdout.write(f'  + {module.nom} -> {role_code}: {actions}')
+                    else:
+                        if set(permission.actions) != set(actions):
+                            permission.actions = actions
+                            permission.save()
+                            updated_count += 1
         
-        self.stdout.write(f'\n{created_count} permissions créées.')
+        self.stdout.write(f'\n{created_count} permissions créées, {updated_count} mises à jour.')

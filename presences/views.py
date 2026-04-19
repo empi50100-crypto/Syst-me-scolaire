@@ -299,6 +299,34 @@ def liste_seances(request):
 
 
 @login_required
+def attestation_assiduite_form(request):
+    """Formulaire pour sélectionner un élève et générer une attestation d'assiduité"""
+    from scolarite.models import Eleve
+    from django.db.models import Q
+    
+    eleves = Eleve.objects.filter(est_actif=True).order_by('nom', 'prenom')
+    
+    # Handle search
+    search = request.GET.get('search', '')
+    if search:
+        eleves = eleves.filter(
+            Q(nom__icontains=search) | 
+            Q(prenom__icontains=search) | 
+            Q(matricule__icontains=search)
+        )
+    
+    if request.method == 'POST':
+        eleve_pk = request.POST.get('eleve')
+        if eleve_pk:
+            return redirect('presences:attestation_assiduite_pdf', eleve_pk=eleve_pk)
+    
+    return render(request, 'presences/attestation_form.html', {
+        'eleves': eleves,
+        'search': search,
+    })
+
+
+@login_required
 def attestation_assiduite_pdf(request, eleve_pk):
     # PDF generation logic...
     return HttpResponse("PDF non implémenté")

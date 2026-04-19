@@ -157,7 +157,7 @@ def bulletin_list(request):
     
     annee = AnneeScolaire.objects.filter(est_active=True).first()
     
-    cycles = Cycle.objects.filter(annee_scolaire=annee).order_by('numero') if annee else []
+    cycles = Cycle.objects.filter(annee_scolaire=annee).order_by('numero') if annee else Cycle.objects.none()
     selected_cycle_pk = request.GET.get('cycle')
     selected_cycle = None
     if selected_cycle_pk:
@@ -404,7 +404,7 @@ def bulletin_list(request):
 
 @login_required
 def rapport_academique(request):
-    if not request.user.has_module_permission('rapports', 'read'):
+    if not request.user.has_module_permission('bulletins', 'read'):
         messages.error(request, "Vous n'avez pas l'autorisation de voir les rapports.")
         return redirect('dashboard')
     
@@ -447,7 +447,7 @@ def rapport_academique(request):
 
 @login_required
 def rapport_financier(request):
-    if not request.user.has_module_permission('rapports', 'read'):
+    if not request.user.has_module_permission('rapport_financier', 'read'):
         messages.error(request, "Vous n'avez pas l'autorisation de voir les rapports.")
         return redirect('dashboard')
     
@@ -470,7 +470,7 @@ def rapport_financier(request):
 
 @login_required
 def transition_annee(request):
-    if not request.user.has_module_permission('rapports', 'write'):
+    if not request.user.has_module_permission('bulletins', 'write'):
         messages.error(request, "Vous n'avez pas l'autorisation.")
         return redirect('dashboard')
     
@@ -581,7 +581,7 @@ def get_niveau_suivant(niveau):
 
 @login_required
 def bulletins_par_classe(request, classe_pk, cycle_pk=None):
-    if not request.user.has_module_permission('rapports', 'read'):
+    if not request.user.has_module_permission('bulletins', 'read'):
         messages.error(request, "Vous n'avez pas l'autorisation.")
         return redirect('dashboard')
     classe = get_object_or_404(Classe, pk=classe_pk)
@@ -596,7 +596,7 @@ def bulletins_par_classe(request, classe_pk, cycle_pk=None):
 
 @login_required
 def generer_bulletin(request, inscription_pk):
-    if not request.user.has_module_permission('rapports', 'write'):
+    if not request.user.has_module_permission('bulletins', 'write'):
         messages.error(request, "Vous n'avez pas l'autorisation.")
         return redirect('dashboard')
     inscription = get_object_or_404(EleveInscription, pk=inscription_pk)
@@ -606,7 +606,7 @@ def generer_bulletin(request, inscription_pk):
 
 @login_required
 def exporter_bulletin_pdf(request, bulletin_pk):
-    if not request.user.has_module_permission('rapports', 'read'):
+    if not request.user.has_module_permission('bulletins', 'read'):
         messages.error(request, "Vous n'avez pas l'autorisation.")
         return redirect('dashboard')
     return HttpResponse("PDF non implemente")
@@ -614,7 +614,7 @@ def exporter_bulletin_pdf(request, bulletin_pk):
 
 @login_required
 def fiches_notes_list(request):
-    if not request.user.has_module_permission('rapports', 'read'):
+    if not request.user.has_module_permission('fiche_notes', 'read'):
         messages.error(request, "Vous n'avez pas l'autorisation de voir les fiches de notes.")
         return redirect('dashboard')
     
@@ -626,7 +626,7 @@ def fiches_notes_list(request):
 
 @login_required
 def statistiques_globales(request):
-    if not request.user.has_module_permission('rapports', 'read'):
+    if not request.user.has_module_permission('stats_globales', 'read'):
         messages.error(request, "Vous n'avez pas l'autorisation de voir les statistiques.")
         return redirect('dashboard')
     

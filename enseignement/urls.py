@@ -16,6 +16,8 @@ urlpatterns = [
     
     path('professeurs/', views.professeur_list_view, name='professeur_list'),
     path('professeurs/ajouter/', views.professeur_create_view, name='professeur_create'),
+    path('professeurs/<int:pk>/modifier/', views.professeur_edit_view, name='professeur_edit'),
+    path('professeurs/<int:pk>/supprimer/', views.professeur_delete_view, name='professeur_delete'),
     
     path('attributions/', views.attribution_list_view, name='attribution_list'),
     path('attributions/ajouter/', views.attribution_create_view, name='attribution_create'),

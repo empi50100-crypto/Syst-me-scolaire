@@ -1121,9 +1121,15 @@ def user_permissions_detail(request, pk):
         messages.success(request, f'Permissions de {utilisateur.get_full_name()} mises à jour.')
         return redirect('authentification:user_list')
     
-    # Récupérer les permissions actuelles
+    # Récupérer les permissions personnalisées (niveau utilisateur)
     permissions_existantes = {
         p.module.code: p for p in PermissionPersonnalisee.objects.filter(utilisateur=utilisateur).select_related('module')
+    }
+    
+    # Récupérer les permissions par rôle pour le rôle de l'utilisateur
+    from authentification.models import Service, Module, Permission
+    role_permissions = {
+        p.module_id: p for p in Permission.objects.filter(role=utilisateur.role).select_related('module')
     }
     
     # Pour superadmin/direction, simuler des permissions complètes si pas de custom permissions
@@ -1140,28 +1146,7 @@ def user_permissions_detail(request, pk):
         else:
             custom_disabled_modules.add(code)
     
-    # Modules disponibles
-    modules_disponibles = [
-        {'code': 'eleve_list', 'nom': 'Gestion des Élèves'},
-        {'code': 'professeur_list', 'nom': 'Gestion des Professeurs'},
-        {'code': 'classe_list', 'nom': 'Gestion des Classes'},
-        {'code': 'matiere_list', 'nom': 'Gestion des Matières'},
-        {'code': 'attribution_list', 'nom': 'Attributions'},
-        {'code': 'emploi_temps', 'nom': 'Emploi du Temps'},
-        {'code': 'evaluation_list', 'nom': 'Évaluations'},
-        {'code': 'saisie_notes', 'nom': 'Saisie des Notes'},
-        {'code': 'presence_list', 'nom': 'Gestion des Présences'},
-        {'code': 'paiement_list', 'nom': 'Gestion des Paiements'},
-        {'code': 'frais_scolarite', 'nom': 'Frais de Scolarité'},
-        {'code': 'bulletin_list', 'nom': 'Bulletins'},
-        {'code': 'rapport_academique', 'nom': 'Rapports Académiques'},
-        {'code': 'personnel_list', 'nom': 'Gestion du Personnel'},
-        {'code': 'salaire_list', 'nom': 'Gestion des Salaires'},
-        {'code': 'user_list', 'nom': 'Gestion des Utilisateurs'},
-    ]
-    
     # Construire service_data pour le template
-    from authentification.models import Service, Module
     services = Service.objects.prefetch_related('modules').all()
     
     service_data = []
@@ -1169,10 +1154,11 @@ def user_permissions_detail(request, pk):
         modules_list = []
         for module in service.modules.filter(est_actif=True):
             perm = permissions_existantes.get(module.code)
+            role_perm = role_permissions.get(module.id)
             
             # Logique des permissions:
             # - Si superadmin/direction: accès par défaut à tout, sauf si custom désactivé
-            # - Sinon: accès uniquement si permission custom active
+            # - Sinon: accès via permission rôle OU permission custom active
             if is_superadmin_or_direction:
                 # Superadmin/Direction: accès par défaut, sauf si explicitement désactivé
                 if module.code in custom_disabled_modules:
@@ -1185,16 +1171,33 @@ def user_permissions_detail(request, pk):
                     has_perm = True  # Accès par défaut (pas de custom permission)
                     is_disabled = False
             else:
-                # Autres rôles: accès uniquement via custom permission
-                has_perm = perm is not None and perm.est_actif
-                is_disabled = perm is None or (perm is not None and not perm.est_actif)
+                # Autres rôles: accès via permission rôle OU permission custom active
+                # Vérifier d'abord si explicitement désactivé par custom permission
+                if module.code in custom_disabled_modules:
+                    has_perm = False
+                    is_disabled = True
+                elif perm is not None and perm.est_actif:
+                    # Permission personnalisée active
+                    has_perm = True
+                    is_disabled = False
+                elif role_perm is not None and 'read' in role_perm.actions:
+                    # Permission par rôle existante
+                    has_perm = True
+                    is_disabled = False
+                else:
+                    # Aucun accès (ni par rôle, ni par custom)
+                    has_perm = False
+                    is_disabled = True
             
             # Construire la liste des actions
             actions = []
             if has_perm:
-                if perm:
-                    # Permissions personnalisées définies - utiliser la liste actions
+                if perm and perm.est_actif:
+                    # Permissions personnalisées actives - utiliser la liste actions du custom
                     actions = perm.actions if perm.actions else []
+                elif role_perm:
+                    # Permission par rôle - utiliser les actions du rôle
+                    actions = role_perm.actions if role_perm.actions else []
                 elif is_superadmin_or_direction:
                     # Superadmin/Direction sans custom permission = full access
                     actions = ['read', 'create', 'update', 'delete', 'export']
@@ -1204,6 +1207,7 @@ def user_permissions_detail(request, pk):
                 'has_permission': has_perm,
                 'is_disabled': is_disabled,
                 'is_custom': perm is not None,
+                'is_role_based': role_perm is not None and perm is None,
                 'actions': actions
             })
         
@@ -1247,6 +1251,9 @@ def user_permission_toggle(request, user_pk, module_code):
             )
             if not created:
                 perm.est_actif = not perm.est_actif
+                # Ensure actions list is not empty when activating
+                if perm.est_actif and (not perm.actions or 'read' not in perm.actions):
+                    perm.actions = ['read']
                 perm.save()
             
             status = 'activé' if perm.est_actif else 'désactivé'

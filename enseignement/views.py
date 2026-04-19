@@ -93,12 +93,14 @@ def professeur_list_view(request):
         messages.error(request, "Vous n'avez pas l'autorisation de voir les professeurs.")
         return redirect('dashboard')
     
-    professors = ProfilProfesseur.objects.select_related('user').order_by('user__last_name', 'user__first_name')
+    # Récupérer tous les utilisateurs avec le rôle professeur
+    from authentification.models import Utilisateur
+    professors = Utilisateur.objects.filter(role='professeur').prefetch_related('profil_professeur').order_by('last_name', 'first_name')
     
     search = request.GET.get('search', '')
     if search:
         professors = professors.filter(
-            Q(user__last_name__icontains=search) | Q(user__first_name__icontains=search) | Q(user__username__icontains=search)
+            Q(last_name__icontains=search) | Q(first_name__icontains=search) | Q(username__icontains=search)
         )
     
     return render(request, 'enseignement/professeur_list.html', {
@@ -223,6 +225,10 @@ def professeur_create_view(request):
         messages.error(request, "Vous n'avez pas l'autorisation d'ajouter des professeurs.")
         return redirect('enseignement:professeur_list')
     
+    # Get pre-selected user from query param or POST
+    selected_user_id = request.GET.get('user') or request.POST.get('user')
+    selected_user = None
+    
     if request.method == 'POST':
         user_id = request.POST.get('user')
         statut = request.POST.get('statut', 'actif')
@@ -238,12 +244,96 @@ def professeur_create_view(request):
             messages.success(request, f'Profil professeur créé pour {user.get_full_name()}.')
             return redirect('enseignement:professeur_list')
     
+    # If a user is selected (from the list), get their data for pre-filling
+    if selected_user_id:
+        selected_user = get_object_or_404(Utilisateur, pk=selected_user_id, role='professeur')
+    
+    # Create form object with user data pre-filled
+    # Use date_joined as default for date_embauche (formatted as YYYY-MM-DD for HTML date input)
+    date_embauche_default = selected_user.date_joined.strftime('%Y-%m-%d') if selected_user and selected_user.date_joined else ''
+    
+    form = {
+        'nom': selected_user.last_name if selected_user else '',
+        'prenom': selected_user.first_name if selected_user else '',
+        'email': selected_user.email if selected_user else '',
+        'telephone': selected_user.telephone if selected_user else '',
+        'date_embauche': date_embauche_default,
+        'statut': 'actif',
+        'salaire_base': '',
+    }
+    
+    # Users without a profil_professeur
     utilisateurs = Utilisateur.objects.filter(role='professeur', profil_professeur__isnull=True)
-    matieres = Matiere.objects.all()
+    matieres_list = Matiere.objects.all()
+    
     return render(request, 'enseignement/professeur_form.html', {
+        'form': form,
         'utilisateurs': utilisateurs,
-        'matieres': matieres
+        'matieres': matieres_list,
+        'selected_user': selected_user,
+        'is_direction_or_compta': request.user.est_direction() or request.user.est_comptable(),
+        'is_secretaire': request.user.est_secretaire(),
+        'is_direction': request.user.est_direction(),
     })
+
+
+@login_required
+def professeur_edit_view(request, pk):
+    """Modifier un profil professeur existant"""
+    if not request.user.has_module_permission('professeur_list', 'update'):
+        messages.error(request, "Vous n'avez pas l'autorisation de modifier les professeurs.")
+        return redirect('enseignement:professeur_list')
+    
+    profil = get_object_or_404(ProfilProfesseur, pk=pk)
+    
+    if request.method == 'POST':
+        statut = request.POST.get('statut', profil.statut)
+        matiere_id = request.POST.get('specialite')
+        
+        profil.statut = statut
+        if matiere_id:
+            profil.specialite_id = matiere_id
+        profil.save()
+        
+        messages.success(request, f'Profil de {profil.user.get_full_name()} mis à jour.')
+        return redirect('enseignement:professeur_list')
+    
+    # Pre-fill form with existing data
+    form = {
+        'nom': profil.user.last_name,
+        'prenom': profil.user.first_name,
+        'email': profil.user.email,
+        'telephone': profil.user.telephone,
+        'date_embauche': '',
+        'statut': profil.statut,
+        'salaire_base': '',
+    }
+    
+    matieres_list = Matiere.objects.all()
+    
+    return render(request, 'enseignement/professeur_form.html', {
+        'form': form,
+        'profil': profil,
+        'matieres': matieres_list,
+        'selected_user': profil.user,
+        'is_direction_or_compta': request.user.est_direction() or request.user.est_comptable(),
+        'is_secretaire': request.user.est_secretaire(),
+        'is_direction': request.user.est_direction(),
+    })
+
+
+@login_required
+def professeur_delete_view(request, pk):
+    """Supprimer un profil professeur"""
+    if not request.user.has_module_permission('professeur_list', 'delete'):
+        messages.error(request, "Vous n'avez pas l'autorisation de supprimer les professeurs.")
+        return redirect('enseignement:professeur_list')
+    
+    profil = get_object_or_404(ProfilProfesseur, pk=pk)
+    nom = profil.user.get_full_name()
+    profil.delete()
+    messages.success(request, f'Profil de {nom} supprimé.')
+    return redirect('enseignement:professeur_list')
 
 
 @login_required

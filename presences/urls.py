@@ -12,5 +12,6 @@ urlpatterns = [
     path('seances/demarrer/<int:attribution_id>/', views.demarrer_seance, name='demarrer_seance'),
     path('seances/terminer/<int:seance_id>/', views.terminer_seance, name='terminer_seance'),
     path('seances/', views.liste_seances, name='liste_seances'),
+    path('attestation/', views.attestation_assiduite_form, name='attestation_assiduite_form'),
     path('attestation/<int:eleve_pk>/pdf/', views.attestation_assiduite_pdf, name='attestation_assiduite_pdf'),
 ]

@@ -1,10 +1,18 @@
 {% extends 'base.html' %}
 
-{% block title %}Professeur{% endblock %}
+{% block title %}{% if profil %}Modifier le profil{% elif selected_user %}Compléter le profil{% else %}Nouveau Professeur{% endif %}{% endblock %}
 
 {% block content %}
 <div class="page-header">
-    <h1><i class="bi bi-person-badge"></i> {% if professeur %}Modifier{% else %}Nouveau{% endif %} un Professeur</h1>
+    <h1><i class="bi bi-person-badge"></i> 
+        {% if profil %}
+            Modifier le profil de {{ selected_user.first_name }} {{ selected_user.last_name }}
+        {% elif selected_user %}
+            Compléter le profil de {{ selected_user.first_name }} {{ selected_user.last_name }}
+        {% else %}
+            Nouveau Professeur
+        {% endif %}
+    </h1>
 </div>
 
 {% if is_secretaire %}
@@ -33,6 +41,28 @@
     <form method="post">
         {% csrf_token %}
         
+        <!-- Hidden field for selected user (only when creating, not editing) -->
+        {% if selected_user and not profil %}
+        <input type="hidden" name="user" value="{{ selected_user.id }}">
+        {% elif not profil %}
+        <div class="form-section mb-4">
+            <div class="form-section-header">
+                <i class="bi bi-person-check"></i> Sélectionner un utilisateur
+            </div>
+            <div class="form-group">
+                <label class="form-label">Utilisateur professeur</label>
+                <select name="user" class="form-control" required>
+                    <option value="">-- Choisir un professeur --</option>
+                    {% for u in utilisateurs %}
+                    <option value="{{ u.id }}" {% if form.nom == u.last_name and form.prenom == u.first_name %}selected{% endif %}>
+                        {{ u.last_name }} {{ u.first_name }} ({{ u.email }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        {% endif %}
+        
         <div class="form-section">
             <div class="form-section-header">
                 <i class="bi bi-person"></i> Informations Personnelles
@@ -42,52 +72,59 @@
                 <div class="col-md-4">
                     <div class="form-group">
                         <label class="form-label">Nom</label>
-                        {{ form.nom }}
+                        <input type="text" name="nom" class="form-control" value="{{ form.nom }}" readonly>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="form-group">
                         <label class="form-label">Prénom</label>
-                        {{ form.prenom }}
+                        <input type="text" name="prenom" class="form-control" value="{{ form.prenom }}" readonly>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="form-group">
                         <label class="form-label">Email</label>
-                        {{ form.email }}
+                        <input type="email" name="email" class="form-control" value="{{ form.email }}" readonly>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="form-group">
                         <label class="form-label">Téléphone</label>
-                        {{ form.telephone }}
+                        <input type="text" name="telephone" class="form-control" value="{{ form.telephone }}">
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="form-group">
                         <label class="form-label">Date d'embauche</label>
-                        {{ form.date_embauche }}
+                        <input type="date" name="date_embauche" class="form-control" value="{{ form.date_embauche }}">
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="form-group">
                         <label class="form-label">Statut</label>
-                        {{ form.statut }}
+                        <select name="statut" class="form-control">
+                            <option value="actif" {% if form.statut == 'actif' %}selected{% endif %}>Actif</option>
+                            <option value="inactif" {% if form.statut == 'inactif' %}selected{% endif %}>Inactif</option>
+                            <option value="suspendu" {% if form.statut == 'suspendu' %}selected{% endif %}>Suspendu</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label class="form-label">Spécialité (Matière)</label>
+                        <select name="specialite" class="form-control">
+                            <option value="">-- Choisir une matière --</option>
+                            {% for m in matieres %}
+                            <option value="{{ m.id }}" {% if profil and profil.specialite.id == m.id %}selected{% endif %}>{{ m.nom }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
                 </div>
                 {% if is_direction_or_compta %}
                 <div class="col-md-4">
                     <div class="form-group">
                         <label class="form-label">Salaire de base (FCFA)</label>
-                        {{ form.salaire_base }}
-                    </div>
-                </div>
-                {% endif %}
-                {% if is_secretaire %}
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label class="form-label">Matière(s) enseignée(s)</label>
-                        <input type="text" class="form-control" value="{{ matieres }}" readonly>
+                        <input type="number" name="salaire_base" class="form-control" value="{{ form.salaire_base }}">
                     </div>
                 </div>
                 {% endif %}

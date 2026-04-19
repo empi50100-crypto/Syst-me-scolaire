@@ -38,6 +38,8 @@
                             <br><small class="text-muted">{{ item.module.url }}</small>
                             {% if item.is_custom %}
                             <br><span class="badge bg-info">Personnalisé</span>
+                            {% elif item.is_role_based %}
+                            <br><span class="badge bg-primary">Par rôle</span>
                             {% endif %}
                         </td>
                         <td>
