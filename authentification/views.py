@@ -1376,7 +1376,7 @@ def permissions_utilisateur(request):
 
 @login_required
 def demandes_list(request):
-    if not request.user.has_module_permission('demandes', 'read'):
+    if not request.user.has_module_permission('approbations', 'read'):
         messages.error(request, "Accès refusé.")
         return redirect('dashboard')
     utilisateurs_en_attente = Utilisateur.objects.filter(is_active=False, is_approved=False).order_by('-date_joined')

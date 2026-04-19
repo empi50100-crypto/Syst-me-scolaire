@@ -2,6 +2,8 @@
 
 > Ce guide vous accompagne PAS À PAS pour tester toutes les fonctionnalités du système.
 > Chaque étape indique : où cliquer, quoi saisir, et comment vérifier.
+>
+> **📋 Nouveau** : Pour un test basé sur les rôles utilisateurs (Direction, Secrétariat, Comptable, Professeur, Surveillance), consultez le **[Guide de Test par Rôles](GUIDE_TEST_PAR_ROLES.md)**.
 
 ---
 
@@ -12,9 +14,23 @@
 2. Exécuter : `python manage.py runserver`
 3. Ouvrir votre navigateur à : **http://127.0.0.1:8000/**
 
-### 2. Identifiants de connexion
+### 2. Initialiser les modules et permissions
+Avant de commencer les tests, assurez-vous que les modules et permissions sont initialisés :
+
+```bash
+python manage.py init_modules
+```
+
+Cette commande crée :
+- Les 10 services (Scolarité, Enseignement, Finances, etc.)
+- Les modules pour chaque service
+- Les permissions par défaut pour chaque rôle
+
+### 3. Identifiants de connexion
 - **Nom d'utilisateur** : `admin`
 - **Mot de passe** : `admin2026`
+
+**Note** : Ce guide utilise le compte super admin. Pour tester avec des rôles spécifiques (Direction, Secrétaire, etc.), utilisez le **[Guide de Test par Rôles](GUIDE_TEST_PAR_ROLES.md)**.
 
 ---
 
@@ -409,26 +425,53 @@
 
 ## ÉTAPE 15 : TEST DES RÔLES
 
+> **📋 Note** : Pour un test complet et chronologique de tous les rôles (Direction, Secrétariat, Comptable, Professeur, Surveillance), consultez le **[Guide de Test par Rôles](GUIDE_TEST_PAR_ROLES.md)**.
+
 ### 15.1 Tester le rôle Direction
 1. Se déconnecter (cliquer sur votre nom en haut à droite puis **Déconnexion**)
 2. Se reconnecter avec `direction1` / `Direction2026!`
 3. Vérifier que :
    - Le menu affiche les modules accessibles à la Direction
-   - Certain modules ne sont pas visibles (ex: Salaires)
+   - La Direction a accès à tous les modules de configuration et rapports
+   - Peut créer des années scolaires, classes, matières
 
-### 15.2 Tester le rôle Comptabilité
+### 15.2 Tester le rôle Secrétariat
+1. Se déconnecter
+2. Se reconnecter avec `secretaire1` / `Secretaire2026!`
+3. Vérifier que :
+   - Le menu affiche les modules de Scolarité (Élèves, Inscriptions, Discipline)
+   - Accès complet à la gestion des élèves
+   - Accès en lecture aux classes et professeurs
+   - Les modules Finances et RH ne sont pas visibles
+
+### 15.3 Tester le rôle Comptabilité
 1. Se déconnecter
 2. Se reconnecter avec `comptable1` / `Comptable2026!`
 3. Vérifier que :
-   - Le menu affiche les modules de Finances
-   - Les modules de RH ne sont pas visibles
+   - Le menu affiche les modules de Finances (Frais, Paiements, Caisse, Charges)
+   - Accès complet à la gestion financière
+   - Accès en lecture aux élèves et inscriptions
+   - Peut générer des rapports financiers
+   - Les modules Scolarité (CRUD) ne sont pas accessibles
 
-### 15.3 Tester le rôle Professeur
+### 15.4 Tester le rôle Professeur
 1. Se déconnecter
 2. Se reconnecter avec `professeur1` / `Professeur2026!`
 3. Vérifier que :
-   - Le menu affiche "Mes séances", "Mes classes", "Mes notes"
-   - Les autres modules ne sont pas visibles
+   - Le menu affiche "Mes séances", "Mes classes", "Saisie des notes"
+   - Accès uniquement aux classes qui lui sont attribuées
+   - Peut créer des séances et faire l'appel
+   - Peut saisir des notes pour ses matières
+   - Les modules Finances et RH ne sont pas visibles
+
+### 15.5 Tester le rôle Surveillance
+1. Se déconnecter
+2. Se reconnecter avec un utilisateur ayant le rôle `surveillance`
+3. Vérifier que :
+   - Le menu affiche les modules de Présences (Appel, Statistiques, Rapport retards)
+   - Accès à la gestion de la discipline
+   - Accès en lecture à la liste des élèves
+   - Peut effectuer l'appel pour n'importe quelle classe
 
 ---
 
@@ -468,5 +511,10 @@
 
 ---
 
-*Dernière mise à jour : 11 Avril 2026*
-*Système : SyGeS-AM*
+*Dernière mise à jour : 19 Avril 2026*
+*Version : 2.1 - SyGeS-AM*
+
+## Documents associés
+
+- **[Guide de Test par Rôles](GUIDE_TEST_PAR_ROLES.md)** : Guide de test chronologique par rôles (Direction, Secrétariat, Comptable, Professeur, Surveillance)
+- **[Manuel d'Utilisation](MANUEL_UTILISATION.md)** : Guide complet d'utilisation quotidienne

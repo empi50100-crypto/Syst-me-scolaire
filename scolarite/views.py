@@ -622,7 +622,7 @@ def conduite_config_edit(request, niveau):
 
 @login_required
 def periode_cloture_list(request):
-    if not request.user.has_module_permission('discipline', 'read'):
+    if not request.user.has_module_permission('periode_cloture', 'read'):
         messages.error(request, "Vous n'avez pas l'autorisation de voir les clôtures.")
         return redirect('dashboard')
     
@@ -662,7 +662,7 @@ def periode_cloture_list(request):
 
 @login_required
 def periode_cloture_edit(request, classe_id):
-    if not request.user.has_module_permission('discipline', 'write'):
+    if not request.user.has_module_permission('periode_cloture', 'write'):
         messages.error(request, "Vous n'avez pas l'autorisation de clôturer.")
         return redirect('scolarite:periode_cloture_list')
     
@@ -685,7 +685,7 @@ def periode_cloture_edit(request, classe_id):
 
 @login_required
 def periode_cloture_delete(request, classe_id, periode_id):
-    if not request.user.has_module_permission('discipline', 'delete'):
+    if not request.user.has_module_permission('periode_cloture', 'delete'):
         messages.error(request, "Vous n'avez pas l'autorisation de supprimer.")
         return redirect('scolarite:periode_cloture_list')
     
@@ -701,7 +701,7 @@ def periode_cloture_delete(request, classe_id, periode_id):
 
 @login_required
 def note_cloture_list(request):
-    if not request.user.has_module_permission('discipline', 'read'):
+    if not request.user.has_module_permission('note_cloture', 'read'):
         messages.error(request, "Vous n'avez pas l'autorisation de voir les clôtures de notes.")
         return redirect('dashboard')
     
@@ -744,7 +744,7 @@ def note_cloture_list(request):
 
 @login_required
 def note_cloture_edit(request, classe_id):
-    if not request.user.has_module_permission('discipline', 'write'):
+    if not request.user.has_module_permission('note_cloture', 'write'):
         messages.error(request, "Vous n'avez pas l'autorisation de clôturer les notes.")
         return redirect('scolarite:note_cloture_list')
     
@@ -769,7 +769,7 @@ def note_cloture_edit(request, classe_id):
 
 @login_required
 def inscription_list(request):
-    if not request.user.has_module_permission('eleve_list', 'read'):
+    if not request.user.has_module_permission('inscriptions', 'read'):
         messages.error(request, "Vous n'avez pas l'autorisation de voir les inscriptions.")
         return redirect('dashboard')
     

@@ -51,6 +51,23 @@ def _calculer_total_frais_avec_eleves(annee):
 
 
 @login_required
+def caisse(request):
+    if not request.user.has_module_permission('caisse', 'read'):
+        messages.error(request, "Vous n'avez pas l'autorisation.")
+        return redirect('dashboard')
+    annee_actuelle = AnneeScolaire.objects.filter(est_actif=True).first()
+    operations = OperationCaisse.objects.all().order_by('-date_operation')[:50]
+    solde_total = OperationCaisse.objects.aggregate(
+        total=Sum('montant')
+    )['total'] or 0
+    return render(request, 'finances/caisse.html', {
+        'operations': operations,
+        'solde_total': solde_total,
+        'annee_actuelle': annee_actuelle
+    })
+
+
+@login_required
 def annee_list(request):
     if not request.user.has_module_permission('annee_scolaire', 'read'):
         messages.error(request, "Vous n'avez pas l'autorisation.")
@@ -233,7 +250,7 @@ def historique_paiements_eleve(request, eleve_pk):
 
 @login_required
 def gestion_salaires(request):
-    if not request.user.has_module_permission('salaires', 'read'):
+    if not request.user.has_module_permission('salaires_rh', 'read'):
         messages.error(request, "Vous n'avez pas l'autorisation.")
         return redirect('dashboard')
     
@@ -275,8 +292,100 @@ def charges_list(request):
 
 
 @login_required
+def charge_fixe_create(request):
+    if not request.user.has_module_permission('charges', 'write'):
+        messages.error(request, "Vous n'avez pas l'autorisation.")
+        return redirect('finances:charges_list')
+    if request.method == 'POST':
+        form = ChargeFixeForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Charge fixe créée avec succès.')
+            return redirect('finances:charges_list')
+    else:
+        form = ChargeFixeForm()
+    return render(request, 'finances/charge_form.html', {'form': form, 'type': 'fixe'})
+
+
+@login_required
+def charge_fixe_edit(request, pk):
+    if not request.user.has_module_permission('charges', 'update'):
+        messages.error(request, "Vous n'avez pas l'autorisation.")
+        return redirect('finances:charges_list')
+    charge = get_object_or_404(ChargeFixe, pk=pk)
+    if request.method == 'POST':
+        form = ChargeFixeForm(request.POST, instance=charge)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Charge fixe mise à jour.')
+            return redirect('finances:charges_list')
+    else:
+        form = ChargeFixeForm(instance=charge)
+    return render(request, 'finances/charge_form.html', {'form': form, 'charge': charge, 'type': 'fixe'})
+
+
+@login_required
+def charge_fixe_delete(request, pk):
+    if not request.user.has_module_permission('charges', 'delete'):
+        messages.error(request, "Vous n'avez pas l'autorisation.")
+        return redirect('finances:charges_list')
+    charge = get_object_or_404(ChargeFixe, pk=pk)
+    if request.method == 'POST':
+        charge.delete()
+        messages.success(request, 'Charge fixe supprimée.')
+        return redirect('finances:charges_list')
+    return render(request, 'finances/charge_confirm_delete.html', {'charge': charge, 'type': 'fixe'})
+
+
+@login_required
+def charge_operationnelle_create(request):
+    if not request.user.has_module_permission('charges', 'write'):
+        messages.error(request, "Vous n'avez pas l'autorisation.")
+        return redirect('finances:charges_list')
+    if request.method == 'POST':
+        form = ChargeOperationnelleForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Charge opérationnelle créée avec succès.')
+            return redirect('finances:charges_list')
+    else:
+        form = ChargeOperationnelleForm()
+    return render(request, 'finances/charge_form.html', {'form': form, 'type': 'operationnelle'})
+
+
+@login_required
+def charge_operationnelle_edit(request, pk):
+    if not request.user.has_module_permission('charges', 'update'):
+        messages.error(request, "Vous n'avez pas l'autorisation.")
+        return redirect('finances:charges_list')
+    charge = get_object_or_404(ChargeOperationnelle, pk=pk)
+    if request.method == 'POST':
+        form = ChargeOperationnelleForm(request.POST, instance=charge)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Charge opérationnelle mise à jour.')
+            return redirect('finances:charges_list')
+    else:
+        form = ChargeOperationnelleForm(instance=charge)
+    return render(request, 'finances/charge_form.html', {'form': form, 'charge': charge, 'type': 'operationnelle'})
+
+
+@login_required
+def charge_operationnelle_delete(request, pk):
+    if not request.user.has_module_permission('charges', 'delete'):
+        messages.error(request, "Vous n'avez pas l'autorisation.")
+        return redirect('finances:charges_list')
+    charge = get_object_or_404(ChargeOperationnelle, pk=pk)
+    if request.method == 'POST':
+        charge.delete()
+        messages.success(request, 'Charge opérationnelle supprimée.')
+        return redirect('finances:charges_list')
+    return render(request, 'finances/charge_confirm_delete.html', {'charge': charge, 'type': 'operationnelle'})
+
+
+@login_required
 def personnel_list(request):
-    if not request.user.has_module_permission('personnel', 'read'):
+    if not request.user.has_module_permission('personnel_rh', 'read'):
         messages.error(request, "Vous n'avez pas l'autorisation.")
         return redirect('dashboard')
     personnel_list = MembrePersonnel.objects.select_related('utilisateur').all().order_by('-date_embauche')
@@ -290,7 +399,7 @@ def personnel_list(request):
 
 @login_required
 def tableau_bord_financier(request):
-    if not request.user.has_module_permission('rapport_financier', 'read'):
+    if not request.user.has_module_permission('tableau_bord_financier', 'read'):
         messages.error(request, "Vous n'avez pas l'autorisation.")
         return redirect('dashboard')
     
@@ -335,11 +444,57 @@ def tableau_bord_financier(request):
 
 @login_required
 def cycle_list(request):
-    if not request.user.has_module_permission('annee_scolaire', 'read'):
+    if not request.user.has_module_permission('cycles', 'read'):
         messages.error(request, "Vous n'avez pas l'autorisation.")
         return redirect('dashboard')
     cycles = Cycle.objects.all()
     return render(request, 'finances/cycle_list.html', {'cycles': cycles})
+
+
+@login_required
+def cycle_create(request):
+    if not request.user.has_module_permission('cycles', 'write'):
+        messages.error(request, "Vous n'avez pas l'autorisation.")
+        return redirect('finances:cycle_list')
+    if request.method == 'POST':
+        form = CycleForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Cycle créé avec succès.')
+            return redirect('finances:cycle_list')
+    else:
+        form = CycleForm()
+    return render(request, 'finances/cycle_form.html', {'form': form})
+
+
+@login_required
+def cycle_edit(request, pk):
+    if not request.user.has_module_permission('cycles', 'update'):
+        messages.error(request, "Vous n'avez pas l'autorisation.")
+        return redirect('finances:cycle_list')
+    cycle = get_object_or_404(Cycle, pk=pk)
+    if request.method == 'POST':
+        form = CycleForm(request.POST, instance=cycle)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Cycle mis à jour.')
+            return redirect('finances:cycle_list')
+    else:
+        form = CycleForm(instance=cycle)
+    return render(request, 'finances/cycle_form.html', {'form': form, 'cycle': cycle})
+
+
+@login_required
+def cycle_delete(request, pk):
+    if not request.user.has_module_permission('cycles', 'delete'):
+        messages.error(request, "Vous n'avez pas l'autorisation.")
+        return redirect('finances:cycle_list')
+    cycle = get_object_or_404(Cycle, pk=pk)
+    if request.method == 'POST':
+        cycle.delete()
+        messages.success(request, 'Cycle supprimé.')
+        return redirect('finances:cycle_list')
+    return render(request, 'finances/cycle_confirm_delete.html', {'cycle': cycle})
 
 
 @login_required
@@ -394,7 +549,7 @@ def bourse_list(request):
 
 @login_required
 def rapport_financier(request):
-    if not request.user.has_module_permission('rapports', 'read'):
+    if not request.user.has_module_permission('rapport_financier', 'read'):
         messages.error(request, "Vous n'avez pas l'autorisation.")
         return redirect('dashboard')
     return render(request, 'finances/rapport_financier.html')
@@ -402,7 +557,7 @@ def rapport_financier(request):
 
 @login_required
 def rappel_list(request):
-    if not request.user.has_module_permission('eleves_en_retard', 'read'):
+    if not request.user.has_module_permission('rappels', 'read'):
         messages.error(request, "Vous n'avez pas l'autorisation de voir les rappels.")
         return redirect('dashboard')
     

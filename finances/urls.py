@@ -11,6 +11,9 @@ urlpatterns = [
     path('annees/<int:pk>/activer/', views.annee_activer, name='annee_activer'),
     path('annees/<int:pk>/selectionner/', views.annee_activer, name='annee_selectionner'),
     
+    path('caisse/', views.caisse, name='caisse'),
+    path('caisse/operations/', views.operation_caisse, name='operation_caisse'),
+    
     path('frais/', views.frais_list, name='frais_list'),
     path('frais/ajouter/', views.frais_create, name='frais_create'),
     path('frais/<int:pk>/modifier/', views.frais_update, name='frais_update'),
@@ -24,8 +27,17 @@ urlpatterns = [
     path('eleve/<int:eleve_pk>/paiements/', views.historique_paiements_eleve, name='historique_paiements_eleve'),
     
     path('salaires/', views.gestion_salaires, name='gestion_salaires'),
-    path('caisse/', views.operation_caisse, name='operation_caisse'),
+    path('cycles/', views.cycle_list, name='cycle_list'),
+    path('cycles/ajouter/', views.cycle_create, name='cycle_create'),
+    path('cycles/<int:pk>/modifier/', views.cycle_edit, name='cycle_edit'),
+    path('cycles/<int:pk>/supprimer/', views.cycle_delete, name='cycle_delete'),
     path('charges/', views.charges_list, name='charges_list'),
+    path('charges/fixe/ajouter/', views.charge_fixe_create, name='charge_fixe_create'),
+    path('charges/fixe/<int:pk>/modifier/', views.charge_fixe_edit, name='charge_fixe_edit'),
+    path('charges/fixe/<int:pk>/supprimer/', views.charge_fixe_delete, name='charge_fixe_delete'),
+    path('charges/operationnelle/ajouter/', views.charge_operationnelle_create, name='charge_operationnelle_create'),
+    path('charges/operationnelle/<int:pk>/modifier/', views.charge_operationnelle_edit, name='charge_operationnelle_edit'),
+    path('charges/operationnelle/<int:pk>/supprimer/', views.charge_operationnelle_delete, name='charge_operationnelle_delete'),
     path('personnel/', views.personnel_list, name='personnel_list'),
     
     path('tableau-bord/', views.tableau_bord_financier, name='tableau_bord_financier'),

@@ -187,7 +187,7 @@
                             <i class="bi bi-cash me-2"></i> Gérer les frais scolaires
                         </a>
                         {% endif %}
-                        {% if user|can_view:'salaires' %}
+                        {% if user|can_view:'rapport_financier' %}
                         <a href="{% url 'finances:gestion_salaires' %}" class="btn btn-outline-info text-start py-2">
                             <i class="bi bi-people me-2"></i> Gestion des salaires
                         </a>

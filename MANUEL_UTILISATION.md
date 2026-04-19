@@ -2,6 +2,8 @@
 
 > Ce manuel est un guide complet pour l'utilisation quotidienne du système.
 > Chaque section indique : pourquoi faire une action, comment la réaliser, et quid vérifier.
+>
+> **📘 Guide de Test** : Pour tester le système avec différents rôles (Direction, Secrétariat, Comptable, Professeur, Surveillance), consultez le **[Guide de Test par Rôles](GUIDE_TEST_PAR_ROLES.md)**.
 
 ---
 
@@ -584,24 +586,113 @@ Onglet Informations familiales :
 
 ## 12. RÔLES ET PERMISSIONS
 
-### 12.1 Récapitulatif des rôles
+### 12.1 Vue d'ensemble des rôles
 
-| Rôle | Accès |
-|------|-------|
-| **Super Administrateur** | Tout le système (interface web complète) |
-| **Direction** | Configuration, Rapports, RH, Validation |
-| **Secrétaire** | Inscriptions, Classes, Élèves |
-| **Comptable** | Finances, Caisse, Salaires |
-| **Professeur** | Mes classes, Mes notes, Mes séances |
-| **Surveillance** | Présences, Discipline |
+Le système gère les accès par **rôles prédéfinis**. Chaque utilisateur se voit assigner un rôle qui détermine les modules auxquels il peut accéder.
 
-### 12.2 Gestion des permissions
-**Cheminement** : **Authentification** → **Permissions**
+**Rôles disponibles** :
+- **Direction** : Gestion complète de l'établissement
+- **Secrétaire** : Gestion des élèves et inscriptions
+- **Comptable** : Gestion financière et comptable
+- **Professeur** : Enseignement, notes et présences
+- **Surveillance** : Contrôle des présences et discipline
+
+> **Note** : Le rôle **Super Administrateur** existe pour la configuration technique du système mais n'est pas destiné à l'utilisation quotidienne.
+
+### 12.2 Récapitulatif des accès par rôle
+
+| Rôle | Modules Principaux | Permissions |
+|------|-------------------|-------------|
+| **Direction** | Tous les modules | CRUD complet sur tous les modules de gestion |
+| **Secrétaire** | Scolarité, Enseignement (Lecture), Rapports | Gestion complète des élèves, inscriptions, discipline |
+| **Comptable** | Finances, Scolarité (Lecture), Rapports | Gestion complète des paiements, caisse, charges, salaires |
+| **Professeur** | Espace Enseignant, Présences, Notes | Saisie des notes, appel, gestion de ses classes |
+| **Surveillance** | Présences, Discipline, Élèves (Lecture) | Appel pour toutes les classes, gestion des sanctions |
+
+### 12.3 Détail des permissions par rôle
+
+#### Direction
+**Accès** : Tous les modules
+**Responsabilités** :
+- Configuration de l'année scolaire
+- Création des classes et matières
+- Gestion des utilisateurs
+- Validation des bulletins et rapports
+- Supervision de tous les services
+
+#### Secrétaire
+**Accès** :
+- **Scolarité** : Élèves (CRUD), Inscriptions (CRUD), Discipline (CRUD), Dossiers médicaux, Documents
+- **Enseignement** : Classes, Professeurs, Matières (Lecture seule)
+- **Rapports** : Bulletins, Fiches de notes (Lecture/Export)
+- **Configuration** : Années scolaires (Lecture)
+
+**Responsabilités** :
+- Enregistrement des nouveaux élèves
+- Gestion des inscriptions
+- Suivi des dossiers médicaux
+- Tenue à jour des documents des élèves
+
+#### Comptable
+**Accès** :
+- **Finances** : Frais scolaires, Paiements, Caisse, Charges, Factures, Bourses (CRUD)
+- **Ressources Humaines** : Salaires (CRUD), Personnel (Lecture)
+- **Scolarité** : Élèves, Inscriptions (Lecture seule)
+- **Rapports** : Rapport financier, Statistiques globales
+
+**Responsabilités** :
+- Enregistrement des paiements
+- Suivi de la caisse
+- Gestion des frais scolaires
+- Émission des factures
+- Paiement des salaires
+- Rapports financiers
+
+#### Professeur
+**Accès** :
+- **Espace Enseignant** : Mes classes, Mes séances, Saisie des notes, Emploi du temps
+- **Enseignement** : Matières, Attributions (Lecture)
+- **Présences** : Mes séances de cours
+- **Communication** : Notifications, Messages
+
+**Responsabilités** :
+- Préparation et déroulement des cours
+- Saisie des notes d'évaluation
+- Suivi des présences dans ses classes
+- Communication avec la direction et les parents
+
+#### Surveillance
+**Accès** :
+- **Présences** : Appel, Statistiques, Rapport des retards (CRUD)
+- **Scolarité** : Discipline (CRUD), Élèves (Lecture)
+- **Communication** : Notifications, Messages (Lecture)
+
+**Responsabilités** :
+- Contrôle des présences dans toutes les classes
+- Gestion des retards et absences
+- Application du règlement intérieur
+- Gestion des sanctions et récompenses
+
+### 12.4 Gestion des permissions
+**Cheminement** : **Administration** → **Gestion des permissions**
 
 **Fonctionnalités** :
-- Créer des **Profils de permissions**
-- Affecter des modules spécifiques à un rôle
+- Activer/Désactiver des modules pour un rôle spécifique
 - Créer des **permissions personnalisées** par utilisateur
+- Consulter l'historique des accès
+
+**Important** : Les permissions par défaut sont configurées via la commande :
+```bash
+python manage.py init_modules
+```
+
+### 12.5 Bonnes pratiques de sécurité
+
+1. **Ne partagez pas vos identifiants** : Chaque utilisateur doit avoir son propre compte
+2. **Déconnectez-vous** : Toujours se déconnecter en quittant le poste de travail
+3. **Mot de passe robuste** : Utiliser des mots de passe complexes (min. 8 caractères, majuscules, minuscules, chiffres)
+4. **Rôle approprié** : Assigner le rôle minimum nécessaire à chaque utilisateur
+5. **Révision régulière** : Vérifier périodiquement les accès et désactiver les comptes inactifs
 
 ---
 
@@ -629,5 +720,10 @@ En cas de problème non résolu, contacter l'administrateur système.
 
 ---
 
-*Dernière mise à jour : 11 Avril 2026*
-*Version : 2.0 - SyGeS-AM*
+*Dernière mise à jour : 19 Avril 2026*
+*Version : 2.1 - SyGeS-AM*
+
+## Documents associés
+
+- **[Guide de Test Complet](GUIDE_TEST_COMPLET.md)** : Guide de test détaillé (vue Super Admin)
+- **[Guide de Test par Rôles](GUIDE_TEST_PAR_ROLES.md)** : Guide de test chronologique par rôles utilisateurs
