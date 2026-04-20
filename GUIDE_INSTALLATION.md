@@ -6,6 +6,7 @@
 > - **[Guide de Test par Rôles](GUIDE_TEST_PAR_ROLES.md)** : Pour tester le système avec chaque rôle utilisateur
 > - **[Manuel d'Utilisation](MANUEL_UTILISATION.md)** : Guide d'utilisation quotidienne
 > - **[Guide de Test Complet](GUIDE_TEST_COMPLET.md)** : Tests fonctionnels complets
+> - **[Manuel de Désinstallation](MANUEL_DESINSTALLATION.md)** : Réinitialisation complète du système (Super Admin)
 
 ---
 
