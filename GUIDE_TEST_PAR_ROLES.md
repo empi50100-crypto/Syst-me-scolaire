@@ -36,51 +36,55 @@ python manage.py init_modules
 
 ### 1.2 Créer l'Année Scolaire
 
-**Chemin** : **Configuration** → **Années scolaires** → **[Ajouter]**
+**Chemin** : **Configuration** → **Paramètres** → Onglet **Années scolaires**
 
-1. **Libellé** : `2025-2026`
-2. **Date de début** : `2025-09-01`
-3. **Date de fin** : `2026-07-31`
-4. **Est active** : ☑ Cocher
-5. Cliquer sur **[Enregistrer]**
+1. Cliquer sur **[Nouvelle année]**
+2. **Libellé** : `2025-2026`
+3. **Date de début** : `2025-09-01`
+4. **Date de fin** : `2026-07-31`
+5. **Type de cycle actif** : Trimestriel
+6. Cliquer sur **[Enregistrer]**
 
-**Vérifier** : L'année apparaît avec le statut "Active"
+**Revenir en modification** pour cocher "Année active"
 
-### 1.3 Créer les Cycles
+### 1.3 Créer les Niveaux Scolaires
 
-**Chemin** : **Finances** → **Cycles** → **[Ajouter]**
+**Chemin** : **Configuration** → **Paramètres** → Onglet **Niveaux**
 
-Créer les cycles pédagogiques :
+Cliquer sur **[Nouveau niveau]** et créer dans l'ordre :
 
-| Type | Nom | Description |
-|------|-----|-------------|
-| 1 | `Premier Cycle` | 6ème à 3ème (Collège) |
-| 2 | `Second Cycle` | 2nde à Terminale (Lycée) |
+| Niveau | Libellé | Ordre |
+|--------|--------|-------|
+| 6e | Sixième | 9 |
+| 5e | Cinquième | 10 |
+| 4e | Quatrième | 11 |
+| 3e | Troisième | 12 |
 
-### 1.4 Créer les Niveaux Scolaires
+### 1.4 Créer les Cycles
 
-**Chemin** : **Core** → **Niveaux scolaires** → **[Ajouter]**
+**Chemin** : **Configuration** → **Paramètres** → Onglet **Cycles**
 
-Créer dans l'ordre :
+**Prérequis** : Année scolaire active créée.
 
-| Ordre | Nom | Cycle |
-|-------|-----|-------|
-| 1 | `6ème` | Premier Cycle |
-| 2 | `5ème` | Premier Cycle |
-| 3 | `4ème` | Premier Cycle |
-| 4 | `3ème` | Premier Cycle |
+Cliquer sur **[Nouveau cycle]** et créer :
+
+| Type | Numéro | Date début | Date fin |
+|------|-------|------------|----------|
+| Trimestriel | 1 | 2025-09-01 | 2025-12-20 |
+| Trimestriel | 2 | 2026-01-05 | 2026-03-31 |
+| Trimestriel | 3 | 2026-04-01 | 2026-07-31 |
 
 ### 1.5 Créer les Périodes d'Évaluation
 
-**Chemin** : **Core** → **Périodes d'évaluation** → **[Ajouter]**
+**Chemin** : **Configuration** → **Paramètres** → Onglet **Périodes**
 
-Créer les trimestres :
+Cliquer sur **[Nouvelle période]** et créer :
 
-| Nom | Date début | Date fin | Ordre |
-|-----|------------|----------|-------|
-| `Trimestre 1` | 2025-09-01 | 2025-12-20 | 1 |
-| `Trimestre 2` | 2026-01-05 | 2026-03-31 | 2 |
-| `Trimestre 3` | 2026-04-01 | 2026-07-15 | 3 |
+| Type | Numéro | Date début | Date fin |
+|------|-------|------------|----------|
+| Trimestre | 1 | 2025-09-01 | 2025-12-20 |
+| Trimestre | 2 | 2026-01-05 | 2026-03-31 |
+| Trimestre | 3 | 2026-04-01 | 2026-07-31 |
 
 ### 1.6 Créer les Classes
 
@@ -90,11 +94,11 @@ Créer les classes :
 
 | Nom | Niveau | Effectif max |
 |-----|--------|--------------|
-| `6ème A` | 6ème | 30 |
-| `6ème B` | 6ème | 30 |
-| `5ème A` | 5ème | 30 |
-| `4ème A` | 4ème | 25 |
-| `3ème A` | 3ème | 25 |
+| 6ème A | 6ème | 30 |
+| 6ème B | 6ème | 30 |
+| 5ème A | 5ème | 30 |
+| 4ème A | 4ème | 25 |
+| 3ème A | 3ème | 25 |
 
 ### 1.7 Créer les Matières
 
@@ -550,6 +554,42 @@ Vérifier l'affichage des :
 
 **Vérifier** : Un message confirme que la clôture est effective
 
+### 6.2bis Clôturer l'Année Scolaire (Professeur Principal)
+
+**Chemin** : **Scolarité** → **Clôture Année**
+
+**Prérequis** :
+- Avoir saisi toutes les notes de l'année
+- Avoir clôturé tous les trimestres/semestres
+- Être professeur principal d'au moins une classe
+
+**Étapes** :
+1. Accéder à **Clôture Année**
+2. Voir la liste de vos classes
+3. Cliquer sur **[Clôturer l'année]** pour votre classe
+4. Confirmer la clôture
+
+**Vérifier** :
+- Message de confirmation
+- Les moyennes générales sont sauvegardées
+- Les décisions (Promu/Redouble) sont attribuées
+
+### 6.2ter Clôture Globale (Direction)
+
+**Chemin** : **Scolarité** → **Clôture Globale**
+
+**Prérequis** :
+- Toutes les classes doivent être clôturées par les professeurs principaux
+
+**Étapes** :
+1. Accéder à **Clôture Globale**
+2. Vérifier que toutes les classes montrent "Clôturée" (badge vert)
+3. Cliquer **[Réinscrire les promus]** ou **[Fermer l'année scolaire]**
+
+**Vérifier** :
+- Les promus sont automatiquement réinscrits
+- L'année scolaire est fermée (si opté pour)
+
 ### 6.3 Générer les Bulletins
 
 **Chemin** : **Rapports** → **Bulletins** → **[Générer]**
@@ -705,5 +745,5 @@ Vérifier s'il y a des demandes en attente :
 
 ---
 
-*Dernière mise à jour : 19 Avril 2026*  
-*Version : 2.1 - SyGeS-AM - Guide par Rôles*
+*Dernière mise à jour : 22 Avril 2026*  
+*Version : 2.2 - SyGeS-AM - Guide par Rôles*

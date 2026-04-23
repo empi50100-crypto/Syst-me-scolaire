@@ -488,8 +488,11 @@ Cette commande crée :
 | 7 | Inscriptions créées | Scolarité > Inscriptions | Inscriptions ok |
 | 8 | Appel effectué | Présences > Séances | Appel validé |
 | 9 | Notes saisies | Enseignement > Examens | Notes ok |
-| 10 | Paiement enregistré | Finances > Paiements | Paiement ok |
-| 11 | Bulletin généré | Rapports > Bulletins | PDF généré |
+| 10 | Clôture périodes | Scolarité > Clôture Périodes | Périodes closes |
+| 11 | Clôture année (Prof) | Scolarité > Clôture Année | Classe clôturée |
+| 12 | Clôture globale (Dir) | Scolarité > Clôture Globale | Année fermée |
+| 13 | Paiement enregistré | Finances > Paiements | Paiement ok |
+| 14 | Bulletin généré | Rapports > Bulletins | PDF généré |
 
 ---
 
@@ -511,10 +514,10 @@ Cette commande crée :
 
 ---
 
-*Dernière mise à jour : 19 Avril 2026*
-*Version : 2.1 - SyGeS-AM*
+*Dernière mise à jour : 22 Avril 2026*
+*Version : 2.3 - SyGeS-AM*
 
 ## Documents associés
 
-- **[Guide de Test par Rôles](GUIDE_TEST_PAR_ROLES.md)** : Guide de test chronologique par rôles (Direction, Secrétariat, Comptable, Professeur, Surveillance)
+- **[Guide de Test par Rôles](GUIDE_TEST_PAR_ROLES.md)** : Guide de test chronologique par rôles (Direction, Secrétaire, Comptable, Professeur, Surveillance)
 - **[Manuel d'Utilisation](MANUEL_UTILISATION.md)** : Guide complet d'utilisation quotidienne

@@ -10,6 +10,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.home, name='home'),
     path('dashboard/', views.dashboard, name='dashboard'),
+    path('core/configuration/', views.configuration_view, name='configuration'),
     path('core/cycles/', views.cycle_list, name='cycle_list'),
     path('core/cycles/ajouter/', views.cycle_create, name='cycle_create'),
     path('core/cycles/modifier/<int:pk>/', views.cycle_edit, name='cycle_edit'),

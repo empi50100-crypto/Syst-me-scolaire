@@ -10,7 +10,8 @@ import csv
 from scolarite.models import (
     Eleve, ParentTuteur, DossierMedical, DocumentEleve,
     CloturePeriode, ClotureNotes, SanctionRecompense,
-    EleveInscription, ConfigurationConduite, ConduiteEleve
+    EleveInscription, ConfigurationConduite, ConduiteEleve,
+    ClotureAnneeScolaire
 )
 from scolarite.forms import EleveForm, DocumentFormSet
 from core.models import AnneeScolaire
@@ -768,6 +769,123 @@ def note_cloture_edit(request, classe_id):
 
 
 @login_required
+def annee_cloture_list(request):
+    """Liste des clôtures d'année scolaire"""
+    if not request.user.has_module_permission('annee_cloture', 'read'):
+        messages.error(request, "Vous n'avez pas l'autorisation de voir les clôtures d'année.")
+        return redirect('dashboard')
+    
+    annee = AnneeScolaire.objects.filter(est_active=True).first()
+    profil_prof = getattr(request.user, 'profil_professeur', None)
+    
+    if not profil_prof and not request.user.est_direction() and not request.user.est_superadmin():
+        messages.error(request, "Accès restreint.")
+        return redirect('dashboard')
+    
+    if profil_prof:
+        classes = Classe.objects.filter(
+            professeur_principal=profil_prof,
+            annee_scolaire=annee
+        ) if annee else []
+    else:
+        classes = Classe.objects.filter(annee_scolaire=annee) if annee else []
+    
+    classe_data = []
+    for classe in classes:
+        cloture = ClotureAnneeScolaire.objects.filter(classe=classe, annee_scolaire=annee).first()
+        classe_data.append({
+            'classe': classe,
+            'cloture': cloture
+        })
+    
+    return render(request, 'scolarite/annee_cloture_list.html', {
+        'classe_data': classe_data,
+        'annee': annee
+    })
+
+
+@login_required
+def annee_cloture_edit(request, classe_id):
+    """Clôturer l'année scolaire pour une classe"""
+    if not request.user.has_module_permission('annee_cloture', 'write'):
+        messages.error(request, "Vous n'avez pas l'autorisation de clôturer l'année.")
+        return redirect('scolarite:annee_cloture_list')
+    
+    annee = AnneeScolaire.objects.filter(est_active=True).first()
+    classe = get_object_or_404(Classe, pk=classe_id)
+    profil_prof = getattr(request.user, 'profil_professeur', None)
+    
+    if profil_prof and classe.professeur_principal != profil_prof and not request.user.est_direction() and not request.user.est_superadmin():
+        messages.error(request, "Vous n'êtes pas professeur principal de cette classe.")
+        return redirect('scolarite:annee_cloture_list')
+    
+    if request.method == 'POST':
+        from rapports.views import calculer_moyenne_generale, get_mention
+        
+        cloture, created = ClotureAnneeScolaire.objects.update_or_create(
+            classe=classe,
+            annee_scolaire=annee,
+            defaults={
+                'cloture_par': request.user,
+                'est_validee': True
+            }
+        )
+        
+        inscriptions = EleveInscription.objects.filter(classe=classe, annee_scolaire=annee)
+        
+        for inscription in inscriptions:
+            moyenne = calculer_moyenne_generale(inscription.eleve, classe, annee)
+            inscription.moyenne_generale = moyenne
+            
+            if moyenne is not None:
+                inscription.mention = get_mention(moyenne)
+                if moyenne >= 10:
+                    inscription.decision = 'Promu'
+                else:
+                    inscription.decision = 'Redouble'
+            else:
+                inscription.mention = ''
+                inscription.decision = 'En attente'
+            
+            inscription.save()
+        
+        log_audit_helper(request.user, 'update', 'ClotureAnneeScolaire', cloture, f"Clôture année scolaire pour {classe}", request)
+        messages.success(request, f'Année scolaire clôturée pour {classe}. {inscriptions.count()} élèves traités.')
+        return redirect('scolarite:annee_cloture_list')
+    
+    return render(request, 'scolarite/annee_cloture_form.html', {
+        'classe': classe,
+        'annee': annee
+    })
+
+
+@login_required
+def annee_cloture_delete(request, classe_id):
+    """Annuler la clôture de l'année scolaire"""
+    if not request.user.has_module_permission('annee_cloture', 'delete'):
+        messages.error(request, "Vous n'avez pas l'autorisation d'annuler la clôture.")
+        return redirect('scolarite:annee_cloture_list')
+    
+    annee = AnneeScolaire.objects.filter(est_active=True).first()
+    classe = get_object_or_404(Classe, pk=classe_id)
+    cloture = ClotureAnneeScolaire.objects.filter(classe=classe, annee_scolaire=annee).first()
+    
+    if cloture and request.method == 'POST':
+        log_audit_helper(request.user, 'delete', 'ClotureAnneeScolaire', cloture, f"Annulation clôture année {classe}", request)
+        cloture.delete()
+        
+        EleveInscription.objects.filter(classe=classe, annee_scolaire=annee).update(
+            moyenne_generale=None,
+            mention='',
+            decision=''
+        )
+        
+        messages.success(request, 'Clôture d\'année annulée.')
+    
+    return redirect('scolarite:annee_cloture_list')
+
+
+@login_required
 def inscription_list(request):
     if not request.user.has_module_permission('inscriptions', 'read'):
         messages.error(request, "Vous n'avez pas l'autorisation de voir les inscriptions.")
@@ -793,4 +911,106 @@ def inscription_list(request):
         'inscriptions': inscriptions,
         'annee': annee,
         'search': search
+    })
+
+
+@login_required
+def cloture_annee_globale(request):
+    """Clôture globale de l'année scolaire par la Direction"""
+    if not request.user.est_direction() and not request.user.est_superadmin():
+        messages.error(request, "Accès réservé à la Direction.")
+        return redirect('dashboard')
+    
+    annee = AnneeScolaire.objects.filter(est_active=True).first()
+    if not annee:
+        messages.error(request, "Aucune année scolaire active.")
+        return redirect('dashboard')
+    
+    classes = Classe.objects.filter(annee_scolaire=annee)
+    
+    classe_stats = []
+    toutes_cloturees = True
+    total_nb = 0
+    total_promus = 0
+    total_redoublants = 0
+    
+    for classe in classes:
+        cloture_prof = ClotureAnneeScolaire.objects.filter(classe=classe, annee_scolaire=annee).first()
+        
+        inscriptions = EleveInscription.objects.filter(classe=classe, annee_scolaire=annee)
+        promus = inscriptions.filter(decision='Promu').count()
+        redoublants = inscriptions.filter(decision='Redouble').count()
+        
+        total_nb += inscriptions.count()
+        total_promus += promus
+        total_redoublants += redoublants
+        
+        if not cloture_prof or not cloture_prof.est_validee:
+            toutes_cloturees = False
+        
+        classe_stats.append({
+            'classe': classe,
+            'cloture_prof': cloture_prof,
+            'nb_inscriptions': inscriptions.count(),
+            'promus': promus,
+            'redoublants': redoublants
+        })
+    
+    if request.method == 'POST' and toutes_cloturees:
+        action = request.POST.get('action', '')
+        
+        from core.models import NiveauScolaire
+        
+        reinscriptions_count = 0
+        for classe in classes:
+            inscriptions = EleveInscription.objects.filter(classe=classe, annee_scolaire=annee, decision='Promu')
+            
+            niveau = classe.niveau
+            classe_actuelle_numero = getattr(niveau, 'ordre', 0)
+            nextNiveau = NiveauScolaire.objects.filter(
+                annee_scolaire=annee,
+                ordre=classe_actuelle_numero + 1
+            ).first()
+            
+            nouvelle_classe = None
+            if nextNiveau:
+                nouvelle_classe = Classe.objects.filter(
+                    niveau=nextNiveau,
+                    subdivision=classe.subdivision,
+                    annee_scolaire=annee
+                ).first()
+            
+            for inscription in inscriptions:
+                if nouvelle_classe:
+                    EleveInscription.objects.create(
+                        eleve=inscription.eleve,
+                        classe=nouvelle_classe,
+                        annee_scolaire=annee
+                    )
+                    reinscriptions_count += 1
+                else:
+                    EleveInscription.objects.create(
+                        eleve=inscription.eleve,
+                        classe=classe,
+                        annee_scolaire=annee
+                    )
+                    reinscriptions_count += 1
+        
+        if action == 'fermer':
+            annee.est_active = False
+            annee.save()
+            log_audit_helper(request.user, 'update', 'AnneeScolaire', annee, f"Année {annee} fermée", request)
+            messages.success(request, f'Année scolaire {annee} fermée. {reinscriptions_count} élèves promus ont été réinscrits.')
+        else:
+            messages.success(request, f'{reinscriptions_count} élèves promus ont été réinscrits.')
+        
+        return redirect('dashboard')
+    
+    return render(request, 'scolarite/cloture_annee_globale.html', {
+        'annee': annee,
+        'classe_stats': classe_stats,
+        'toutes_cloturees': toutes_cloturees,
+        'total_nb': total_nb,
+        'total_promus': total_promus,
+        'total_redoublants': total_redoublants
     })

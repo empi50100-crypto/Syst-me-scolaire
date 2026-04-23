@@ -1,0 +1,254 @@
+{% extends 'base.html' %}
+
+{% block title %}Configuration - SyGeS-AM{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Accueil</a></li>
+                <li class="breadcrumb-item active">Configuration</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<h1 class="mb-4"><i class="bi bi-gear"></i> Configuration</h1>
+
+<ul class="nav nav-tabs mb-4" id="configTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="onglet-annees" data-bs-toggle="tab" data-bs-target="#annees" type="button">Années Scolaires</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="onglet-niveaux" data-bs-toggle="tab" data-bs-target="#niveaux" type="button">Niveaux</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="onglet-cycles" data-bs-toggle="tab" data-bs-target="#cycles" type="button">Cycles</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="onglet-periodes" data-bs-toggle="tab" data-bs-target="#periodes" type="button">Périodes</button>
+    </li>
+</ul>
+
+<div class="tab-content" id="configTabsContent">
+    <!-- Années Scolaires -->
+    <div class="tab-pane fade show active" id="annees" role="tabpanel">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4>Années Scolaires</h4>
+            <a href="{% url 'finances:annee_scolaire' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Nouvelle année
+            </a>
+        </div>
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Libellé</th>
+                                <th>Date début</th>
+                                <th>Date fin</th>
+                                <th>Type cycle</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for annee in annees %}
+                            <tr>
+                                <td><strong>{{ annee.libelle }}</strong></td>
+                                <td>{{ annee.date_debut|date:"d/m/Y" }}</td>
+                                <td>{{ annee.date_fin|date:"d/m/Y" }}</td>
+                                <td>{{ annee.get_type_cycle_actif_display|default:"-" }}</td>
+                                <td>
+                                    {% if annee.est_active %}
+                                    <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">Inactive</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'finances:annee_scolaire_edit' annee.pk %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted">Aucune année scolaire</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Niveaux -->
+    <div class="tab-pane fade" id="niveaux" role="tabpanel">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4>Niveaux Scolaires</h4>
+            <a href="{% url 'core:niveau_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Nouveau niveau
+            </a>
+        </div>
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Code</th>
+                                <th>Libellé</th>
+                                <th>Ordre</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for niv in niveaux %}
+                            <tr>
+                                <td><span class="badge bg-info">{{ niv.niveau }}</span></td>
+                                <td><strong>{{ niv.libelle }}</strong></td>
+                                <td>{{ niv.ordre }}</td>
+                                <td>
+                                    <a href="{% url 'core:niveau_edit' niv.pk %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="{% url 'core:niveau_delete' niv.pk %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Supprimer ce niveau?')">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">Aucun niveau défini</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cycles -->
+    <div class="tab-pane fade" id="cycles" role="tabpanel">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4>Cycles - {{ annee_active.libelle|default:"Aucune année active" }}</h4>
+            {% if annee_active %}
+            <a href="{% url 'core:cycle_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Nouveau cycle
+            </a>
+            {% endif %}
+        </div>
+        {% if annee_active %}
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Cycle</th>
+                                <th>Numéro</th>
+                                <th>Date début</th>
+                                <th>Date fin</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for cycle in cycles %}
+                            <tr>
+                                <td><span class="badge bg-{% if cycle.type_cycle == 'trimestriel' %}primary{% else %}warning{% endif %}">
+                                    {{ cycle.get_type_cycle_display }}
+                                </span></td>
+                                <td><strong>{{ cycle.numero }}</strong></td>
+                                <td>{{ cycle.date_debut|date:"d/m/Y" }}</td>
+                                <td>{{ cycle.date_fin|date:"d/m/Y" }}</td>
+                                <td>
+                                    <a href="{% url 'core:cycle_edit' cycle.pk %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="{% url 'core:cycle_delete' cycle.pk %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Supprimer ce cycle?')">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted">Aucun cycle défini pour cette année</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle"></i>
+            Aucune année scolaire active. Créez d'abord une année scolaire pour définir les cycles.
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Périodes -->
+    <div class="tab-pane fade" id="periodes" role="tabpanel">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4>Périodes d'évaluation - {{ annee_active.libelle|default:"Aucune année active" }}</h4>
+            {% if annee_active %}
+            <a href="{% url 'core:periode_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Nouvelle période
+            </a>
+            {% endif %}
+        </div>
+        {% if annee_active %}
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Type</th>
+                                <th>Numéro</th>
+                                <th>Date début</th>
+                                <th>Date fin</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for periode in periodes %}
+                            <tr>
+                                <td><span class="badge bg-info">{{ periode.get_type_periode_display }}</span></td>
+                                <td><strong>{{ periode.numero }}</strong></td>
+                                <td>{{ periode.debut|date:"d/m/Y" }}</td>
+                                <td>{{ periode.fin|date:"d/m/Y" }}</td>
+                                <td>
+                                    <a href="{% url 'core:periode_edit' periode.pk %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="{% url 'core:periode_delete' periode.pk %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Supprimer cette période?')">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted">Aucune période définie</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle"></i>
+            Aucune année scolaire active.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

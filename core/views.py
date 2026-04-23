@@ -16,6 +16,36 @@ def landing_page(request):
 
 
 @login_required
+def configuration_view(request):
+    """Interface unifiée de configuration pour la Direction"""
+    if not request.user.est_superadmin() and not request.user.est_direction():
+        from django.contrib import messages
+        messages.error(request, "Accès réservé à la Direction.")
+        return redirect('dashboard')
+    
+    from core.models import AnneeScolaire, NiveauScolaire, Cycle, PeriodeEvaluation
+    
+    annees = AnneeScolaire.objects.all().order_by('-date_debut')
+    niveaux = NiveauScolaire.objects.all().order_by('ordre')
+    annee_active = AnneeScolaire.objects.filter(est_active=True).first()
+    
+    cycles = []
+    periodes = []
+    
+    if annee_active:
+        cycles = Cycle.objects.filter(annee_scolaire=annee_active).order_by('numero')
+        periodes = PeriodeEvaluation.objects.filter(annee_scolaire=annee_active).order_by('numero')
+    
+    return render(request, 'core/configuration.html', {
+        'annees': annees,
+        'niveaux': niveaux,
+        'cycles': cycles,
+        'periodes': periodes,
+        'annee_active': annee_active,
+    })
+
+
+@login_required
 def dashboard(request):
     context = {}
     annee = getattr(request, 'annee_active', None)

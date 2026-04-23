@@ -42,4 +42,9 @@ urlpatterns = [
     
     path('notes/cloture/', views.note_cloture_list, name='note_cloture_list'),
     path('notes/cloture/<int:classe_id>/', views.note_cloture_edit, name='note_cloture_edit'),
+    
+    path('annee/cloture/', views.annee_cloture_list, name='annee_cloture_list'),
+    path('annee/cloture/<int:classe_id>/', views.annee_cloture_edit, name='annee_cloture_edit'),
+    path('annee/cloture/<int:classe_id>/annuler/', views.annee_cloture_delete, name='annee_cloture_delete'),
+    path('annee/cloture-globale/', views.cloture_annee_globale, name='cloture_annee_globale'),
 ]

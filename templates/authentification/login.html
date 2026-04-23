@@ -434,7 +434,87 @@
         }
     }
 
-    /* Modal */
+    /* Custom Modals - Simple et fiable */
+    .custom-modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        z-index: 9998;
+        backdrop-filter: blur(4px);
+    }
+    .custom-modal-overlay.active {
+        display: block;
+    }
+    .custom-modal {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 9999;
+        max-width: 500px;
+        width: calc(100% - 40px);
+        max-height: 85vh;
+    }
+    .custom-modal.active {
+        display: block;
+    }
+    .custom-modal-content {
+        background: var(--bg-card);
+        border: 1px solid var(--border-light);
+        border-radius: 16px;
+        max-height: 85vh;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        animation: modalSlideIn 0.3s ease;
+    }
+    @keyframes modalSlideIn {
+        from {
+            opacity: 0;
+            transform: scale(0.9);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+    .custom-modal-header {
+        border-bottom: 1px solid var(--border);
+        padding: 20px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .custom-modal-header .modal-title {
+        font-weight: 700;
+        font-size: 1.1rem;
+        color: var(--text-primary);
+        margin: 0;
+    }
+    .custom-modal-body {
+        padding: 24px;
+        overflow-y: auto;
+        max-height: calc(85vh - 80px);
+    }
+    .custom-modal .btn-close {
+        background: transparent url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23fff'%3e%3cpath d='M.293.293a1 1 0 011.414 0L8 6.586 14.293.293a1 1 0 111.414 1.414L9.414 8l6.293 6.293a1 1 0 01-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 01-1.414-1.414L6.586 8 .293 1.707a1 1 0 010-1.414z'/%3e%3c/svg%3e") center/1em auto no-repeat;
+        border: none;
+        width: 1em;
+        height: 1em;
+        opacity: 0.8;
+        cursor: pointer;
+    }
+    .custom-modal .btn-close:hover {
+        opacity: 1;
+    }
+
+    /* Modal Bootstrap - gardé pour compatibilité */
     .modal-content {
         background: var(--bg-card) !important;
         border: 1px solid var(--border-light) !important;
@@ -584,8 +664,8 @@
         </div>
         <div class="nav-actions">
             <a href="{% url 'home' %}" class="nav-link">Accueil</a>
-            <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#infoModal">Fonctionnalités</a>
-            <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#contactModal">Contact</a>
+            <button class="nav-link" onclick="openModal('infoModal')" style="background:none;border:none;cursor:pointer;">Fonctionnalités</button>
+            <button class="nav-link" onclick="openModal('contactModal')" style="background:none;border:none;cursor:pointer;">Contact</button>
         </div>
     </nav>
     
@@ -651,15 +731,18 @@
     </div>
 </div>
 
+<!-- Les modals doivent être en dehors du login-page pour s'afficher correctement -->
+<!-- Overlay pour fermer en cliquant dehors -->
+<div id="modalOverlay" class="custom-modal-overlay" onclick="closeAllModals()"></div>
+
 <!-- Modal Contact -->
-<div class="modal fade" id="contactModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Contact - Développeur</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
+<div class="custom-modal" id="contactModal">
+    <div class="custom-modal-content">
+        <div class="custom-modal-header">
+            <h5 class="modal-title">Contact - Développeur</h5>
+            <button type="button" class="btn-close btn-close-white" onclick="closeModal('contactModal')" aria-label="Close"></button>
+        </div>
+        <div class="custom-modal-body">
                 <div class="text-center mb-4">
                     <div class="contact-dev-icon mx-auto mb-3">
                         <i class="bi bi-person-badge"></i>
@@ -720,15 +803,14 @@
     </div>
 </div>
 
-<!-- Modal -->
-<div class="modal fade" id="infoModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Fonctionnalités de SyGeS-AM</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
+<!-- Modal Fonctionnalités -->
+<div class="custom-modal" id="infoModal">
+    <div class="custom-modal-content">
+        <div class="custom-modal-header">
+            <h5 class="modal-title">Fonctionnalités de SyGeS-AM</h5>
+            <button type="button" class="btn-close btn-close-white" onclick="closeModal('infoModal')" aria-label="Close"></button>
+        </div>
+        <div class="custom-modal-body">
                 <div class="modal-feature">
                     <div class="modal-feature-icon">
                         <i class="bi bi-shield-lock"></i>
@@ -788,8 +870,48 @@
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+/* Custom Modal Functions */
+function openModal(modalId) {
+    const overlay = document.getElementById('modalOverlay');
+    const modal = document.getElementById(modalId);
+    if (overlay && modal) {
+        overlay.classList.add('active');
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closeModal(modalId) {
+    const overlay = document.getElementById('modalOverlay');
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.remove('active');
+    }
+    // Check if any modal is still open
+    const anyOpen = document.querySelector('.custom-modal.active');
+    if (!anyOpen && overlay) {
+        overlay.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+}
+
+function closeAllModals() {
+    const overlay = document.getElementById('modalOverlay');
+    document.querySelectorAll('.custom-modal').forEach(m => m.classList.remove('active'));
+    if (overlay) {
+        overlay.classList.remove('active');
+    }
+    document.body.style.overflow = '';
+}
+
+// Close on Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeAllModals();
+    }
+});
+
 /* Ticker */
 const TICK_DATA = [
     { icon: 'bi-mortarboard-fill', label: 'Inscriptions' },

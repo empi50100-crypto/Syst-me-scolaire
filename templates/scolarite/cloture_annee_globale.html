@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block title %}Clôture Année Scolaire - SyGeS-AM{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Accueil</a></li>
+                <li class="breadcrumb-item active">Clôture Année Scolaire Globale</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<h1 class="mb-4"><i class="bi bi-calendar-check"></i> Clôture Année Scolaire Globale</h1>
+
+<div class="alert alert-info mb-4">
+    <i class="bi bi-info-circle"></i>
+    <strong>Résumé :</strong> Année scolaire <strong>{{ annee }}</strong>
+    <ul class="mb-0 mt-2">
+        <li><strong>{{ classe_stats|length }}</strong> classes</li>
+        <li><strong>{{ total_nb }}</strong> élèves inscrits</li>
+        <li><strong>{{ total_promus }}</strong> promus</li>
+        <li><strong>{{ total_redoublants }}</strong> redoublants</li>
+    </ul>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">État des classes</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Classe</th>
+                        <th>Professeur Principal</th>
+                        <th>Nb Élèves</th>
+                        <th>Promus</th>
+                        <th>Redoublants</th>
+                        <th>Statut</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for stats in classe_stats %}
+                    <tr>
+                        <td><strong>{{ stats.classe }}</strong></td>
+                        <td>{{ stats.classe.professeur_principal.user.get_full_name|default:"-" }}</td>
+                        <td>{{ stats.nb_inscriptions }}</td>
+                        <td><span class="badge bg-success">{{ stats.promus }}</span></td>
+                        <td><span class="badge bg-warning text-dark">{{ stats.redoublants }}</span></td>
+                        <td>
+                            {% if stats.cloture_prof and stats.cloture_prof.est_validee %}
+                            <span class="badge bg-success"><i class="bi bi-check-circle"></i> Clôturée</span>
+                            {% else %}
+                            <span class="badge bg-danger">Non clôturée</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted">Aucune classe trouvée.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% if toutes_cloturees %}
+<div class="card">
+    <div class="card-header bg-success text-white">
+        <h5 class="mb-0"><i class="bi bi-check-circle"></i> Clôture possibles</h5>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-success">
+            <i class="bi bi-check-circle"></i>
+            <strong>Toutes les classes ont été clôturées par les professeurs principaux.</strong>
+            Vous pouvez maintenant procéder à la clôture globale.
+        </div>
+        
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label class="form-label">Action</label>
+                <div class="d-flex gap-2">
+                    <button type="submit" name="action" value="reinscrire" class="btn btn-primary">
+                        <i class="bi bi-arrow-repeat"></i> Réinscrire les promus uniquement
+                    </button>
+                    <button type="submit" name="action" value="fermer" class="btn btn-danger" onclick="return confirm('Voulez-vous vraiment fermer cette année scolaire ? Cette action est irréversible.')">
+                        <i class="bi bi-x-circle"></i> Fermer l'année scolaire
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% else %}
+<div class="card">
+    <div class="card-header bg-warning">
+        <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Clôture non possible</h5>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle"></i>
+            <strong>Certaines classes n'ont pas encore été clôturées par les professeurs principaux.</strong>
+            Veuillez attendre que tous les professeurs principaux aient clôturé leurs classes avant de procéder à la clôture globale.
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

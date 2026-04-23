@@ -22,13 +22,20 @@
 
 <div class="card mb-4">
     <div class="card-header">
-        <form method="get" class="row g-3">
-            <div class="col-md-4">
-                <select name="annee" class="form-select" onchange="this.form.submit()">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-6">
+                <label class="form-label small text-muted mb-1">Filtrer par année</label>
+                <select name="annee" class="form-select">
                     {% for y in years %}
                     <option value="{{ y }}" {% if annee_selectionnee == y %}selected{% endif %}>{{ y }}</option>
                     {% endfor %}
                 </select>
+            </div>
+            <div class="col-md-6">
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-fill">Filtrer</button>
+                    <a href="{% url 'finances:salaire_personnel_list' %}" class="btn btn-secondary flex-fill">Réinitialiser</a>
+                </div>
             </div>
         </form>
     </div>

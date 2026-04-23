@@ -4,57 +4,57 @@
     <h5 class="section-title"><i class="bi bi-cash-stack me-2"></i>Vue d'ensemble des Finances</h5>
     <div class="row g-3">
         <div class="col-md-3">
-            <div class="card stat-card primary h-100">
+            <div class="card stat-card indigo h-100">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
-                            <h6 class="text-white fw-bold mb-2">Total Frais</h6>
-                            <h3 class="text-dark fw-bold mb-0">{{ total_frais|default:"0"|floatformat:0 }}</h3>
-                            <small class="text-dark">FCFA</small>
+                            <h6 class="stat-label">Total Frais</h6>
+                            <h3 class="stat-value">{{ total_frais|default:"0"|floatformat:0 }}</h3>
+                            <small class="stat-sub">FCFA</small>
                         </div>
-                        <i class="bi bi-file-earmark-text text-white fs-4"></i>
+                        <div class="stat-icon"><i class="bi bi-file-earmark-text-fill"></i></div>
                     </div>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card stat-card success h-100">
+            <div class="card stat-card emerald h-100">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
-                            <h6 class="text-white fw-bold mb-2">Encaissé</h6>
-                            <h3 class="text-dark fw-bold mb-0">{{ total_encaissé|default:"0"|floatformat:0 }}</h3>
-                            <small class="text-dark">FCFA</small>
+                            <h6 class="stat-label">Encaissé</h6>
+                            <h3 class="stat-value">{{ total_encaissé|default:"0"|floatformat:0 }}</h3>
+                            <small class="stat-sub">FCFA</small>
                         </div>
-                        <i class="bi bi-arrow-down-circle text-white fs-4"></i>
+                        <div class="stat-icon"><i class="bi bi-arrow-down-circle-fill"></i></div>
                     </div>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card stat-card warning h-100">
+            <div class="card stat-card amber h-100">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
-                            <h6 class="text-dark fw-bold mb-2">Reste à Payer</h6>
-                            <h3 class="text-dark fw-bold mb-0">{{ reste_a_payer|default:"0"|floatformat:0 }}</h3>
-                            <small class="text-dark">FCFA</small>
+                            <h6 class="stat-label">Reste à Payer</h6>
+                            <h3 class="stat-value">{{ reste_a_payer|default:"0"|floatformat:0 }}</h3>
+                            <small class="stat-sub">FCFA</small>
                         </div>
-                        <i class="bi bi-hourglass-split text-dark fs-4"></i>
+                        <div class="stat-icon"><i class="bi bi-hourglass-split"></i></div>
                     </div>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card stat-card danger h-100">
+            <div class="card stat-card rose h-100">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
-                            <h6 class="text-white fw-bold mb-2">Taux Recouvrement</h6>
-                            <h3 class="text-dark fw-bold mb-0">{{ taux_recouvrement|default:"0" }}%</h3>
-                            <small class="text-dark">Objectif: 100%</small>
+                            <h6 class="stat-label">Taux Recouvrement</h6>
+                            <h3 class="stat-value">{{ taux_recouvrement|default:"0" }}%</h3>
+                            <small class="stat-sub">Objectif: 100%</small>
                         </div>
-                        <i class="bi bi-percent text-white fs-4"></i>
+                        <div class="stat-icon"><i class="bi bi-percent"></i></div>
                     </div>
                 </div>
             </div>
@@ -66,43 +66,43 @@
     <h5 class="section-title"><i class="bi bi-people me-2"></i>Gestion du Personnel</h5>
     <div class="row g-3">
         <div class="col-md-4">
-            <div class="card stat-card info h-100">
+            <div class="card stat-card sky h-100">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
-                            <h6 class="text-white fw-bold mb-2">Masse Salariale Mensuelle</h6>
-                            <h3 class="text-dark fw-bold mb-0">{{ masse_salariale_mensuelle|default:"0"|floatformat:0 }}</h3>
-                            <small class="text-dark">FCFA</small>
+                            <h6 class="stat-label">Masse Salariale Mensuelle</h6>
+                            <h3 class="stat-value">{{ masse_salariale_mensuelle|default:"0"|floatformat:0 }}</h3>
+                            <small class="stat-sub">FCFA</small>
                         </div>
-                        <i class="bi bi-person-badge text-white fs-4"></i>
+                        <div class="stat-icon"><i class="bi bi-person-badge-fill"></i></div>
                     </div>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card stat-card danger h-100">
+            <div class="card stat-card rose h-100">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
-                            <h6 class="text-white fw-bold mb-2">Total Décaissements</h6>
-                            <h3 class="text-dark fw-bold mb-0">{{ total_decaissement|default:"0"|floatformat:0 }}</h3>
-                            <small class="text-dark">FCFA</small>
+                            <h6 class="stat-label">Total Décaissements</h6>
+                            <h3 class="stat-value">{{ total_decaissement|default:"0"|floatformat:0 }}</h3>
+                            <small class="stat-sub">FCFA</small>
                         </div>
-                        <i class="bi bi-arrow-up-circle text-white fs-4"></i>
+                        <div class="stat-icon"><i class="bi bi-arrow-up-circle-fill"></i></div>
                     </div>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card stat-card success h-100">
+            <div class="card stat-card emerald h-100">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
-                            <h6 class="text-white fw-bold mb-2">Solde</h6>
-                            <h3 class="{% if montant_restant|default:0 >= 0 %}text-success{% else %}text-danger{% endif %} fw-bold mb-0">{{ montant_restant|default:"0"|floatformat:0 }}</h3>
-                            <small class="text-dark">FCFA</small>
+                            <h6 class="stat-label">Solde</h6>
+                            <h3 class="stat-value" {% if montant_restant|default:0 < 0 %}style="color:#f43f5e;"{% endif %}>{{ montant_restant|default:"0"|floatformat:0 }}</h3>
+                            <small class="stat-sub">FCFA</small>
                         </div>
-                        <i class="bi bi-bank text-white fs-4"></i>
+                        <div class="stat-icon"><i class="bi bi-bank2"></i></div>
                     </div>
                 </div>
             </div>
@@ -114,29 +114,29 @@
     <h5 class="section-title"><i class="bi bi-graph-up me-2"></i>Statistiques & Graphiques</h5>
     <div class="row g-3">
         <div class="col-md-4">
-            <div class="card border-success h-100">
+            <div class="card stat-card emerald h-100">
                 <div class="card-body text-center">
-                    <h6 class="text-muted mb-2 fw-bold">Encaissements du Mois</h6>
-                    <h2 class="text-dark fw-bold mb-0">{{ encaissements_mois|default:"0"|floatformat:0 }}</h2>
-                    <small class="text-muted">FCFA</small>
+                    <h6 class="stat-label">Encaissements du Mois</h6>
+                    <h2 class="stat-value">{{ encaissements_mois|default:"0"|floatformat:0 }}</h2>
+                    <small class="stat-sub">FCFA</small>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card border-primary h-100">
+            <div class="card stat-card indigo h-100">
                 <div class="card-body text-center">
-                    <h6 class="text-muted mb-2 fw-bold">Nombre de Paiements</h6>
-                    <h2 class="text-dark fw-bold mb-0">{{ nb_paiements|default:"0" }}</h2>
-                    <small class="text-muted">transactions</small>
+                    <h6 class="stat-label">Nombre de Paiements</h6>
+                    <h2 class="stat-value">{{ nb_paiements|default:"0" }}</h2>
+                    <small class="stat-sub">transactions</small>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card border-info h-100">
+            <div class="card stat-card sky h-100">
                 <div class="card-body text-center">
-                    <h6 class="text-muted mb-2 fw-bold">Paiements Aujourd'hui</h6>
-                    <h2 class="text-dark fw-bold mb-0">{{ paiements_aujourdhui|default:"0" }}</h2>
-                    <small class="text-muted">transactions</small>
+                    <h6 class="stat-label">Paiements Aujourd'hui</h6>
+                    <h2 class="stat-value">{{ paiements_aujourdhui|default:"0" }}</h2>
+                    <small class="stat-sub">transactions</small>
                 </div>
             </div>
         </div>
@@ -147,7 +147,7 @@
     <div class="row g-3">
         <div class="col-lg-6">
             <div class="card h-100">
-                <div class="card-header bg-primary text-white">
+                <div class="card-header dash-header">
                     <h5 class="mb-0"><i class="bi bi-graph-up me-2"></i>Encaissements vs Charges (6 mois)</h5>
                 </div>
                 <div class="card-body">
@@ -157,7 +157,7 @@
         </div>
         <div class="col-lg-6">
             <div class="card h-100">
-                <div class="card-header bg-success text-white">
+                <div class="card-header dash-header">
                     <h5 class="mb-0"><i class="bi bi-graph-down me-2"></i>Encaissements vs Charges (7 jours)</h5>
                 </div>
                 <div class="card-body">
@@ -172,7 +172,7 @@
     <div class="row g-3">
         <div class="col-md-6">
             <div class="card h-100">
-                <div class="card-header bg-dark text-white">
+                <div class="card-header dash-header">
                     <h5 class="mb-0"><i class="bi bi-lightning me-2"></i>Actions rapides</h5>
                 </div>
                 <div class="card-body">
@@ -198,7 +198,7 @@
         </div>
         <div class="col-md-6">
             <div class="card h-100">
-                <div class="card-header bg-secondary text-white">
+                <div class="card-header dash-header-dark">
                     <h5 class="mb-0"><i class="bi bi-file-earmark-text me-2"></i>Rapports & Historiques</h5>
                 </div>
                 <div class="card-body">
@@ -301,25 +301,3 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<style>
-.section-title {
-    color: #495057;
-    font-weight: 600;
-    margin-bottom: 1rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 2px solid #e9ecef;
-}
-.stat-card { 
-    border-radius: 8px; 
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08); 
-    transition: transform 0.2s;
-}
-.stat-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
-.stat-card.primary { border-left: 4px solid #0d6efd; background: #0d6efd; }
-.stat-card.success { border-left: 4px solid #198754; background: #198754; }
-.stat-card.warning { border-left: 4px solid #ffc107; background: #ffc107; }
-.stat-card.info { border-left: 4px solid #0dcaf0; background: #0dcaf0; }
-.stat-card.danger { border-left: 4px solid #dc3545; background: #dc3545; }
-.dashboard-section .card { border-radius: 8px; }
-.dashboard-section h3 { font-size: 1.5rem; font-weight: 700; }
-</style>

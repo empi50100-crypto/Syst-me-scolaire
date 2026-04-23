@@ -38,8 +38,9 @@
 
 <div class="card mb-4">
     <div class="card-header">
-        <form method="get" class="row g-3">
-            <div class="col-md-4">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-6">
+                <label class="form-label small text-muted mb-1">Filtrer par fonction</label>
                 <select name="fonction" class="form-select">
                     <option value="">Toutes les fonctions</option>
                     <option value="direction" {% if fonction_filter == 'direction' %}selected{% endif %}>Direction</option>
@@ -52,9 +53,11 @@
                     <option value="menage" {% if fonction_filter == 'menage' %}selected{% endif %}>Agent d'entretien</option>
                 </select>
             </div>
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-primary">Filtrer</button>
-                <a href="{% url 'ressources_humaines:liste_personnel' %}" class="btn btn-secondary">Réinitialiser</a>
+            <div class="col-md-6">
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-fill">Filtrer</button>
+                    <a href="{% url 'ressources_humaines:liste_personnel' %}" class="btn btn-secondary flex-fill">Réinitialiser</a>
+                </div>
             </div>
         </form>
     </div>

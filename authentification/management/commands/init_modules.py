@@ -44,6 +44,8 @@ class Command(BaseCommand):
             {'service': 'scolarite', 'nom': 'Inscriptions', 'code': 'inscriptions', 'url': '/scolarite/inscriptions/', 'icon': 'bi bi-person-plus', 'ordre': 2},
             {'service': 'scolarite', 'nom': 'Sanctions & Récompenses', 'code': 'discipline', 'url': '/scolarite/discipline/', 'icon': 'bi bi-shield-exclamation', 'ordre': 3},
             {'service': 'scolarite', 'nom': 'Clôture Périodes', 'code': 'periode_cloture', 'url': '/scolarite/periodes/cloture/', 'icon': 'bi bi-lock', 'ordre': 4},
+            {'service': 'scolarite', 'nom': 'Clôture Année', 'code': 'annee_cloture', 'url': '/scolarite/annee/cloture/', 'icon': 'bi bi-calendar-check', 'ordre': 4.5},
+            {'service': 'scolarite', 'nom': 'Clôture Globale', 'code': 'cloture_globale', 'url': '/scolarite/annee/cloture-globale/', 'icon': 'bi bi-calendar-x', 'ordre': 4.6},
             {'service': 'scolarite', 'nom': 'Notes & Périodes', 'code': 'note_cloture', 'url': '/scolarite/notes/cloture/', 'icon': 'bi bi-journal-check', 'ordre': 5},
             {'service': 'scolarite', 'nom': 'Dossiers médicaux', 'code': 'dossiers_medicaux', 'url': '/scolarite/dossiers-medicaux/', 'icon': 'bi bi-heart-pulse', 'ordre': 6},
             {'service': 'scolarite', 'nom': 'Documents', 'code': 'documents_eleve', 'url': '/scolarite/documents/', 'icon': 'bi bi-file-earmark', 'ordre': 7},
@@ -93,7 +95,7 @@ class Command(BaseCommand):
             
             # Configuration
             {'service': 'configuration', 'nom': 'Années scolaires', 'code': 'annee_scolaire', 'url': '/finances/annees/', 'icon': 'bi bi-calendar-event', 'ordre': 1},
-            {'service': 'configuration', 'nom': 'Paramètres Core', 'code': 'core_config', 'url': '/admin/core/', 'icon': 'bi bi-gear-fill', 'ordre': 2},
+            {'service': 'configuration', 'nom': 'Configuration', 'code': 'core_setup', 'url': '/configuration/', 'icon': 'bi bi-gear-fill', 'ordre': 2},
             
             # Administration
             {'service': 'administration', 'nom': 'Utilisateurs', 'code': 'user_list', 'url': '/authentification/users/', 'icon': 'bi bi-person-badge', 'ordre': 1},
@@ -144,6 +146,9 @@ class Command(BaseCommand):
             'direction': {
                 '_all': True,
                 '_actions': ['create', 'read', 'update', 'delete', 'export', 'import', 'validate'],
+                'annee_cloture': ['read', 'update', 'delete'],
+                'cloture_globale': ['read', 'update'],
+                'core_setup': ['read', 'update'],
             },
             'secretaire': {
                 # Scolarité
@@ -202,6 +207,8 @@ class Command(BaseCommand):
                 'emploi_du_temps': ['read'],
                 'mes_seances': ['read', 'update'],
                 'saisie_notes': ['create', 'read', 'update', 'export'],
+                # Clôture année scolaire (pour leurs classes)
+                'annee_cloture': ['read', 'update'],
                 # Enseignement
                 'attribution_list': ['read'],
                 'classe_list': ['read'],

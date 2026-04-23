@@ -1,34 +1,54 @@
 {% load permissions_tags %}
 <div class="row g-4 mb-4">
     <div class="col-md-3">
-        <div class="card stat-card success h-100">
-            <div class="card-body text-center">
-                <h6 class="text-muted">PRÉSENTS</h6>
-                <h2 class="text-success">{{ presents_aujourdhui|default:"0" }}</h2>
+        <div class="card stat-card emerald h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="stat-label">Présents</h6>
+                        <h2 class="stat-value">{{ presents_aujourdhui|default:"0" }}</h2>
+                    </div>
+                    <div class="stat-icon"><i class="bi bi-check-circle-fill"></i></div>
+                </div>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card stat-card danger h-100">
-            <div class="card-body text-center">
-                <h6 class="text-muted">ABSENTS</h6>
-                <h2 class="text-danger">{{ absents_aujourdhui|default:"0" }}</h2>
+        <div class="card stat-card rose h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="stat-label">Absents</h6>
+                        <h2 class="stat-value">{{ absents_aujourdhui|default:"0" }}</h2>
+                    </div>
+                    <div class="stat-icon"><i class="bi bi-person-x-fill"></i></div>
+                </div>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card stat-card warning h-100">
-            <div class="card-body text-center">
-                <h6 class="text-muted">RETARDS</h6>
-                <h2 class="text-warning">{{ retards_aujourdhui|default:"0" }}</h2>
+        <div class="card stat-card amber h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="stat-label">Retards</h6>
+                        <h2 class="stat-value">{{ retards_aujourdhui|default:"0" }}</h2>
+                    </div>
+                    <div class="stat-icon"><i class="bi bi-clock-fill"></i></div>
+                </div>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card stat-card primary h-100">
-            <div class="card-body text-center">
-                <h6 class="text-muted">TAUX PRÉSENCE</h6>
-                <h2>{{ taux_presence_jour|default:"0" }}%</h2>
+        <div class="card stat-card indigo h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="stat-label">Taux présence</h6>
+                        <h2 class="stat-value">{{ taux_presence_jour|default:"0" }}%</h2>
+                    </div>
+                    <div class="stat-icon"><i class="bi bi-percent"></i></div>
+                </div>
             </div>
         </div>
     </div>
@@ -37,33 +57,33 @@
 <div class="row g-4 mb-4">
     <div class="col-md-4">
         <div class="card h-100">
-            <div class="card-header bg-info text-white">
+            <div class="card-header dash-header">
                 <h5 class="mb-0"><i class="bi bi-clock me-2"></i>Cours en cours</h5>
             </div>
             <div class="card-body text-center">
-                <h2 class="text-info">{{ cours_en_cours|default:"0" }}</h2>
+                <h2 class="text-dark fw-bold">{{ cours_en_cours|default:"0" }}</h2>
                 <small class="text-muted">sessions actives</small>
             </div>
         </div>
     </div>
     <div class="col-md-4">
         <div class="card h-100">
-            <div class="card-header bg-success text-white">
+            <div class="card-header dash-header">
                 <h5 class="mb-0"><i class="bi bi-check-circle me-2"></i>Cours terminés</h5>
             </div>
             <div class="card-body text-center">
-                <h2 class="text-success">{{ cours_termines|default:"0" }}</h2>
+                <h2 class="text-dark fw-bold">{{ cours_termines|default:"0" }}</h2>
                 <small class="text-muted">aujourd'hui</small>
             </div>
         </div>
     </div>
     <div class="col-md-4">
         <div class="card h-100">
-            <div class="card-header bg-secondary text-white">
+            <div class="card-header dash-header-dark">
                 <h5 class="mb-0"><i class="bi bi-people me-2"></i>Total élèves</h5>
             </div>
             <div class="card-body text-center">
-                <h2>{{ total_eleves|default:"0" }}</h2>
+                <h2 class="text-dark fw-bold">{{ total_eleves|default:"0" }}</h2>
                 <small class="text-muted">inscrits</small>
             </div>
         </div>
@@ -73,7 +93,7 @@
 <div class="row g-4 mb-4">
     <div class="col-lg-6">
         <div class="card h-100">
-            <div class="card-header bg-primary text-white">
+            <div class="card-header dash-header">
                 <h5 class="mb-0"><i class="bi bi-clipboard-check me-2"></i>Gestion des présences</h5>
             </div>
             <div class="card-body">
@@ -99,7 +119,7 @@
     </div>
     <div class="col-lg-6">
         <div class="card h-100">
-            <div class="card-header bg-dark text-white">
+            <div class="card-header dash-header-dark">
                 <h5 class="mb-0"><i class="bi bi-journal-text me-2"></i>Suivi des séances</h5>
             </div>
             <div class="card-body">
@@ -118,7 +138,7 @@
 
 {% if stats_semaine %}
 <div class="card mb-4">
-    <div class="card-header bg-warning text-dark">
+    <div class="card-header dash-header">
         <h5 class="mb-0"><i class="bi bi-graph-up me-2"></i>Statistiques de la semaine</h5>
     </div>
     <div class="card-body">
@@ -149,7 +169,7 @@
 <div class="row g-4">
     <div class="col-md-6">
         <div class="card">
-            <div class="card-header bg-primary text-white">
+            <div class="card-header dash-header">
                 <h5 class="mb-0"><i class="bi bi-calendar-week me-2"></i>Année scolaire</h5>
             </div>
             <div class="card-body">
@@ -166,22 +186,14 @@
     </div>
     <div class="col-md-6">
         <div class="card">
-            <div class="card-header bg-secondary text-white">
+            <div class="card-header dash-header-dark">
                 <h5 class="mb-0"><i class="bi bi-collection me-2"></i>Classes</h5>
             </div>
             <div class="card-body text-center">
-                <h2>{{ total_classes|default:"0" }}</h2>
+                <h2 class="text-dark fw-bold">{{ total_classes|default:"0" }}</h2>
                 <small class="text-muted">classes actives</small>
             </div>
         </div>
     </div>
 </div>
 
-<style>
-.stat-card { border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-.stat-card.primary { border-left: 4px solid #0d6efd; }
-.stat-card.success { border-left: 4px solid #198754; }
-.stat-card.warning { border-left: 4px solid #ffc107; }
-.stat-card.danger { border-left: 4px solid #dc3545; }
-.stat-card.info { border-left: 4px solid #0dcaf0; }
-</style>

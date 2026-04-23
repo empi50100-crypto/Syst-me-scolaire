@@ -11,11 +11,18 @@
 
 1. [Connexion et Premiers Pas](#1-connexion-et-premiers-pas)
 2. [Configuration de l'Année Scolaire](#2-configuration-de-lannée-scolaire)
+   - [2.1 Interface de Configuration](#21-interface-de-configuration)
+   - [2.2 Créer une année scolaire](#22-creer-une-année-scolaire)
+   - [2.3 Créer les niveaux](#23-creer-les-niveaux)
+   - [2.4 Créer les cycles](#24-creer-les-cycles)
+   - [2.5 Créer les périodes](#25-creer-les-périodes)
 3. [ Gestion des Utilisateurs](#3-gestion-des-utilisateurs)
 4. [Organisation Académique](#4-organisation-académique)
 5. [Gestion des Élèves](#5-gestion-des-élèves)
 6. [Suivi des Présences](#6-suivi-des-présences)
 7. [Évaluations et Notes](#7-évaluations-et-notes)
+   - [7.5 Clôturer l'année scolaire (Professeur Principal)](#75-clôturer-lannée-scolaire-professeur-principal)
+   - [7.6 Clôture annuelle globale (Direction)](#76-clôture-annuelle-globale-direction)
 8. [Finances et Comptabilité](#8-finances-et-comptabilité)
 9. [Ressources Humaines](#9-ressources-humaines)
 10. [Rapports et Bulletins](#10-rapports-et-bulletins)
@@ -74,46 +81,79 @@
 
 ## 2. CONFIGURATION DE L'ANNÉE SCOLAIRE
 
-### 2.1 Créer une année scolaire
+### 2.1 Interface de Configuration
+**Pourquoi** : Toutes les configurations se font depuis une interface unique accesible à la Direction.
+
+**Cheminement** : **Configuration** → **Paramètres**
+
+**Pages disponibles** :
+- **Onglet Années scolaires** : Créer et gérer les années scolaires
+- **Onglet Niveaux** : Définir les niveaux (6ème, 5ème, etc.)
+- **Onglet Cycles** : Créer les cycles (trimestriel/semestriel)
+- **Onglet Périodes** : Créer les périodes d'évaluation
+
+### 2.2 Créer une année scolaire
 **Pourquoi** : Sans année scolaire active, aucune inscription ni opération n'est possible.
 
-**Cheminement** : **Core** → **Années scolaires** → **[Ajouter]**
+**Cheminement** : **Configuration** → Onglet **Années scolaires** → **[Nouvelle année]**
 
 **Étapes** :
 1. Dans le champ **Libellé**, saisir le nom (ex: `2025-2026`)
 2. Dans **Date de début**, sélectionner le 1er septembre de l'année
 3. Dans **Date de fin**, sélectionner le 31 juillet de l'année suivante
-4. **Cocher la case "Est active"** pour rendre cette année utilisable
+4. **Type de cycle actif** : Choisir "Trimestriel" ou "Semestriel"
 5. Cliquer sur **[Enregistrer]**
 
-**Vérifier** : L'année apparaît dans la liste avec un indicateur "Active"
+**Important** : Pour activer cette année, cliquer sur Modifier et cocher "Année active".
 
-### 2.2 Créer des cycles scolaires
-**Pourquoi** : Les cycles organize les niveaux pédagogiques (Maternelle, Primaire, Collège, etc.)
+### 2.3 Créer les niveaux
+**Pourquoi** : Les niveaux définissent les classes (Maternelle, 6ème, 5ème, etc.)
 
-**Cheminement** : **Core** → **Cycles** → **[Ajouter]**
-
-**Étapes** :
-1. Dans **Nom**, saisir le nom du cycle (ex: `Primaire`)
-2. Dans **Code**, saisir un code court (ex: `primaire`)
-3. Cliquer sur **[Enregistrer]**
-
-**Exemples de cycles à créer** :
-- Maternelle, Primaire, Collège, Lycée
-
-### 2.3 Créer des niveaux scolaires
-**Pourquoi** : Les niveaux définissent les classes (6ème, 5ème, etc.)
-
-**Cheminement** : **Core** → **Niveaux scolaires** → **[Ajouter]**
+**Cheminement** : **Configuration** → Onglet **Niveaux** → **[Nouveau niveau]**
 
 **Étapes** :
-1. Dans **Nom**, saisir le nom (ex: `6ème`)
-2. Dans **Ordre**, saisir un numéro (1 pour le plus bas, 4 pour 3ème)
-3. Dans **Cycle**, sélectionner le cycle correspondant
+1. Dans **Niveau**, sélectionner dans la liste (ex: `6e` pour Sixième)
+2. Dans **Libellé**, le nom s'affiche automatiquement (modifiable)
+3. Dans **Ordre**, saisir un numéro (1 pour Maternelle 1, 10 pour Terminale)
 4. Cliquer sur **[Enregistrer]**
 
-### 2.4 Créer des périodes d'évaluation
-**Pourquoi** : Pour définir les périodes de notation (trimestres/semestres)
+**Ordre recommandé** :
+- Maternelle 1 = 1, Maternelle 2 = 2, Maternelle 3 = 3
+- CP = 4, CE1 = 5, CE2 = 6, CM1 = 7, CM2 = 8
+- 6ème = 9, 5ème = 10, 4ème = 11, 3ème = 12
+- 2nde = 13, 1re = 14, Tle = 15
+
+### 2.4 Créer les cycles
+**Pourquoi** : Les cycles déterminent la Structure de l'année (Trimestres ou Semestres)
+
+**Cheminement** : **Configuration** → Onglet **Cycles** → **[Nouveau cycle]**
+
+**Prérequis** : Une année scolaire active doit exister.
+
+**Étapes** :
+1. Dans **Type de cycle**, choisir "Trimestriel" ou "Semestriel"
+2. Dans **Numéro**, saisir 1, 2 ou 3
+3. Dans **Date de début** et **Date de fin** du cycle
+4. Cliquer sur **[Enregistrer]**
+
+**Note** : Créer Trimestre 1, 2 et 3 (ou Semestre 1 et 2)
+
+### 2.5 Créer les périodes d'évaluation
+**Pourquoi** : Les périodes définissent quand les notes sont saisies et les bulletins générés.
+
+**Cheminement** : **Configuration** → Onglet **Périodes** → **[Nouvelle période]**
+
+**Prérequis** : Une année scolaire active doit exister.
+
+**Étapes** :
+1. Dans **Type de période**, choisir "Trimestre" ou "Semestre"
+2. Dans **Numéro**, saisir 1, 2 ou 3
+3. Dans **Date de début** et **Date de fin** de la période
+4. Cliquer sur **[Enregistrer]**
+
+---
+
+## 3. GESTION DES UTILISATEURS
 
 **Cheminement** : **Core** → **Périodes d'évaluation** → **[Ajouter]**
 
@@ -405,6 +445,48 @@ Onglet Informations familiales :
 4. Confirmer la clôture
 
 **Attention** : Après clôture, les notes ne peuvent plus être modifiées.
+
+### 7.5 Clôturer l'année scolaire (Professeur Principal)
+**Pourquoi** : Pour calculer les moyennes générales, attribuer les mentions et définir les décisions (Promu/Redouble) pour votre classe.
+
+**Cheminement** : **Scolarité** → **Clôture Année** 
+
+**Conditions préalables** :
+- Avoir saisi toutes les notes
+- Avoir clôturé toutes les périodes (trimestres/semestres)
+- Être professeur principal de la classe
+
+**Étapes** :
+1. Accéder à **Clôture Année**
+2. Sélectionner votre classe
+3. Cliquer sur **[Clôturer l'année]**
+4. Confirmer la clôture
+
+**Résultat** :
+- Les moyennes générales sont calculées automatiquement
+- Les mentions sont attribuées (Excellent, Très Bien, Bien, Assez Bien, Passable, Insuffisant)
+- Les décisions sont attribuées :
+  - **Promu** : moyenne ≥ 10/20
+  - **Redouble** : moyenne < 10/20
+
+### 7.6 Clôture annuelle globale (Direction)
+**Pourquoi** : Pour réinscrire automatiquement les élèves promus et fermer l'année scolaire.
+
+**Cheminement** : **Scolarité** → **Clôture Globale**
+
+**Conditions préalables** :
+- Toutes les classes doivent avoir été clôturées par les professeurs principaux
+
+**Étapes** :
+1. Accéder à **Clôture Globale**
+2. Vérifier que toutes les classes sont clôturées (badge vert)
+3. Choisir une action :
+   - **[Réinscrire les promus]** : Crée les inscriptions pour l'année suivante
+   - **[Fermer l'année scolaire]** : Déactive l'année + réinscrit les promus
+
+**Résultat** :
+- Les élèves promus sont réinscrits automatiquement dans la classe supérieure
+- L'année scolaire est fermée (est_active = False)
 
 ---
 
@@ -720,8 +802,8 @@ En cas de problème non résolu, contacter l'administrateur système.
 
 ---
 
-*Dernière mise à jour : 19 Avril 2026*
-*Version : 2.1 - SyGeS-AM*
+*Dernière mise à jour : 22 Avril 2026*
+*Version : 2.3 - SyGeS-AM*
 
 ## Documents associés
 

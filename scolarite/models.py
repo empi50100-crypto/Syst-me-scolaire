@@ -268,3 +268,21 @@ class ConduiteEleve(models.Model):
     def __str__(self):
         return f"{self.inscription.eleve}: {self.note_finale}/20"
 
+
+class ClotureAnneeScolaire(models.Model):
+    """Clôture de l'année scolaire par le professeur principal"""
+    classe = models.ForeignKey('enseignement.Classe', on_delete=models.CASCADE, related_name='clotures_annee')
+    annee_scolaire = models.ForeignKey(AnneeScolaire, on_delete=models.CASCADE, related_name='clotures_annee')
+    date_cloture = models.DateTimeField(auto_now_add=True)
+    cloture_par = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
+    observations = models.TextField(blank=True)
+    est_validee = models.BooleanField(default=False, verbose_name="Clôture validée")
+    
+    class Meta:
+        verbose_name = 'Clôture Année Scolaire'
+        verbose_name_plural = 'Clôtures Année Scolaire'
+        unique_together = ['classe', 'annee_scolaire']
+    
+    def __str__(self):
+        return f"{self.classe.nom} - {self.annee_scolaire} cloturée"
+

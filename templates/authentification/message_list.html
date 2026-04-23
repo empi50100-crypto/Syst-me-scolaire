@@ -365,6 +365,105 @@
     background: #c1c1c1;
     border-radius: 2px;
 }
+
+/* ===== DARK MODE ===== */
+body.dark-bg .chat-container {
+    background: #1e293b;
+}
+body.dark-bg .chat-sidebar {
+    background: #1e293b;
+    border-right-color: #334155;
+}
+body.dark-bg .filter-tabs {
+    background: #0f172a;
+    border-bottom-color: #334155;
+}
+body.dark-bg .filter-tab {
+    background: #1e293b;
+    border-color: #334155;
+    color: #94a3b8;
+}
+body.dark-bg .filter-tab:hover {
+    background: #334155;
+    color: #f1f5f9;
+}
+body.dark-bg .conversation-item {
+    border-bottom-color: #334155;
+}
+body.dark-bg .conversation-item:hover {
+    background: #334155;
+}
+body.dark-bg .conversation-item.active {
+    background: rgba(99,102,241,0.15);
+    border-left-color: #818cf8;
+}
+body.dark-bg .conv-name {
+    color: #f1f5f9;
+}
+body.dark-bg .conv-preview {
+    color: #94a3b8;
+}
+body.dark-bg .conv-time {
+    color: #64748b;
+}
+body.dark-bg .chat-messages-panel {
+    background: #0f172a;
+}
+body.dark-bg .chat-messages-area {
+    background: #0f172a;
+}
+body.dark-bg .chat-message.received .message-bubble {
+    background: #334155;
+    color: #f1f5f9;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+body.dark-bg .chat-input-area {
+    background: #1e293b;
+    border-top-color: #334155;
+}
+body.dark-bg .chat-input {
+    background: #0f172a;
+    border-color: #334155;
+    color: #f1f5f9;
+}
+body.dark-bg .chat-input::placeholder {
+    color: #64748b;
+}
+body.dark-bg .chat-input:focus {
+    border-color: #818cf8;
+    background: #0f172a;
+    color: #f1f5f9;
+}
+body.dark-bg .empty-state {
+    background: #0f172a;
+    color: #94a3b8;
+}
+body.dark-bg .empty-state h5 {
+    color: #f1f5f9;
+}
+body.dark-bg .empty-state i {
+    color: #334155;
+}
+body.dark-bg .search-box {
+    border-bottom-color: #334155;
+}
+body.dark-bg .search-box input {
+    background: #0f172a;
+    border-color: #334155;
+    color: #f1f5f9;
+}
+body.dark-bg .search-box input::placeholder {
+    color: #64748b;
+}
+body.dark-bg .typing-indicator {
+    color: #94a3b8;
+}
+body.dark-bg .chat-messages-area::-webkit-scrollbar-thumb {
+    background: #475569;
+}
+body.dark-bg .conversations-list::-webkit-scrollbar-thumb {
+    background: #475569;
+}
 </style>
 {% endblock %}
 

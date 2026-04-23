@@ -254,8 +254,22 @@ def gestion_salaires(request):
         messages.error(request, "Vous n'avez pas l'autorisation.")
         return redirect('dashboard')
     
-    salaires = Salaire.objects.select_related('employe__utilisateur').all().order_by('-annee', '-mois')
-    return render(request, 'finances/salaire_list.html', {'salaires': salaires})
+    # Récupérer toutes les années disponibles
+    years = Salaire.objects.values_list('annee', flat=True).distinct().order_by('-annee')
+    if not years:
+        years = [date.today().year]
+    
+    # Filtrer par année si spécifiée
+    annee_filter = request.GET.get('annee', '')
+    salaires = Salaire.objects.select_related('personnel').all().order_by('-annee', '-mois')
+    if annee_filter:
+        salaires = salaires.filter(annee=annee_filter)
+    
+    return render(request, 'finances/salaire_list.html', {
+        'salaires': salaires,
+        'years': years,
+        'annee_filter': annee_filter
+    })
 
 
 @login_required
