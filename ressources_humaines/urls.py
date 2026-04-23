@@ -6,6 +6,7 @@ app_name = 'ressources_humaines'
 urlpatterns = [
     path('', views.liste_personnel, name='liste_personnel'),
     path('creer/', views.creer_personnel, name='creer_personnel'),
+    path('api/utilisateur/<int:user_id>/', views.get_utilisateur_info, name='get_utilisateur_info'),
     path('<int:pk>/modifier/', views.modifier_personnel, name='modifier_personnel'),
     path('<int:pk>/supprimer/', views.supprimer_personnel, name='supprimer_personnel'),
     path('salaires/', views.liste_salaires, name='liste_salaires'),

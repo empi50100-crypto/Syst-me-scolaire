@@ -30,14 +30,16 @@ class Salle(models.Model):
 
 class Matiere(models.Model):
     nom = models.CharField(max_length=100)
-    
+    coefficient = models.PositiveIntegerField(default=1, verbose_name="Coefficient")
+
     class Meta:
         verbose_name = 'Matière'
         verbose_name_plural = 'Matières'
         ordering = ['nom']
-    
+        unique_together = ['nom', 'coefficient']
+
     def __str__(self):
-        return self.nom
+        return f"{self.nom} (Coef {self.coefficient})"
 
 
 class ProfilProfesseur(models.Model):

@@ -3,73 +3,232 @@
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1><i class="bi bi-person-plus"></i> {% if personnel %}Modifier{% else %}Nouveau{% endif %} membre du personnel</h1>
-    <a href="{% url 'ressources_humaines:liste_personnel' %}" class="btn btn-secondary">
-        <i class="bi bi-arrow-left"></i> Retour
+    <h1><i class="bi bi-person-plus text-primary"></i> {% if personnel %}Modifier{% else %}Nouveau{% endif %} membre du personnel</h1>
+    <a href="{% url 'ressources_humaines:liste_personnel' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Retour à la liste
     </a>
 </div>
 
-<div class="card">
+<div class="card shadow-sm">
+    <div class="card-header dash-header">
+        <i class="bi bi-info-circle"></i> Informations du membre
+    </div>
     <div class="card-body">
+        {% if form.errors %}
+        <div class="alert alert-danger">
+            <i class="bi bi-exclamation-triangle-fill"></i> <strong>Veuillez corriger les erreurs ci-dessous :</strong>
+            <ul class="mb-0 mt-2">
+                {% for field in form %}
+                    {% for error in field.errors %}
+                        <li>{{ field.label }} : {{ error }}</li>
+                    {% endfor %}
+                {% endfor %}
+                {% for error in form.non_field_errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
         <form method="post" class="row g-3">
             {% csrf_token %}
-            
+
+            <!-- Section : Informations principales -->
+            <div class="col-12">
+                <h6 class="section-title"><i class="bi bi-person-badge"></i> Informations principales</h6>
+            </div>
             <div class="col-md-6">
-                <label for="id_utilisateur" class="form-label">Utilisateur *</label>
+                <label class="form-label fw-semibold">Utilisateur <span class="text-danger">*</span></label>
                 {{ form.utilisateur }}
-                {% if form.utilisateur.errors %}
-                <div class="text-danger">{{ form.utilisateur.errors }}</div>
-                {% endif %}
+                {% if form.utilisateur.errors %}<div class="invalid-feedback d-block">{{ form.utilisateur.errors }}</div>{% endif %}
             </div>
-            
             <div class="col-md-6">
-                <label for="id_fonction" class="form-label">Fonction *</label>
+                <label class="form-label fw-semibold">Fonction <span class="text-danger">*</span></label>
                 {{ form.fonction }}
-                {% if form.fonction.errors %}
-                <div class="text-danger">{{ form.fonction.errors }}</div>
-                {% endif %}
+                {% if form.fonction.errors %}<div class="invalid-feedback d-block">{{ form.fonction.errors }}</div>{% endif %}
             </div>
-            
+
+            <div class="col-12"><hr class="my-2"></div>
+
+            <!-- Section : Informations complémentaires -->
+            <div class="col-12">
+                <h6 class="section-title"><i class="bi bi-clipboard-data"></i> Informations complémentaires</h6>
+            </div>
             <div class="col-md-6">
-                <label for="id_poste" class="form-label">Poste</label>
+                <label class="form-label fw-semibold">Poste occupé</label>
                 {{ form.poste }}
+                {% if form.poste.errors %}<div class="invalid-feedback d-block">{{ form.poste.errors }}</div>{% endif %}
             </div>
-            
             <div class="col-md-6">
-                <label for="id_telephone" class="form-label">Téléphone</label>
+                <label class="form-label fw-semibold">Téléphone</label>
                 {{ form.telephone }}
+                {% if form.telephone.errors %}<div class="invalid-feedback d-block">{{ form.telephone.errors }}</div>{% endif %}
             </div>
-            
             <div class="col-md-6">
-                <label for="id_date_embauche" class="form-label">Date d'embauche</label>
+                <label class="form-label fw-semibold">Date d'embauche</label>
                 {{ form.date_embauche }}
+                {% if form.date_embauche.errors %}<div class="invalid-feedback d-block">{{ form.date_embauche.errors }}</div>{% endif %}
             </div>
-            
-            <div class="col-md-6">
-                <label for="id_est_actif" class="form-label">Statut</label>
-                <div class="form-check">
+            <div class="col-md-6 d-flex align-items-center">
+                <div class="form-check form-switch mt-3">
                     {{ form.est_actif }}
-                    <label class="form-check-label" for="id_est_actif">Actif</label>
+                    <label class="form-check-label fw-semibold ms-2">Employé actif</label>
                 </div>
             </div>
-            
+
+            <div class="col-12"><hr class="my-2"></div>
+
+            <!-- Section : Informations de contact -->
             <div class="col-12">
-                <label for="id_adresse" class="form-label">Adresse</label>
+                <h6 class="section-title"><i class="bi bi-geo-alt"></i> Informations de contact</h6>
+            </div>
+            <div class="col-12">
+                <label class="form-label fw-semibold">Adresse complète</label>
                 {{ form.adresse }}
+                {% if form.adresse.errors %}<div class="invalid-feedback d-block">{{ form.adresse.errors }}</div>{% endif %}
             </div>
-            
             <div class="col-12">
-                <label for="id_observations" class="form-label">Observations</label>
+                <label class="form-label fw-semibold">Observations / Notes</label>
                 {{ form.observations }}
+                {% if form.observations.errors %}<div class="invalid-feedback d-block">{{ form.observations.errors }}</div>{% endif %}
             </div>
-            
-            <div class="col-12">
+
+            <!-- Actions -->
+            <div class="col-12 d-flex gap-2 mt-4">
                 <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-save"></i> Enregistrer
+                    <i class="bi bi-check-lg"></i> {% if personnel %}Enregistrer les modifications{% else %}Créer le membre{% endif %}
                 </button>
-                <a href="{% url 'ressources_humaines:liste_personnel' %}" class="btn btn-secondary">Annuler</a>
+                <a href="{% url 'ressources_humaines:liste_personnel' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-lg"></i> Annuler
+                </a>
             </div>
         </form>
     </div>
 </div>
+
+<script>
+// Remplissage automatique des champs quand on sélectionne un utilisateur
+document.addEventListener('DOMContentLoaded', function() {
+    const utilisateurSelect = document.getElementById('id_utilisateur');
+    
+    if (utilisateurSelect) {
+        utilisateurSelect.addEventListener('change', function() {
+            const userId = this.value;
+            if (userId) {
+                // Récupérer les informations de l'utilisateur via l'API
+                fetch(`/ressources-humaines/api/utilisateur/${userId}/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.error) {
+                            console.error('Erreur:', data.error);
+                            return;
+                        }
+                        
+                        // Remplir la fonction
+                        const fonctionSelect = document.getElementById('id_fonction');
+                        if (fonctionSelect && data.fonction) {
+                            fonctionSelect.value = data.fonction;
+                            // Animation de mise en évidence
+                            fonctionSelect.style.background = 'rgba(37, 99, 235, 0.1)';
+                            setTimeout(() => {
+                                fonctionSelect.style.background = '';
+                            }, 500);
+                        }
+                        
+                        // Remplir le poste
+                        const posteSelect = document.getElementById('id_poste');
+                        if (posteSelect && data.poste_id) {
+                            posteSelect.value = data.poste_id;
+                            posteSelect.style.background = 'rgba(37, 99, 235, 0.1)';
+                            setTimeout(() => {
+                                posteSelect.style.background = '';
+                            }, 500);
+                        }
+                        
+                        // Remplir le téléphone
+                        const telephoneInput = document.getElementById('id_telephone');
+                        if (telephoneInput && data.telephone) {
+                            telephoneInput.value = data.telephone;
+                            telephoneInput.style.background = 'rgba(37, 99, 235, 0.1)';
+                            setTimeout(() => {
+                                telephoneInput.style.background = '';
+                            }, 500);
+                        }
+                        
+                        // Remplir l'adresse
+                        const adresseInput = document.getElementById('id_adresse');
+                        if (adresseInput && data.adresse) {
+                            adresseInput.value = data.adresse;
+                            adresseInput.style.background = 'rgba(37, 99, 235, 0.1)';
+                            setTimeout(() => {
+                                adresseInput.style.background = '';
+                            }, 500);
+                        }
+                        
+                        // Remplir la date d'embauche avec la date de création du compte
+                        const dateEmbaucheInput = document.getElementById('id_date_embauche');
+                        if (dateEmbaucheInput && data.date_joined) {
+                            dateEmbaucheInput.value = data.date_joined;
+                            dateEmbaucheInput.style.background = 'rgba(37, 99, 235, 0.1)';
+                            setTimeout(() => {
+                                dateEmbaucheInput.style.background = '';
+                            }, 500);
+                        }
+                        
+                        // Afficher une notification visuelle
+                        showAutoFillNotification();
+                    })
+                    .catch(error => {
+                        console.error('Erreur lors de la récupération des données:', error);
+                    });
+            }
+        });
+    }
+    
+    // Fonction pour afficher une notification de remplissage automatique
+    function showAutoFillNotification() {
+        const notification = document.createElement('div');
+        notification.innerHTML = '<i class="bi bi-magic"></i> Champs remplis automatiquement depuis le profil utilisateur';
+        notification.style.cssText = `
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            background: linear-gradient(135deg, #2563eb, #06b6d4);
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-weight: 500;
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+            z-index: 9999;
+            animation: slideIn 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        `;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => {
+                notification.remove();
+            }, 300);
+        }, 3000);
+    }
+});
+
+// CSS pour les animations
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes slideOut {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+`;
+document.head.appendChild(style);
+</script>
 {% endblock %}

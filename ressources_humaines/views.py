@@ -3,8 +3,72 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Sum
+from django.http import JsonResponse
+from authentification.models import Utilisateur
 from .models import MembrePersonnel, Salaire, FichePoste, ContratEmploye
 from .forms import MembrePersonnelForm, SalaireForm, FichePosteForm, ContratEmployeForm
+
+
+@login_required
+def get_utilisateur_info(request, user_id):
+    """API pour récupérer les informations d'un utilisateur pour le remplissage automatique"""
+    if not request.user.has_module_permission('personnel_rh', 'read'):
+        return JsonResponse({'error': 'Permission refusée'}, status=403)
+    
+    try:
+        utilisateur = Utilisateur.objects.get(pk=user_id)
+        
+        # Mapping des rôles vers les fonctions
+        role_to_fonction = {
+            'direction': 'direction',
+            'secretaire': 'secretaire',
+            'comptable': 'comptable',
+            'professeur': 'professeur',
+            'surveillance': 'surveillance',
+            'agent_securite': 'agent_securite',
+            'responsable_stock': 'responsable_stock',
+            'chauffeur': 'chauffeur',
+            'superadmin': 'direction',
+        }
+        
+        # Mapping des fonctions vers les titres de poste
+        fonction_to_poste_titre = {
+            'direction': 'Directeur/Directrice',
+            'secretaire': 'Secrétaire',
+            'comptable': 'Comptable',
+            'professeur': 'Enseignant',
+            'surveillance': 'Surveillant',
+            'agent_securite': 'Agent de Sécurité',
+            'responsable_stock': 'Responsable Stock',
+            'chauffeur': 'Chauffeur',
+            'menage': 'Agent d\'entretien / Ménage',
+            'medecin': 'Médecin / Infirmier',
+            'autre': 'Autre poste',
+        }
+        
+        fonction = role_to_fonction.get(utilisateur.role, 'autre')
+        poste_titre = fonction_to_poste_titre.get(fonction, 'Autre poste')
+        
+        # Chercher le poste correspondant dans la base
+        from .models import FichePoste
+        poste = FichePoste.objects.filter(titre=poste_titre, est_active=True).first()
+        
+        data = {
+            'id': utilisateur.id,
+            'nom': utilisateur.get_full_name() or utilisateur.username,
+            'role': utilisateur.role,
+            'fonction': fonction,
+            'telephone': utilisateur.telephone or '',
+            'adresse': utilisateur.adresse or '',
+            'date_joined': utilisateur.date_joined.strftime('%Y-%m-%d') if utilisateur.date_joined else None,
+            'email': utilisateur.email or '',
+            'poste_id': poste.id if poste else None,
+            'poste_nom': poste_titre,
+        }
+        
+        return JsonResponse(data)
+    except Utilisateur.DoesNotExist:
+        return JsonResponse({'error': 'Utilisateur non trouvé'}, status=404)
 
 
 @login_required

@@ -10,7 +10,7 @@ class Migration(migrations.Migration):
     dependencies = [
         ('scolarite', '0001_initial'),
         ('core', '0001_initial'),
-        ('enschignament', '0001_initial'),
+        ('enseignement', '0001_initial'),
     ]
 
     operations = [

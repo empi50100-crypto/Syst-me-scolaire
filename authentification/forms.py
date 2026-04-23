@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm as DjangoUserCreationForm
 from .models import Utilisateur, PermissionPersonnalisee, Module
+from enseignement.models import Matiere
 
 
 class LoginForm(AuthenticationForm):
@@ -33,16 +34,34 @@ class UserRegistrationForm(DjangoUserCreationForm):
         choices=[('', 'Sélectionner votre service')] + list(Utilisateur.Role.choices),
         widget=forms.Select(attrs={'class': 'form-select'})
     )
-    
+    adresse = forms.CharField(
+        label='Adresse',
+        required=False,
+        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Votre adresse complète'})
+    )
+    matiere = forms.ModelChoiceField(
+        label='Matière enseignée',
+        queryset=Matiere.objects.all().order_by('nom'),
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        empty_label='-- Sélectionner une matière --'
+    )
+
     class Meta:
         model = Utilisateur
-        fields = ('username', 'email', 'first_name', 'last_name', 'telephone', 'role')
+        fields = ('username', 'email', 'first_name', 'last_name', 'telephone', 'adresse', 'role', 'matiere')
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['username'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Nom d\'utilisateur'})
         self.fields['password1'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Mot de passe'})
         self.fields['password2'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Confirmer le mot de passe'})
+
+        # N'afficher qu'un seul nom de matière (sans doublons de coefficients)
+        from django.db.models import Min
+        ids_uniques = Matiere.objects.values('nom').annotate(id_min=Min('id')).values_list('id_min', flat=True)
+        self.fields['matiere'].queryset = Matiere.objects.filter(id__in=ids_uniques).order_by('nom')
+        self.fields['matiere'].label_from_instance = lambda obj: obj.nom
     
     def clean_role(self):
         role = self.cleaned_data.get('role')
@@ -62,6 +81,10 @@ class UserRegistrationForm(DjangoUserCreationForm):
         user = super().save(commit=False)
         user.est_approuve = False
         user.is_active = True
+        # Sauvegarder les champs personnalisés
+        user.telephone = self.cleaned_data.get('telephone', '')
+        user.adresse = self.cleaned_data.get('adresse', '')
+        user.matiere = self.cleaned_data.get('matiere')
         if commit:
             user.save()
         return user
@@ -86,6 +109,26 @@ class UserCreationForm(forms.ModelForm):
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'est_approuve': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Afficher uniquement le nom de la matière (sans coefficient)
+        from django.db.models import Min
+        from enseignement.models import Matiere
+        ids_uniques = Matiere.objects.values('nom').annotate(id_min=Min('id')).values_list('id_min', flat=True)
+        queryset = Matiere.objects.filter(id__in=ids_uniques).order_by('nom')
+        
+        # Si l'utilisateur a déjà une matière assignée qui n'est pas dans le queryset filtré,
+        # on l'ajoute pour éviter les problèmes d'affichage
+        if self.instance and self.instance.pk and self.instance.matiere_id:
+            if not queryset.filter(id=self.instance.matiere_id).exists():
+                matiere_actuelle = Matiere.objects.filter(id=self.instance.matiere_id).first()
+                if matiere_actuelle:
+                    queryset = list(queryset) + [matiere_actuelle]
+        
+        self.fields['matiere'].queryset = queryset
+        self.fields['matiere'].label_from_instance = lambda obj: obj.nom
+        self.fields['matiere'].empty_label = "-- Sélectionner une matière --"
     
     def clean_password2(self):
         cd = self.cleaned_data
@@ -129,6 +172,26 @@ class UserChangeForm(forms.ModelForm):
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'est_approuve': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Afficher uniquement le nom de la matière (sans coefficient)
+        from django.db.models import Min
+        from enseignement.models import Matiere
+        ids_uniques = Matiere.objects.values('nom').annotate(id_min=Min('id')).values_list('id_min', flat=True)
+        queryset = Matiere.objects.filter(id__in=ids_uniques).order_by('nom')
+        
+        # Si l'utilisateur a déjà une matière assignée qui n'est pas dans le queryset filtré,
+        # on l'ajoute pour éviter les problèmes d'affichage
+        if self.instance and self.instance.pk and self.instance.matiere_id:
+            if not queryset.filter(id=self.instance.matiere_id).exists():
+                matiere_actuelle = Matiere.objects.filter(id=self.instance.matiere_id).first()
+                if matiere_actuelle:
+                    queryset = list(queryset) + [matiere_actuelle]
+        
+        self.fields['matiere'].queryset = queryset
+        self.fields['matiere'].label_from_instance = lambda obj: obj.nom
+        self.fields['matiere'].empty_label = "-- Sélectionner une matière --"
 
 
 class PermissionPersonnaliseeForm(forms.ModelForm):

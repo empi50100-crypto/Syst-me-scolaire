@@ -46,9 +46,10 @@ class ClasseForm(forms.ModelForm):
 class MatiereForm(forms.ModelForm):
     class Meta:
         model = Matiere
-        fields = ['nom']
+        fields = ['nom', 'coefficient']
         widgets = {
             'nom': forms.TextInput(attrs={'class': 'form-control'}),
+            'coefficient': forms.NumberInput(attrs={'class': 'form-control', 'min': 1}),
         }
 
 

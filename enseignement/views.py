@@ -75,15 +75,19 @@ def matiere_list_view(request):
         messages.error(request, "Vous n'avez pas l'autorisation de voir les matières.")
         return redirect('dashboard')
     
-    matieres = Matiere.objects.all().order_by('nom')
+    matieres = Matiere.objects.prefetch_related('classes').all().order_by('nom')
     
     search = request.GET.get('search', '')
     if search:
         matieres = matieres.filter(nom__icontains=search)
     
+    # Liste unique des matières existantes pour le datalist de recherche
+    matieres_existantes = Matiere.objects.values_list('nom', flat=True).distinct().order_by('nom')
+    
     return render(request, 'enseignement/matiere_list.html', {
         'matieres': matieres,
         'search': search,
+        'matieres_existantes': matieres_existantes,
     })
 
 
@@ -175,7 +179,8 @@ def matiere_create_view(request):
             return redirect('enseignement:matiere_list')
     else:
         form = MatiereForm()
-    return render(request, 'enseignement/matiere_form.html', {'form': form})
+    matieres_existantes = Matiere.objects.values_list('nom', flat=True).distinct().order_by('nom')
+    return render(request, 'enseignement/matiere_form.html', {'form': form, 'matieres_existantes': matieres_existantes, 'action': 'Ajouter'})
 
 
 @login_required
@@ -193,7 +198,8 @@ def matiere_edit_view(request, pk):
             return redirect('enseignement:matiere_list')
     else:
         form = MatiereForm(instance=matiere)
-    return render(request, 'enseignement/matiere_form.html', {'form': form})
+    matieres_existantes = Matiere.objects.values_list('nom', flat=True).distinct().order_by('nom')
+    return render(request, 'enseignement/matiere_form.html', {'form': form, 'matieres_existantes': matieres_existantes, 'action': 'Modifier'})
 
 
 @login_required

@@ -705,9 +705,19 @@
                     {% if form.telephone.errors %}<div class="invalid-feedback">{{ form.telephone.errors.0 }}</div>{% endif %}
                 </div>
                 <div class="col-12">
+                    <label class="form-label">Adresse</label>
+                    {{ form.adresse }}
+                    {% if form.adresse.errors %}<div class="invalid-feedback">{{ form.adresse.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-12">
                     <label class="form-label">Service / Fonction</label>
                     {{ form.role }}
                     {% if form.role.errors %}<div class="invalid-feedback">{{ form.role.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-12" id="matiere-field" style="display:none;">
+                    <label class="form-label">Matière enseignée</label>
+                    {{ form.matiere }}
+                    {% if form.matiere.errors %}<div class="invalid-feedback">{{ form.matiere.errors.0 }}</div>{% endif %}
                 </div>
                 <div class="col-12">
                     <label class="form-label">Mot de passe</label>
@@ -957,6 +967,25 @@ function buildTicker() {
         track.style.animationDuration = dur + 's';
     });
 }
+// Afficher/masquer le champ matière selon le rôle sélectionné
+const roleSelect = document.getElementById('id_role');
+const matiereField = document.getElementById('matiere-field');
+
+function toggleMatiereField() {
+    if (roleSelect && matiereField) {
+        if (roleSelect.value === 'professeur') {
+            matiereField.style.display = 'block';
+        } else {
+            matiereField.style.display = 'none';
+        }
+    }
+}
+
+if (roleSelect) {
+    roleSelect.addEventListener('change', toggleMatiereField);
+    toggleMatiereField(); // État initial
+}
+
 buildTicker();
 window.addEventListener('resize', buildTicker);
 </script>

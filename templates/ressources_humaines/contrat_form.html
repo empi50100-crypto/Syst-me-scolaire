@@ -1,25 +1,130 @@
 {% extends 'base.html' %}
 {% block title %}{% if contrat %}Modifier{% else %}Créer{% endif %} un contrat{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-    <div class="card">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0"><i class="bi bi-file-text"></i> {% if contrat %}Modifier{% else %}Créer{% endif %} un contrat</h5>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-file-text text-primary"></i> {% if contrat %}Modifier{% else %}Créer{% endif %} un contrat</h1>
+    <a href="{% url 'ressources_humaines:liste_contrats' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Retour à la liste
+    </a>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-header dash-header">
+        <i class="bi bi-file-earmark-text"></i> Détails du contrat
+    </div>
+    <div class="card-body">
+        {% if form.errors %}
+        <div class="alert alert-danger">
+            <i class="bi bi-exclamation-triangle-fill"></i> <strong>Veuillez corriger les erreurs ci-dessous :</strong>
+            <ul class="mb-0 mt-2">
+                {% for field in form %}
+                    {% for error in field.errors %}
+                        <li>{{ field.label }} : {{ error }}</li>
+                    {% endfor %}
+                {% endfor %}
+                {% for error in form.non_field_errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
         </div>
-        <div class="card-body">
-            <form method="post">
-                {% csrf_token %}
-                {{ form.as_p }}
-                <div class="d-flex gap-2 mt-3">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-check-lg"></i> Enregistrer
-                    </button>
-                    <a href="{% url 'ressources_humaines:liste_contrats' %}" class="btn btn-secondary">
-                        <i class="bi bi-x-circle"></i> Annuler
-                    </a>
+        {% endif %}
+
+        <form method="post" class="row g-3">
+            {% csrf_token %}
+
+            <!-- Section : Parties contractantes -->
+            <div class="col-12">
+                <h6 class="section-title"><i class="bi bi-people"></i> Parties contractantes</h6>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">Employé <span class="text-danger">*</span></label>
+                {{ form.employe }}
+                {% if form.employe.errors %}<div class="invalid-feedback d-block">{{ form.employe.errors }}</div>{% endif %}
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">Poste <span class="text-danger">*</span></label>
+                {{ form.poste }}
+                {% if form.poste.errors %}<div class="invalid-feedback d-block">{{ form.poste.errors }}</div>{% endif %}
+            </div>
+
+            <div class="col-12"><hr class="my-2"></div>
+
+            <!-- Section : Caractéristiques du contrat -->
+            <div class="col-12">
+                <h6 class="section-title"><i class="bi bi-clipboard-check"></i> Caractéristiques du contrat</h6>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">Type de contrat <span class="text-danger">*</span></label>
+                {{ form.type_contrat }}
+                {% if form.type_contrat.errors %}<div class="invalid-feedback d-block">{{ form.type_contrat.errors }}</div>{% endif %}
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">Statut <span class="text-danger">*</span></label>
+                {{ form.statut }}
+                {% if form.statut.errors %}<div class="invalid-feedback d-block">{{ form.statut.errors }}</div>{% endif %}
+            </div>
+
+            <div class="col-12"><hr class="my-2"></div>
+
+            <!-- Section : Dates -->
+            <div class="col-12">
+                <h6 class="section-title"><i class="bi bi-calendar-range"></i> Période du contrat</h6>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">Date de début <span class="text-danger">*</span></label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-calendar-event"></i></span>
+                    {{ form.date_debut }}
                 </div>
-            </form>
-        </div>
+                {% if form.date_debut.errors %}<div class="invalid-feedback d-block">{{ form.date_debut.errors }}</div>{% endif %}
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">Date de fin</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-calendar-x"></i></span>
+                    {{ form.date_fin }}
+                </div>
+                {% if form.date_fin.errors %}<div class="invalid-feedback d-block">{{ form.date_fin.errors }}</div>{% endif %}
+            </div>
+
+            <div class="col-12"><hr class="my-2"></div>
+
+            <!-- Section : Rémunération -->
+            <div class="col-12">
+                <h6 class="section-title"><i class="bi bi-cash-stack"></i> Rémunération</h6>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">Salaire brut <span class="text-danger">*</span></label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-cash"></i></span>
+                    {{ form.salaire_brut }}
+                </div>
+                {% if form.salaire_brut.errors %}<div class="invalid-feedback d-block">{{ form.salaire_brut.errors }}</div>{% endif %}
+            </div>
+
+            <div class="col-12"><hr class="my-2"></div>
+
+            <!-- Section : Conditions -->
+            <div class="col-12">
+                <h6 class="section-title"><i class="bi bi-pencil-square"></i> Conditions particulières</h6>
+            </div>
+            <div class="col-12">
+                <label class="form-label fw-semibold">Conditions</label>
+                {{ form.conditions }}
+                {% if form.conditions.errors %}<div class="invalid-feedback d-block">{{ form.conditions.errors }}</div>{% endif %}
+            </div>
+
+            <!-- Actions -->
+            <div class="col-12 d-flex gap-2 mt-4">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-lg"></i> Enregistrer
+                </button>
+                <a href="{% url 'ressources_humaines:liste_contrats' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-lg"></i> Annuler
+                </a>
+            </div>
+        </form>
     </div>
 </div>
 {% endblock %}

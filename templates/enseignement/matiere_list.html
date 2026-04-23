@@ -9,8 +9,42 @@
     </a>
 </div>
 
+<!-- Filtres de recherche -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-8">
+                <label class="form-label fw-semibold text-muted small mb-1">Recherche</label>
+                <input type="text" name="search" id="search-matiere" class="form-control form-control-lg" list="matieres-existantes-list" placeholder="Cliquez pour voir les matières existantes ou tapez..." value="{{ search }}" autocomplete="off">
+                <datalist id="matieres-existantes-list">
+                    {% for m in matieres_existantes %}
+                    <option value="{{ m }}">
+                    {% endfor %}
+                </datalist>
+            </div>
+            <div class="col-md-4">
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-fill py-2">
+                        <i class="bi bi-funnel-fill me-1"></i> Filtrer
+                    </button>
+                    <a href="{% url 'enseignement:matiere_list' %}" class="btn btn-outline-secondary py-2">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i> Réinitialiser
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
 <div class="card">
     <div class="card-body">
+        {% if search %}
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> Résultats de la recherche pour : <strong>{{ search }}</strong>
+            <span class="badge bg-primary ms-2">{{ matieres|length }} matière(s)</span>
+        </div>
+        {% endif %}
+
         <table class="table table-striped">
             <thead>
                 <tr>
@@ -23,8 +57,18 @@
             <tbody>
                 {% for matiere in matieres %}
                 <tr>
-                    <td>{{ matiere.nom }}</td>
-                    <td>{{ matiere.classe|default:"-" }}</td>
+                    <td><strong>{{ matiere.nom }}</strong></td>
+                    <td>
+                        {% if matiere.classes.all %}
+                            <div class="d-flex flex-wrap gap-1">
+                            {% for classe in matiere.classes.all %}
+                                <span class="badge bg-info text-dark">{{ classe.nom }}</span>
+                            {% endfor %}
+                            </div>
+                        {% else %}
+                            <span class="text-muted fst-italic">Non attribuée</span>
+                        {% endif %}
+                    </td>
                     <td>{{ matiere.coefficient }}</td>
                     <td>
                         <a href="{% url 'enseignement:matiere_edit' matiere.pk %}" class="btn btn-sm btn-outline-primary" title="Modifier">

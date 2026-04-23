@@ -3,58 +3,115 @@
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1><i class="bi bi-briefcase"></i> {% if poste %}Modifier{% else %}Nouveau{% endif %} poste</h1>
-    <a href="{% url 'ressources_humaines:liste_postes' %}" class="btn btn-secondary">
-        <i class="bi bi-arrow-left"></i> Retour
+    <h1><i class="bi bi-briefcase text-primary"></i> {% if poste %}Modifier{% else %}Nouveau{% endif %} poste</h1>
+    <a href="{% url 'ressources_humaines:liste_postes' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Retour à la liste
     </a>
 </div>
 
-<div class="card">
+<div class="card shadow-sm">
+    <div class="card-header dash-header">
+        <i class="bi bi-info-circle"></i> Définition du poste
+    </div>
     <div class="card-body">
+        {% if form.errors %}
+        <div class="alert alert-danger">
+            <i class="bi bi-exclamation-triangle-fill"></i> <strong>Veuillez corriger les erreurs ci-dessous :</strong>
+            <ul class="mb-0 mt-2">
+                {% for field in form %}
+                    {% for error in field.errors %}
+                        <li>{{ field.label }} : {{ error }}</li>
+                    {% endfor %}
+                {% endfor %}
+                {% for error in form.non_field_errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
         <form method="post" class="row g-3">
             {% csrf_token %}
-            
-            <div class="col-md-6">
-                <label class="form-label">Titre du poste *</label>
-                {{ form.titre }}
+
+            <!-- Section : Informations générales -->
+            <div class="col-12">
+                <h6 class="section-title"><i class="bi bi-file-text"></i> Informations générales</h6>
             </div>
-            
             <div class="col-md-6">
-                <label class="form-label">Type de contrat *</label>
+                <label class="form-label fw-semibold">Titre du poste <span class="text-danger">*</span></label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-type"></i></span>
+                    {{ form.titre }}
+                </div>
+                {% if form.titre.errors %}<div class="invalid-feedback d-block">{{ form.titre.errors }}</div>{% endif %}
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">Type de contrat <span class="text-danger">*</span></label>
                 {{ form.type_contrat }}
+                {% if form.type_contrat.errors %}<div class="invalid-feedback d-block">{{ form.type_contrat.errors }}</div>{% endif %}
             </div>
-            
-            <div class="col-md-6">
-                <label class="form-label">Salaire minimum</label>
-                {{ form.salaire_min }}
-            </div>
-            
-            <div class="col-md-6">
-                <label class="form-label">Salaire maximum</label>
-                {{ form.salaire_max }}
-            </div>
-            
+
+            <div class="col-12"><hr class="my-2"></div>
+
+            <!-- Section : Rémunération -->
             <div class="col-12">
-                <label class="form-label">Description</label>
+                <h6 class="section-title"><i class="bi bi-cash-stack"></i> Fourchette de rémunération</h6>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">Salaire minimum</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-arrow-down"></i></span>
+                    {{ form.salaire_min }}
+                </div>
+                {% if form.salaire_min.errors %}<div class="invalid-feedback d-block">{{ form.salaire_min.errors }}</div>{% endif %}
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">Salaire maximum</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-arrow-up"></i></span>
+                    {{ form.salaire_max }}
+                </div>
+                {% if form.salaire_max.errors %}<div class="invalid-feedback d-block">{{ form.salaire_max.errors }}</div>{% endif %}
+            </div>
+
+            <div class="col-12"><hr class="my-2"></div>
+
+            <!-- Section : Description -->
+            <div class="col-12">
+                <h6 class="section-title"><i class="bi bi-pencil-square"></i> Description et exigences</h6>
+            </div>
+            <div class="col-12">
+                <label class="form-label fw-semibold">Description</label>
                 {{ form.description }}
+                {% if form.description.errors %}<div class="invalid-feedback d-block">{{ form.description.errors }}</div>{% endif %}
             </div>
-            
             <div class="col-12">
-                <label class="form-label">Exigences</label>
+                <label class="form-label fw-semibold">Exigences</label>
                 {{ form.exigences }}
+                {% if form.exigences.errors %}<div class="invalid-feedback d-block">{{ form.exigences.errors }}</div>{% endif %}
             </div>
-            
-            <div class="col-md-6">
-                <div class="form-check">
-                    {{ form.est_actif }}
-                    <label class="form-check-label">Poste actif</label>
+
+            <div class="col-12"><hr class="my-2"></div>
+
+            <!-- Section : Statut -->
+            <div class="col-12">
+                <h6 class="section-title"><i class="bi bi-toggle-on"></i> Statut</h6>
+            </div>
+            <div class="col-md-6 d-flex align-items-center">
+                <div class="form-check form-switch">
+                    {{ form.est_active }}
+                    <label class="form-check-label fw-semibold ms-2">Poste actif</label>
                 </div>
             </div>
-            
-            <div class="col-12">
+
+            <!-- Actions -->
+            <div class="col-12 d-flex gap-2 mt-4">
                 <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-save"></i> Enregistrer
+                    <i class="bi bi-check-lg"></i> Enregistrer
                 </button>
+                <a href="{% url 'ressources_humaines:liste_postes' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-lg"></i> Annuler
+                </a>
             </div>
         </form>
     </div>

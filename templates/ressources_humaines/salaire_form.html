@@ -3,73 +3,133 @@
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1><i class="bi bi-cash-stack"></i> {% if salaire %}Modifier{% else %}Enregistrer{% endif %} salaire</h1>
-    <a href="{% url 'ressources_humaines:liste_salaires' %}" class="btn btn-secondary">
-        <i class="bi bi-arrow-left"></i> Retour
+    <h1><i class="bi bi-cash-stack text-primary"></i> {% if salaire %}Modifier{% else %}Enregistrer{% endif %} un salaire</h1>
+    <a href="{% url 'ressources_humaines:liste_salaires' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Retour à la liste
     </a>
 </div>
 
-<div class="card">
+<div class="card shadow-sm">
+    <div class="card-header dash-header">
+        <i class="bi bi-wallet2"></i> Informations de paie
+    </div>
     <div class="card-body">
+        {% if form.errors %}
+        <div class="alert alert-danger">
+            <i class="bi bi-exclamation-triangle-fill"></i> <strong>Veuillez corriger les erreurs ci-dessous :</strong>
+            <ul class="mb-0 mt-2">
+                {% for field in form %}
+                    {% for error in field.errors %}
+                        <li>{{ field.label }} : {{ error }}</li>
+                    {% endfor %}
+                {% endfor %}
+                {% for error in form.non_field_errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
         <form method="post" class="row g-3">
             {% csrf_token %}
-            
+
+            <!-- Section : Identification -->
+            <div class="col-12">
+                <h6 class="section-title"><i class="bi bi-person-badge"></i> Identification</h6>
+            </div>
             <div class="col-md-6">
-                <label class="form-label">Employé *</label>
+                <label class="form-label fw-semibold">Employé <span class="text-danger">*</span></label>
                 {{ form.employe }}
+                {% if form.employe.errors %}<div class="invalid-feedback d-block">{{ form.employe.errors }}</div>{% endif %}
             </div>
-            
             <div class="col-md-3">
-                <label class="form-label">Mois *</label>
+                <label class="form-label fw-semibold">Mois <span class="text-danger">*</span></label>
                 {{ form.mois }}
+                {% if form.mois.errors %}<div class="invalid-feedback d-block">{{ form.mois.errors }}</div>{% endif %}
             </div>
-            
             <div class="col-md-3">
-                <label class="form-label">Année *</label>
+                <label class="form-label fw-semibold">Année <span class="text-danger">*</span></label>
                 {{ form.annee }}
+                {% if form.annee.errors %}<div class="invalid-feedback d-block">{{ form.annee.errors }}</div>{% endif %}
             </div>
-            
+
+            <div class="col-12"><hr class="my-2"></div>
+
+            <!-- Section : Montants -->
+            <div class="col-12">
+                <h6 class="section-title"><i class="bi bi-currency-exchange"></i> Montants</h6>
+            </div>
             <div class="col-md-4">
-                <label class="form-label">Salaire brut *</label>
-                {{ form.salaire_brut }}
+                <label class="form-label fw-semibold">Salaire brut <span class="text-danger">*</span></label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-cash"></i></span>
+                    {{ form.salaire_brut }}
+                </div>
+                {% if form.salaire_brut.errors %}<div class="invalid-feedback d-block">{{ form.salaire_brut.errors }}</div>{% endif %}
             </div>
-            
             <div class="col-md-4">
-                <label class="form-label">Retenue CNPS</label>
-                {{ form.retenue_cnps }}
+                <label class="form-label fw-semibold">Retenue CNPS</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-shield-minus"></i></span>
+                    {{ form.retenue_cnps }}
+                </div>
+                {% if form.retenue_cnps.errors %}<div class="invalid-feedback d-block">{{ form.retenue_cnps.errors }}</div>{% endif %}
             </div>
-            
             <div class="col-md-4">
-                <label class="form-label">Retenue IRPP</label>
-                {{ form.retenue_irpp }}
+                <label class="form-label fw-semibold">Retenue IRPP</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-bank"></i></span>
+                    {{ form.retenue_irpp }}
+                </div>
+                {% if form.retenue_irpp.errors %}<div class="invalid-feedback d-block">{{ form.retenue_irpp.errors }}</div>{% endif %}
             </div>
-            
             <div class="col-md-6">
-                <label class="form-label">Autres retenues</label>
-                {{ form.autres_retenues }}
+                <label class="form-label fw-semibold">Autres retenues</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-dash-circle"></i></span>
+                    {{ form.autres_retenues }}
+                </div>
+                {% if form.autres_retenues.errors %}<div class="invalid-feedback d-block">{{ form.autres_retenues.errors }}</div>{% endif %}
             </div>
-            
+
+            <div class="col-12"><hr class="my-2"></div>
+
+            <!-- Section : Versement -->
+            <div class="col-12">
+                <h6 class="section-title"><i class="bi bi-calendar-check"></i> Versement</h6>
+            </div>
             <div class="col-md-6">
-                <label class="form-label">Date de versement</label>
+                <label class="form-label fw-semibold">Date de versement</label>
                 {{ form.date_versement }}
+                {% if form.date_versement.errors %}<div class="invalid-feedback d-block">{{ form.date_versement.errors }}</div>{% endif %}
             </div>
-            
-            <div class="col-md-6">
-                <div class="form-check">
+            <div class="col-md-6 d-flex align-items-center">
+                <div class="form-check form-switch mt-3">
                     {{ form.est_paye }}
-                    <label class="form-check-label">Payé</label>
+                    <label class="form-check-label fw-semibold ms-2">Salaire payé</label>
                 </div>
             </div>
-            
+
+            <div class="col-12"><hr class="my-2"></div>
+
+            <!-- Section : Notes -->
             <div class="col-12">
-                <label class="form-label">Notes</label>
-                {{ form.notes }}
+                <h6 class="section-title"><i class="bi bi-pencil-square"></i> Notes</h6>
             </div>
-            
             <div class="col-12">
+                <label class="form-label fw-semibold">Observations</label>
+                {{ form.notes }}
+                {% if form.notes.errors %}<div class="invalid-feedback d-block">{{ form.notes.errors }}</div>{% endif %}
+            </div>
+
+            <!-- Actions -->
+            <div class="col-12 d-flex gap-2 mt-4">
                 <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-save"></i> Enregistrer
+                    <i class="bi bi-check-lg"></i> Enregistrer
                 </button>
+                <a href="{% url 'ressources_humaines:liste_salaires' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-lg"></i> Annuler
+                </a>
             </div>
         </form>
     </div>
