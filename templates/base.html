@@ -118,6 +118,9 @@
             background: #f8fafc;
         }
         
+        body.dark-bg .page-wrapper {
+            background: #1e2936 !important;
+        }
         body.dark-bg .main-content {
             background: #1e2936 !important;
         }
@@ -302,6 +305,9 @@
         }
         .bg-gradient.text-white {
             color: #fff !important;
+        }
+        body.dark-bg .page-wrapper {
+            background: #1e2936 !important;
         }
         body.dark-bg .main-content {
             background: #1e2936 !important;
@@ -645,7 +651,37 @@
         .group-header.open .arrow {
             transform: rotate(90deg);
         }
-        
+
+        /* =============================================== */
+        /* SIDEBAR - Mode Focus (groupe ouvert mis en avant) */
+        /* =============================================== */
+        .sidebar.has-open-group .nav-group:not(.active-group) {
+            opacity: 0.4;
+            transition: opacity 0.3s ease;
+        }
+        .sidebar.has-open-group .nav-group.active-group {
+            margin-bottom: 1rem;
+        }
+        .sidebar.has-open-group .nav-group.active-group .group-header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
+        }
+        .sidebar.has-open-group .nav-group.active-group .group-body {
+            max-height: 500px !important;
+            overflow-y: auto;
+        }
+
+        /* Dark mode focus */
+        body.dark-bg .sidebar.has-open-group .nav-group.active-group .group-header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.5);
+        }
+
+        /* Animation de transition */
+        .nav-group {
+            transition: opacity 0.3s ease;
+        }
+
         /* Navbar Icons - Mode clair (avec effets professionels) */
         .nav-icon-btn {
             display: inline-flex;
@@ -1897,7 +1933,7 @@
         /* =============================================== */
         html, body {
             height: 100%;
-            overflow-x: hidden;
+            overflow-x: auto;
         }
         body {
             display: flex;
@@ -1912,6 +1948,8 @@
             background: #f8fafc;
             margin-left: 260px;
             margin-top: 60px;
+            overflow-x: auto;
+            overflow-y: hidden;
         }
         .sidebar {
             flex-shrink: 0;
@@ -1930,17 +1968,23 @@
             flex-direction: column;
             min-height: calc(100vh - 60px);
             overflow-y: auto;
-            overflow-x: hidden;
+            overflow-x: visible;
             margin-left: 0;
         }
         .content-wrapper {
             flex: 1;
             background: #f8fafc;
             padding: 1.5rem;
-            width: 100%;
+            min-width: fit-content;
         }
         .container-fluid {
             max-width: 100%;
+        }
+        /* Container-fluid dans le contenu principal peut s'étendre */
+        .content-wrapper > .container-fluid,
+        .main-content .container-fluid:not(.navbar .container-fluid) {
+            max-width: none;
+            width: auto;
         }
 
         /* =============================================== */
@@ -2013,6 +2057,16 @@
         }
         .table tbody tr:last-child td {
             border-bottom: none;
+        }
+
+        /* =============================================== */
+        /* TABLE RESPONSIVE - Page level scrolling */
+        /* =============================================== */
+        .table-responsive {
+            overflow-x: visible !important;
+        }
+        .table-responsive .table {
+            min-width: max-content;
         }
 
         /* =============================================== */
@@ -2526,7 +2580,12 @@
                 });
                 sidebar.querySelectorAll('.group-body').forEach(b => {
                     b.classList.remove('open');
-                    b.style.maxHeight = '0';
+                    b.style.maxHeight = '';
+                });
+                // Retirer le mode focus
+                sidebar.classList.remove('has-open-group');
+                sidebar.querySelectorAll('.nav-group').forEach(g => {
+                    g.classList.remove('active-group');
                 });
             }
 
@@ -2566,14 +2625,21 @@
                 clearActiveLinks();
                 closeAllGroups();
                 link.classList.add('active');
-                
+
                 const groupBody = link.closest('.group-body');
                 if (groupBody) {
                     const header = groupBody.previousElementSibling;
+                    const navGroup = groupBody.closest('.nav-group');
                     if (header && header.classList.contains('group-header')) {
                         header.classList.add('open');
+                        updateArrow(header, true);
                         groupBody.classList.add('open');
-                        groupBody.style.maxHeight = groupBody.scrollHeight + 'px';
+                        groupBody.style.maxHeight = '500px';
+                        // Activer le mode focus
+                        if (navGroup) {
+                            sidebar.classList.add('has-open-group');
+                            navGroup.classList.add('active-group');
+                        }
                     }
                 }
             }
@@ -2581,18 +2647,27 @@
             // ── Initialisation au chargement ─────────────────────────────────────────
 
             function initActivateLink(link) {
-                // Version spéciale pour l'initialisation - ne ferme pas les groupes
+                // Version spéciale pour l'initialisation
                 clearActiveLinks();
+                closeAllGroups();
                 link.classList.add('active');
-                
+
                 const groupBody = link.closest('.group-body');
                 if (groupBody) {
                     const header = groupBody.previousElementSibling;
+                    const navGroup = groupBody.closest('.nav-group');
                     if (header && header.classList.contains('group-header')) {
                         header.classList.add('open');
                         updateArrow(header, true);
                         groupBody.classList.add('open');
-                        groupBody.style.maxHeight = '800px';
+                        groupBody.style.maxHeight = '500px';
+                        // Activer le mode focus
+                        if (navGroup) {
+                            sidebar.classList.add('has-open-group');
+                            navGroup.classList.add('active-group');
+                        }
+                        // Faire défiler pour voir le lien actif après un court délai
+                        setTimeout(() => ensureLinkVisible(link), 150);
                     }
                 }
             }
@@ -2622,18 +2697,36 @@
 
             // ── Clic sur un sous-module ─────────────────────────────────────────────
 
+            function ensureLinkVisible(link) {
+                const sidebarRect = sidebar.getBoundingClientRect();
+                const linkRect = link.getBoundingClientRect();
+                const currentScroll = sidebar.scrollTop;
+
+                // Position du lien par rapport à la sidebar
+                const linkTop = linkRect.top - sidebarRect.top;
+                const linkHeight = linkRect.height;
+                const sidebarHeight = sidebar.clientHeight;
+
+                // Calculer la position pour centrer le lien
+                const centerOffset = (sidebarHeight / 2) - (linkHeight / 2);
+                const scrollTo = currentScroll + linkTop - centerOffset;
+
+                sidebar.scrollTo({ top: scrollTo, behavior: 'smooth' });
+            }
+
             function handleLinkClick(link) {
                 // Juste changer l'état visuel sans fermer les groupes
                 clearActiveLinks();
                 link.classList.add('active');
-                // Le navigateur va charger la nouvelle page, pas besoin de scroll
+                // Faire défiler pour voir le lien cliqué
+                ensureLinkVisible(link);
+                // Le navigateur va charger la nouvelle page
             }
 
             sidebar.addEventListener('click', function (e) {
                 const link = e.target.closest('.nav-link[data-url]');
                 if (link) {
                     handleLinkClick(link);
-                    // Pas de scrollIntoView ici - laisse le navigateur charger la page normalement
                 }
             });
 
@@ -2646,28 +2739,61 @@
                 }
             }
 
+            function ensureGroupVisible(header, body) {
+                // Récupérer les positions
+                const sidebarRect = sidebar.getBoundingClientRect();
+                const headerRect = header.getBoundingClientRect();
+                const bodyHeight = body.scrollHeight;
+                const sidebarHeight = sidebar.clientHeight;
+                const currentScroll = sidebar.scrollTop;
+
+                // Hauteur réelle du body (limitée à 500px par max-height)
+                const visibleBodyHeight = Math.min(bodyHeight, 500);
+
+                // Position du header par rapport à la sidebar
+                const headerTop = headerRect.top - sidebarRect.top;
+
+                // Si le module a beaucoup de sous-modules, on priorise leur affichage
+                // en cachant partiellement ou totalement le header si nécessaire
+                if (visibleBodyHeight > sidebarHeight - 60) {
+                    // Beaucoup de sous-modules : on fait défiler pour voir le maximum de sous-modules
+                    // Le header sera caché en haut, l'utilisateur devra défiler vers le haut pour le voir
+                    const scrollNeeded = currentScroll + headerTop + headerRect.height - 10;
+                    sidebar.scrollTo({ top: scrollNeeded, behavior: 'smooth' });
+                } else {
+                    // Peu de sous-modules : on ajuste pour tout voir (header + sous-modules)
+                    const bodyBottom = headerTop + headerRect.height + visibleBodyHeight;
+                    if (bodyBottom > sidebarHeight) {
+                        const neededScroll = bodyBottom - sidebarHeight + 20;
+                        sidebar.scrollTo({ top: currentScroll + neededScroll, behavior: 'smooth' });
+                    } else if (headerTop < 0) {
+                        sidebar.scrollTo({ top: currentScroll + headerTop - 10, behavior: 'smooth' });
+                    }
+                }
+            }
+
             sidebar.addEventListener('click', function (e) {
                 const header = e.target.closest('.group-header');
                 if (!header) return;
 
                 if (header.classList.contains('open')) {
-                    header.classList.remove('open');
-                    updateArrow(header, false);
-                    const body = header.nextElementSibling;
-                    if (body) {
-                        body.classList.remove('open');
-                        // Laisser le CSS gérer la transition
-                        body.style.maxHeight = '';
-                    }
+                    // Fermer ce groupe et réinitialiser tout
+                    closeAllGroups();
                 } else {
+                    // Fermer l'ancien groupe ouvert et ouvrir le nouveau
                     closeAllGroups();
                     header.classList.add('open');
                     updateArrow(header, true);
                     const body = header.nextElementSibling;
+                    const navGroup = header.closest('.nav-group');
                     if (body) {
                         body.classList.add('open');
-                        // Utiliser une valeur fixe au lieu de scrollHeight pour éviter le recalcul de layout
-                        body.style.maxHeight = '800px';
+                        body.style.maxHeight = '500px';
+                        // Activer le mode focus
+                        if (navGroup) {
+                            sidebar.classList.add('has-open-group');
+                            navGroup.classList.add('active-group');
+                        }
                         // Restaurer la classe active pour le lien correspondant à la page actuelle
                         const currentPath = window.location.pathname;
                         body.querySelectorAll('.nav-link').forEach(link => {
@@ -2675,6 +2801,8 @@
                                 link.classList.add('active');
                             }
                         });
+                        // Faire défiler pour voir tous les sous-modules
+                        setTimeout(() => ensureGroupVisible(header, body), 100);
                     }
                 }
             });
@@ -3150,7 +3278,12 @@
                                 setTimeout(function() { fetchUpdates(); }, 200);
                             }
                         } else {
-                            if (!n.id || n.id > lastNotificationId) {
+                            // Vérifier à nouveau que ce n'est pas un message (par sécurité)
+                            const isActuallyMessage = n.type_notification === 'message' || n.type === 'message';
+                            if (isActuallyMessage) {
+                                // C'est un message déjà traité ci-dessus, ne rien faire
+                                console.log('[NOTIF-WS] Message déjà traité, ignoré dans les notifications');
+                            } else if (!n.id || n.id > lastNotificationId) {
                                 if (n.id) lastNotificationId = Math.max(lastNotificationId, n.id);
                                 updateBadge('notification-badge', (parseInt(document.getElementById('notification-badge')?.textContent) || 0) + 1);
                                 showToast(n.titre || 'Notification', n.message || '', 'info', n.lien || null);
