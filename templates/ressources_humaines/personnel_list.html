@@ -3,7 +3,7 @@
 {% block title %}Gestion du Personnel{% endblock %}
 
 {% block content %}
-{% url 'ressources_humaines:ajouter_personnel' as create_url %}
+{% url 'ressources_humaines:creer_personnel' as create_url %}
 {% include 'includes/page_header.html' with title="Gestion du Personnel" icon="bi-people" show_button=True button_url=create_url button_text="Ajouter un membre" button_icon="bi-plus-circle" %}
 
 <!-- Filtres -->

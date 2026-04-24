@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block title %}Supprimer toutes les notifications de messages{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h4 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Suppression massive</h4>
+            </div>
+            <div class="card-body">
+                <p>Êtes-vous sûr de vouloir supprimer <strong>toutes les notifications de type "message"</strong> ?</p>
+                
+                <div class="alert alert-warning">
+                    <h6><strong>{{ count }}</strong> notification(s) de message seront supprimées.</h6>
+                    <p class="mb-0">Ces notifications sont celles créées automatiquement lors de la réception de messages dans le système de chat.</p>
+                </div>
+                
+                <p class="text-muted">Cette action est irréversible.</p>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash"></i> Supprimer toutes ({{ count }})
+                        </button>
+                        <a href="{% url 'authentification:notification_list' %}" class="btn btn-secondary">
+                            Annuler
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

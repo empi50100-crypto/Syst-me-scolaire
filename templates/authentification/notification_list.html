@@ -9,6 +9,7 @@
     </a>
 </div>
 
+
 <div class="mb-3">
     <div class="btn-group" role="group">
         <a href="?filter=all" class="btn btn-sm btn-{% if filter_type == 'all' or not filter_type %}primary{% else %}outline-primary{% endif %}">
@@ -24,27 +25,43 @@
 </div>
 
 <div class="card">
+    <div class="card-header">
+        <h5><i class="bi bi-bell"></i> Liste des notifications</h5>
+    </div>
     <div class="card-body">
-        <div class="list-group">
+        <div class="list-group list-group-transparent">
             {% for notif in notifications %}
-            <a href="{% url 'authentification:notification_detail' notif.pk %}" class="list-group-item list-group-item-action {% if not notif.est_lu %}unread-notif{% endif %}">
+            {% if notif.type_notification|lower != 'message' and notif.type_notification != 'MESSAGE' %}
+            <div class="list-group-item notification-item {% if not notif.est_lu %}unread-notif{% endif %}">
                 <div class="d-flex w-100 justify-content-between align-items-start">
-                    <div class="mb-1">
-                        <div class="d-flex align-items-center gap-2 mb-1">
-                            {% if not notif.est_lu %}
-                            <span class="badge bg-primary rounded-pill">Nouveau</span>
+                    <a href="{% url 'authentification:notification_detail' notif.pk %}" class="flex-grow-1 text-decoration-none" style="color: inherit;">
+                        <div class="mb-1">
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                {% if not notif.est_lu %}
+                                <span class="badge bg-primary rounded-pill">Nouveau</span>
+                                {% endif %}
+                                <small class="text-muted">{{ notif.date_creation|date:"d/m/Y H:i" }}</small>
+                            </div>
+                            <h6 class="mb-1">{{ notif.titre }}</h6>
+                            <p class="mb-1 text-muted" style="font-size: 0.9rem;">{{ notif.message|truncatechars:100 }}</p>
+                            {% if notif.expediteur %}
+                            <small class="text-muted">De: {{ notif.expediteur.get_full_name }}</small>
                             {% endif %}
-                            <small class="text-muted">{{ notif.date_creation|date:"d/m/Y H:i" }}</small>
                         </div>
-                        <h6 class="mb-1">{{ notif.titre }}</h6>
-                        <p class="mb-1 text-muted" style="font-size: 0.9rem;">{{ notif.message|truncatechars:100 }}</p>
-                        {% if notif.expediteur %}
-                        <small class="text-muted">De: {{ notif.expediteur.get_full_name }}</small>
+                    </a>
+                    <div class="d-flex align-items-center gap-2 ms-2">
+                        <i class="bi bi-{% if notif.est_lu %}check-circle{% else %}circle{% endif %} text-{% if notif.est_lu %}muted{% else %}primary{% endif %}"></i>
+                        {% if user.est_superadmin %}
+                        <a href="{% url 'authentification:notification_delete' notif.pk %}" class="btn btn-sm btn-outline-danger" title="Supprimer" onclick="event.stopPropagation();">
+                            <i class="bi bi-trash"></i>
+                        </a>
                         {% endif %}
                     </div>
-                    <i class="bi bi-{% if notif.est_lu %}check-circle{% else %}circle{% endif %} text-{% if notif.est_lu %}muted{% else %}primary{% endif %}"></i>
                 </div>
-            </a>
+            </div>
+            {% else %}
+            <!-- DEBUG: Notification filtrée - Type: {{ notif.type_notification }} - ID: {{ notif.id }} -->
+            {% endif %}
             {% empty %}
             <div class="text-center text-muted py-4">
                 <i class="bi bi-bell-slash display-4"></i>
@@ -56,10 +73,144 @@
 </div>
 {% endblock %}
 
+{% block extra_js %}
+<script>
+// Supprimer les conversations injectées par erreur dans la liste des notifications
+document.addEventListener('DOMContentLoaded', function() {
+    const conversations = document.querySelectorAll('.list-group-transparent .conversation-item');
+    conversations.forEach(function(conv) {
+        console.log('[NOTIF] Suppression conversation injectée:', conv);
+        conv.remove();
+    });
+});
+</script>
+{% endblock %}
+
 {% block extra_css %}
 <style>
+/* Liste transparente pour voir le fond de la carte */
+.list-group-transparent {
+    background: transparent !important;
+}
+
+/* Style de base pour tous les éléments de notification */
+.notification-item {
+    background: linear-gradient(135deg, #312e81 0%, #1e1b4b 100%) !important;
+    color: #ffffff !important;
+    border: 1px solid #4338ca !important;
+    border-radius: 8px !important;
+    margin-bottom: 0.5rem !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+    transition: all 0.2s ease;
+}
+
+.notification-item:hover {
+    transform: translateX(4px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4) !important;
+    border-color: #6366f1 !important;
+}
+
+/* Notifications non lues - plus accentuées */
 .unread-notif {
-    border-left: 3px solid #6366f1 !important;
+    background: linear-gradient(135deg, #4f46e5 0%, #312e81 100%) !important;
+    border-left: 4px solid #22d3ee !important;
+    box-shadow: 0 4px 8px rgba(99, 102, 241, 0.5) !important;
+}
+
+.notification-item h6, .unread-notif h6 {
+    color: #ffffff !important;
+    font-weight: 600 !important;
+}
+
+.notification-item p, .unread-notif p {
+    color: #e2e8f0 !important;
+}
+
+.notification-item .text-muted, .unread-notif .text-muted {
+    color: #a5b4fc !important;
+}
+
+.notification-item .badge, .unread-notif .badge {
+    background: #6366f1 !important;
+}
+
+/* Icônes */
+.notification-item i.bi-circle {
+    color: #22d3ee !important;
+}
+
+.notification-item i.bi-check-circle {
+    color: #94a3b8 !important;
+}
+
+/* Mode sombre - Notifications lues (fond plus foncé) */
+body.dark-bg .notification-item:not(.unread-notif) {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
+    border-color: #334155 !important;
+}
+
+body.dark-bg .notification-item:not(.unread-notif) h6 {
+    color: #e2e8f0 !important;
+}
+
+body.dark-bg .notification-item:not(.unread-notif) p {
+    color: #94a3b8 !important;
+}
+
+/* Mode sombre - Notifications non lues (plus vives) */
+body.dark-bg .unread-notif {
+    background: linear-gradient(135deg, #4f46e5 0%, #312e81 100%) !important;
+    border-left: 4px solid #22d3ee !important;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.5) !important;
+}
+
+body.dark-bg .notification-item:hover {
+    border-color: #6366f1 !important;
+}
+
+/* Style du bouton de suppression */
+.notification-item .btn-outline-danger {
+    color: #ef4444 !important;
+    border-color: #ef4444 !important;
+    background: transparent !important;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+.notification-item .btn-outline-danger:hover {
+    background: #ef4444 !important;
+    color: #fff !important;
+}
+
+body.dark-bg .notification-item .btn-outline-danger {
+    color: #f87171 !important;
+    border-color: #f87171 !important;
+}
+
+body.dark-bg .notification-item .btn-outline-danger:hover {
+    background: #f87171 !important;
+    color: #1e293b !important;
+}
+
+/* Style pour le bouton de suppression en masse */
+.btn-outline-danger {
+    border-color: #ef4444 !important;
+    color: #ef4444 !important;
+}
+
+.btn-outline-danger:hover {
+    background: #ef4444 !important;
+    color: #fff !important;
+}
+
+body.dark-bg .btn-outline-danger {
+    border-color: #f87171 !important;
+    color: #f87171 !important;
+}
+
+body.dark-bg .btn-outline-danger:hover {
+    background: #f87171 !important;
+    color: #1e293b !important;
 }
 </style>
 {% endblock %}

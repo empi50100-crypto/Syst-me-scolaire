@@ -463,6 +463,48 @@ def notification_detail(request, pk):
 
 
 @login_required
+def notification_delete(request, pk):
+    from django.shortcuts import get_object_or_404
+    notification = get_object_or_404(Notification, pk=pk)
+    
+    # Vérifier si l'utilisateur peut supprimer cette notification
+    # Superadmin peut tout supprimer, sinon seulement ses propres notifications
+    if not request.user.est_superadmin() and notification.destinataire != request.user:
+        messages.error(request, "Vous n'avez pas la permission de supprimer cette notification.")
+        return redirect('authentification:notification_list')
+    
+    if request.method == 'POST':
+        notification.delete()
+        messages.success(request, 'Notification supprimée avec succès.')
+        return redirect('authentification:notification_list')
+    
+    return render(request, 'authentification/notification_confirm_delete.html', {'notification': notification})
+
+
+@login_required
+def notification_delete_all_messages(request):
+    """Supprime toutes les notifications de type message (admin uniquement)"""
+    if not request.user.est_superadmin():
+        messages.error(request, "Vous n'avez pas la permission d'effectuer cette action.")
+        return redirect('authentification:notification_list')
+    
+    if request.method == 'POST':
+        count = Notification.objects.filter(
+            type_notification=Notification.TypeNotification.MESSAGE
+        ).count()
+        Notification.objects.filter(
+            type_notification=Notification.TypeNotification.MESSAGE
+        ).delete()
+        messages.success(request, f'{count} notification(s) de message supprimée(s).')
+        return redirect('authentification:notification_list')
+    
+    count = Notification.objects.filter(
+        type_notification=Notification.TypeNotification.MESSAGE
+    ).count()
+    return render(request, 'authentification/notification_delete_all_messages.html', {'count': count})
+
+
+@login_required
 def message_list(request, conversation_id=None):
     filter_type = request.GET.get('filter', 'all')
     conversations_data = []

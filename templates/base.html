@@ -555,18 +555,26 @@
             position: absolute;
             top: 2px;
             right: 2px;
-            min-width: 18px;
-            height: 18px;
-            padding: 0 5px;
-            border-radius: 9px;
-            background: #ef4444 !important;
+            min-width: 20px;
+            height: 20px;
+            padding: 0.25em 0.5em;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #ef4444, #dc2626) !important;
             color: #fff;
-            font-size: 0.7rem;
+            font-size: 0.75rem;
             font-weight: 700;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+            line-height: 1;
+            z-index: 100;
+        }
+        
+        /* Badge vert pour les messages */
+        #message-badge {
+            background: linear-gradient(135deg, #10b981, #059669) !important;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
         }
         
         /* User button */
@@ -709,18 +717,26 @@
             position: absolute;
             top: 2px;
             right: 2px;
-            min-width: 18px;
-            height: 18px;
-            padding: 0 5px;
-            border-radius: 9px;
-            background: #ef4444;
+            min-width: 20px;
+            height: 20px;
+            padding: 0.25em 0.5em;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
             color: #fff;
-            font-size: 0.7rem;
+            font-size: 0.75rem;
             font-weight: 700;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+            line-height: 1;
+            z-index: 100;
+        }
+        
+        /* Badge vert pour les messages */
+        #message-badge {
+            background: linear-gradient(135deg, #10b981, #059669) !important;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
         }
         
         /* User button */
@@ -796,6 +812,8 @@
             color: #ffffff !important;
             border-bottom: 1px solid #4338ca !important;
         }
+        .card:has(.card-header):not(.alert) .card-header h3,
+        .card:has(.card-header):not(.alert) .card-header h4,
         .card:has(.card-header):not(.alert) .card-header h5,
         .card:has(.card-header):not(.alert) .card-header h6 {
             color: #ffffff !important;
@@ -856,6 +874,13 @@
         }
         body.dark-bg .card:has(.card-header):not(.alert) .card-header {
             background: linear-gradient(135deg, #312e81 0%, #1e1b4b 100%) !important;
+        }
+        body.dark-bg .card:has(.card-header):not(.alert) .card-header h3,
+        body.dark-bg .card:has(.card-header):not(.alert) .card-header h4,
+        body.dark-bg .card:has(.card-header):not(.alert) .card-header h5,
+        body.dark-bg .card:has(.card-header):not(.alert) .card-header h6 {
+            color: #ffffff !important;
+            font-weight: 600 !important;
         }
         body.dark-bg .card:has(.card-header):not(.alert) .card-body {
             background: #1e293b !important;
@@ -1108,6 +1133,55 @@
             color: #ffffff !important;
         }
         
+        /* ALL text in stat-cards should be white by default (unless colored variant) */
+        .stat-card:not(.stat-card-primary):not(.stat-card-success):not(.stat-card-warning):not(.stat-card-danger):not(.stat-card-info) *,
+        .stat-card-secondary * {
+            color: #ffffff !important;
+        }
+        
+        /* Text in colored stat-cards - white by default, colored for headings */
+        .stat-card-primary *, .stat-card-success *, .stat-card-warning *, 
+        .stat-card-danger *, .stat-card-info * {
+            color: #ffffff !important;
+        }
+        
+        /* Override for headings in colored stat-cards - these should keep their colors */
+        .stat-card-primary h3, .stat-card-primary h4, .stat-card-primary h5, .stat-card-primary h6,
+        .stat-card-primary .card-title {
+            color: #60a5fa !important; 
+            font-weight: 800 !important; 
+            text-shadow: 0 0 15px rgba(96,165,250,0.8), 0 0 25px rgba(96,165,250,0.4) !important; 
+        }
+        .stat-card-success h3, .stat-card-success h4, .stat-card-success h5, .stat-card-success h6,
+        .stat-card-success .card-title {
+            color: #4ade80 !important; 
+            font-weight: 800 !important; 
+            text-shadow: 0 0 15px rgba(74,222,128,0.8), 0 0 25px rgba(74,222,128,0.4) !important; 
+        }
+        .stat-card-warning h3, .stat-card-warning h4, .stat-card-warning h5, .stat-card-warning h6,
+        .stat-card-warning .card-title {
+            color: #fbbf24 !important; 
+            font-weight: 800 !important; 
+            text-shadow: 0 0 15px rgba(251,191,36,0.8), 0 0 25px rgba(251,191,36,0.4) !important; 
+        }
+        .stat-card-danger h3, .stat-card-danger h4, .stat-card-danger h5, .stat-card-danger h6,
+        .stat-card-danger .card-title {
+            color: #f87171 !important; 
+            font-weight: 800 !important; 
+            text-shadow: 0 0 15px rgba(248,113,113,0.8), 0 0 25px rgba(248,113,113,0.4) !important; 
+        }
+        .stat-card-info h3, .stat-card-info h4, .stat-card-info h5, .stat-card-info h6,
+        .stat-card-info .card-title {
+            color: #38bdf8 !important; 
+            font-weight: 800 !important; 
+            text-shadow: 0 0 15px rgba(56,189,248,0.8), 0 0 25px rgba(56,189,248,0.4) !important; 
+        }
+        .stat-card-secondary h3, .stat-card-secondary h4, .stat-card-secondary h5, .stat-card-secondary h6,
+        .stat-card-secondary .card-title {
+            color: #ffffff !important; 
+            font-weight: 800 !important; 
+        }
+        
         /* Cards without headers - text overrides */
         .stat-card .text-muted, .stat-card .text-secondary, 
         .card-stat .text-muted, .card-stat .text-secondary,
@@ -1157,13 +1231,90 @@
             color: #ffffff !important;
         }
         
-        /* Cards without headers - Card titles */
-        .card-stat .card-title, .card-stat h5, .card-stat h6,
+        /* Cards without headers - Card titles (h3, h4, h5, h6) */
+        .card-stat .card-title, .card-stat h3, .card-stat h4, .card-stat h5, .card-stat h6,
         .card:not(.alert):not(.filters-card):not(:has(.card-header)) .card-title,
+        .card:not(.alert):not(.filters-card):not(:has(.card-header)) h3,
+        .card:not(.alert):not(.filters-card):not(:has(.card-header)) h4,
         .card:not(.alert):not(.filters-card):not(:has(.card-header)) h5,
-        .card:not(.alert):not(.filters-card):not(:has(.card-header)) h6 {
+        .card:not(.alert):not(.filters-card):not(:has(.card-header)) h6,
+        .stat-card h3, .stat-card h4, .stat-card-primary h3, .stat-card-primary h4,
+        .stat-card-success h3, .stat-card-success h4, .stat-card-warning h3, .stat-card-warning h4,
+        .stat-card-danger h3, .stat-card-danger h4, .stat-card-info h3, .stat-card-info h4,
+        .stat-card-secondary h3, .stat-card-secondary h4 {
             color: #ffffff !important;
             font-weight: 600 !important;
+        }
+        
+        /* Stat cards with colored variants - h3 and h4 also get colored */
+        .stat-card-primary h3, .stat-card-primary h4 { 
+            color: #60a5fa !important; 
+            font-weight: 800 !important; 
+            text-shadow: 0 0 15px rgba(96,165,250,0.8), 0 0 25px rgba(96,165,250,0.4) !important; 
+        }
+        .stat-card-success h3, .stat-card-success h4 { 
+            color: #4ade80 !important; 
+            font-weight: 800 !important; 
+            text-shadow: 0 0 15px rgba(74,222,128,0.8), 0 0 25px rgba(74,222,128,0.4) !important; 
+        }
+        .stat-card-warning h3, .stat-card-warning h4 { 
+            color: #fbbf24 !important; 
+            font-weight: 800 !important; 
+            text-shadow: 0 0 15px rgba(251,191,36,0.8), 0 0 25px rgba(251,191,36,0.4) !important; 
+        }
+        .stat-card-danger h3, .stat-card-danger h4 { 
+            color: #f87171 !important; 
+            font-weight: 800 !important; 
+            text-shadow: 0 0 15px rgba(248,113,113,0.8), 0 0 25px rgba(248,113,113,0.4) !important; 
+        }
+        .stat-card-info h3, .stat-card-info h4 { 
+            color: #38bdf8 !important; 
+            font-weight: 800 !important; 
+            text-shadow: 0 0 15px rgba(56,189,248,0.8), 0 0 25px rgba(56,189,248,0.4) !important; 
+        }
+        
+        /* Dark mode - stat card h3/h4 colored variants */
+        body.dark-bg .stat-card-primary h3, body.dark-bg .stat-card-primary h4 { 
+            color: #93c5fd !important; 
+            text-shadow: 0 0 15px rgba(147,197,253,0.9), 0 0 30px rgba(147,197,253,0.5) !important; 
+        }
+        body.dark-bg .stat-card-success h3, body.dark-bg .stat-card-success h4 { 
+            color: #86efac !important; 
+            text-shadow: 0 0 15px rgba(134,239,172,0.9), 0 0 30px rgba(134,239,172,0.5) !important; 
+        }
+        body.dark-bg .stat-card-warning h3, body.dark-bg .stat-card-warning h4 { 
+            color: #fde047 !important; 
+            text-shadow: 0 0 15px rgba(253,224,71,0.9), 0 0 30px rgba(253,224,71,0.5) !important; 
+        }
+        body.dark-bg .stat-card-danger h3, body.dark-bg .stat-card-danger h4 { 
+            color: #fca5a5 !important; 
+            text-shadow: 0 0 15px rgba(252,165,165,0.9), 0 0 30px rgba(252,165,165,0.5) !important; 
+        }
+        body.dark-bg .stat-card-info h3, body.dark-bg .stat-card-info h4 { 
+            color: #7dd3fc !important; 
+            text-shadow: 0 0 15px rgba(125,211,252,0.9), 0 0 30px rgba(125,211,252,0.5) !important; 
+        }
+        
+        /* Dark mode - stat card h5/h6 and card-title colored variants */
+        body.dark-bg .stat-card-primary h5, body.dark-bg .stat-card-primary h6, body.dark-bg .stat-card-primary .card-title { 
+            color: #93c5fd !important; 
+            text-shadow: 0 0 15px rgba(147,197,253,0.9), 0 0 30px rgba(147,197,253,0.5) !important; 
+        }
+        body.dark-bg .stat-card-success h5, body.dark-bg .stat-card-success h6, body.dark-bg .stat-card-success .card-title { 
+            color: #86efac !important; 
+            text-shadow: 0 0 15px rgba(134,239,172,0.9), 0 0 30px rgba(134,239,172,0.5) !important; 
+        }
+        body.dark-bg .stat-card-warning h5, body.dark-bg .stat-card-warning h6, body.dark-bg .stat-card-warning .card-title { 
+            color: #fde047 !important; 
+            text-shadow: 0 0 15px rgba(253,224,71,0.9), 0 0 30px rgba(253,224,71,0.5) !important; 
+        }
+        body.dark-bg .stat-card-danger h5, body.dark-bg .stat-card-danger h6, body.dark-bg .stat-card-danger .card-title { 
+            color: #fca5a5 !important; 
+            text-shadow: 0 0 15px rgba(252,165,165,0.9), 0 0 30px rgba(252,165,165,0.5) !important; 
+        }
+        body.dark-bg .stat-card-info h5, body.dark-bg .stat-card-info h6, body.dark-bg .stat-card-info .card-title { 
+            color: #7dd3fc !important; 
+            text-shadow: 0 0 15px rgba(125,211,252,0.9), 0 0 30px rgba(125,211,252,0.5) !important; 
         }
         
         /* CARDS WITH HEADERS - Dark text in white body */
@@ -1851,10 +2002,8 @@
             justify-content: center;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
-            overflow: hidden;
         }
-        .nav-icon-btn::before {
-            content: '';
+        .nav-icon-btn .btn-shine {
             position: absolute;
             top: 0;
             left: -100%;
@@ -1862,8 +2011,9 @@
             height: 100%;
             background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
             transition: left 0.5s;
+            pointer-events: none;
         }
-        .nav-icon-btn:hover::before {
+        .nav-icon-btn:hover .btn-shine {
             left: 100%;
         }
         .nav-icon-btn:hover {
@@ -1882,15 +2032,28 @@
         .nav-badge {
             background: linear-gradient(135deg, #ef4444, #dc2626);
             color: white;
-            font-weight: 600;
-            font-size: 0.65rem;
-            padding: 0.2rem 0.4rem;
+            font-weight: 700;
+            font-size: 0.75rem;
+            padding: 0.25em 0.5em;
             border-radius: 10px;
             position: absolute;
             top: -5px;
             right: -5px;
+            min-width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
             animation: pulse-badge 2s infinite;
+            line-height: 1;
+            z-index: 100;
+        }
+        
+        /* Badge vert pour les messages */
+        #message-badge {
+            background: linear-gradient(135deg, #10b981, #059669) !important;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
         }
         @keyframes pulse-badge {
             0%, 100% { transform: scale(1); }
@@ -2976,7 +3139,9 @@
                     if (data.notifications && data.notifications.length > 0) {
                         console.log('[POLLING] Nouvelles notifications:', data.notifications.length);
                         data.notifications.forEach(n => {
-                            const isMessageEvent = n.type_notification === 'message';
+                            const typeNotif = (n.type_notification || '').toLowerCase();
+                            const isMessageEvent = typeNotif === 'message';
+                            console.log('[POLLING] Notif reçue - ID:', n.id, 'Type:', n.type_notification, 'EstMessage:', isMessageEvent);
                             if (isMessageEvent) {
                                 if (n.id > lastMessageId) {
                                     lastMessageId = Math.max(lastMessageId, n.id);
@@ -3115,7 +3280,12 @@
         }
         
         function addConversationToList(conv) {
-            const list = document.querySelector('.conversations-list, .conversation-items, .list-group');
+            // Ne pas ajouter de conversations sur la page des notifications
+            if (window.location.pathname.includes('/notifications/')) {
+                console.log('[CONV] Ignoré - sur page notifications');
+                return;
+            }
+            const list = document.querySelector('.conversations-list, .conversation-items, .list-group:not(.list-group-transparent)');
             if (!list) return;
             
             if (list.querySelector(`[data-conversation-id="${conv.id}"]`)) return;
@@ -3137,11 +3307,15 @@
         }
         
         function updateConversationInList(conv) {
+            // Ne pas mettre à jour sur la page des notifications
+            if (window.location.pathname.includes('/notifications/')) {
+                return;
+            }
             if (!conv || !conv.other_user || !conv.other_user.avatar) {
                 return;
             }
             
-            const list = document.querySelector('.conversations-list, .conversation-items, .list-group');
+            const list = document.querySelector('.conversations-list, .conversation-items, .list-group:not(.list-group-transparent)');
             if (!list) return;
             
             const existingItem = list.querySelector(`[data-conversation-id="${conv.id}"]`);
@@ -3256,8 +3430,10 @@
                     } else if ((dataType === 'notification' || dataType === 'message') && data.data) {
                         const n = data.data;
                         console.log('[NOTIF-WS] n defined:', n ? 'yes' : 'no');
-                        const isMessageEvent = dataType === 'message' || (n && n.type === 'message') || (n && n.type_notification === 'message');
-                        console.log('[NOTIF-WS] isMessageEvent:', isMessageEvent);
+                        const typeNotif = (n.type_notification || '').toLowerCase();
+                        const msgType = (n.type || '').toLowerCase();
+                        const isMessageEvent = dataType === 'message' || msgType === 'message' || typeNotif === 'message';
+                        console.log('[NOTIF-WS] isMessageEvent:', isMessageEvent, 'type:', n.type, 'type_notification:', n.type_notification);
                         if (isMessageEvent) {
                             console.log('[NOTIF-WS] Handling message event, data:', n);
                             const msgId = n.id || 0;
@@ -3279,7 +3455,7 @@
                             }
                         } else {
                             // Vérifier à nouveau que ce n'est pas un message (par sécurité)
-                            const isActuallyMessage = n.type_notification === 'message' || n.type === 'message';
+                            const isActuallyMessage = typeNotif === 'message' || msgType === 'message';
                             if (isActuallyMessage) {
                                 // C'est un message déjà traité ci-dessus, ne rien faire
                                 console.log('[NOTIF-WS] Message déjà traité, ignoré dans les notifications');
