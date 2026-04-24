@@ -36,7 +36,7 @@
                             {% endif %}
                             <small class="text-muted">{{ notif.date_creation|date:"d/m/Y H:i" }}</small>
                         </div>
-                        <h6 class="mb-1">{{ notif.titre }}</h5>
+                        <h6 class="mb-1">{{ notif.titre }}</h6>
                         <p class="mb-1 text-muted" style="font-size: 0.9rem;">{{ notif.message|truncatechars:100 }}</p>
                         {% if notif.expediteur %}
                         <small class="text-muted">De: {{ notif.expediteur.get_full_name }}</small>
