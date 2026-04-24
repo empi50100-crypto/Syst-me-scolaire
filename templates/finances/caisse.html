@@ -18,26 +18,26 @@
 
 <div class="row mb-4">
     <div class="col-md-4">
-        <div class="card card-stat success">
+        <div class="card stat-card stat-card-success">
             <div class="card-body">
-                <h5 class="card-title text-muted">Encaissements</h5>
-                <h3>{{ total_encaissements|default:0|floatformat:0 }} FCFA</h3>
+                <h6 class="stat-label">Encaissements</h6>
+                <div class="stat-value">{{ total_encaissements|default:0|floatformat:0 }} <small class="stat-sub">FCFA</small></div>
             </div>
         </div>
     </div>
     <div class="col-md-4">
-        <div class="card card-stat danger">
+        <div class="card stat-card stat-card-danger">
             <div class="card-body">
-                <h5 class="card-title text-muted">Décaissements</h5>
-                <h3>{{ total_decaissements|default:0|floatformat:0 }} FCFA</h3>
+                <h6 class="stat-label">Décaissements</h6>
+                <div class="stat-value">{{ total_decaissements|default:0|floatformat:0 }} <small class="stat-sub">FCFA</small></div>
             </div>
         </div>
     </div>
     <div class="col-md-4">
-        <div class="card card-stat primary">
+        <div class="card stat-card stat-card-primary">
             <div class="card-body">
-                <h5 class="card-title text-muted">Solde</h5>
-                <h3>{{ solde|default:0|floatformat:0 }} FCFA</h3>
+                <h6 class="stat-label">Solde</h6>
+                <div class="stat-value">{{ solde|default:0|floatformat:0 }} <small class="stat-sub">FCFA</small></div>
             </div>
         </div>
     </div>

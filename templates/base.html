@@ -1352,6 +1352,144 @@
         }
 
         /* =============================================== */
+        /* UNIFIED TYPOGRAPHY - Headings & Tables */
+        /* =============================================== */
+        /* Page titles (h1) */
+        h1, .h1, .page-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #1e293b;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin-bottom: 1rem;
+        }
+        body.dark-bg h1, body.dark-bg .h1, body.dark-bg .page-title {
+            color: #f1f5f9 !important;
+        }
+        
+        /* h1 with icon */
+        h1 .bi, .h1 .bi, .page-title .bi {
+            margin-right: 0.5rem;
+            color: #6366f1;
+        }
+        body.dark-bg h1 .bi, body.dark-bg .h1 .bi, body.dark-bg .page-title .bi {
+            color: #818cf8;
+        }
+
+        /* Section titles (h2, h3) */
+        h2, .h2, h3, .h3, .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #334155;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        body.dark-bg h2, body.dark-bg .h2, body.dark-bg h3, body.dark-bg .h3, body.dark-bg .section-title {
+            color: #e2e8f0 !important;
+        }
+
+        /* Card titles in headers */
+        .card-header h4, .card-header h5, .card-header .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin: 0;
+        }
+
+        /* Statistics display (large numbers) */
+        .stat-number, .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e293b;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        .stat-number small, .stat-value small {
+            font-size: 0.875rem;
+            font-weight: 400;
+            color: #64748b;
+        }
+        body.dark-bg .stat-number, body.dark-bg .stat-value {
+            color: #f1f5f9 !important;
+        }
+        body.dark-bg .stat-number small, body.dark-bg .stat-value small {
+            color: #94a3b8;
+        }
+
+        /* Table styling - Unified */
+        .table thead th {
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #475569;
+            background: #f8fafc;
+            border-bottom: 2px solid #e2e8f0;
+            padding: 0.75rem 1rem;
+        }
+        body.dark-bg .table thead th {
+            color: #94a3b8;
+            background: #1e293b;
+            border-bottom-color: #334155;
+        }
+
+        .table tbody td {
+            font-size: 0.9rem;
+            color: #334155;
+            padding: 0.75rem 1rem;
+            vertical-align: middle;
+        }
+        body.dark-bg .table tbody td {
+            color: #cbd5e1;
+        }
+
+        /* Table row hover */
+        .table tbody tr:hover {
+            background-color: #f1f5f9;
+        }
+        body.dark-bg .table tbody tr:hover {
+            background-color: #1e293b;
+        }
+
+        /* Bold values in tables */
+        .table td.fw-bold, .table td .fw-bold {
+            font-weight: 600;
+            color: #1e293b;
+        }
+        body.dark-bg .table td.fw-bold, body.dark-bg .table td .fw-bold {
+            color: #f1f5f9;
+        }
+
+        /* Badge text in tables */
+        .table .badge {
+            font-size: 0.75rem;
+            font-weight: 500;
+            padding: 0.35em 0.65em;
+        }
+
+        /* Form labels */
+        .form-label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #475569;
+            margin-bottom: 0.25rem;
+        }
+        body.dark-bg .form-label {
+            color: #94a3b8;
+        }
+
+        /* Input fields */
+        .form-control, .form-select {
+            font-size: 0.9rem;
+            color: #334155;
+        }
+        body.dark-bg .form-control, body.dark-bg .form-select {
+            background: #1e293b;
+            color: #f1f5f9;
+            border-color: #334155;
+        }
+        body.dark-bg .form-control::placeholder {
+            color: #64748b;
+        }
+
+        /* =============================================== */
         /* LIGHT MODE - Navbar */
         /* =============================================== */
         .navbar {
