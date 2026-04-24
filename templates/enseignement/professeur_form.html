@@ -1,19 +1,13 @@
 {% extends 'base.html' %}
-
 {% block title %}{% if profil %}Modifier le profil{% elif selected_user %}Compléter le profil{% else %}Nouveau Professeur{% endif %}{% endblock %}
 
 {% block content %}
-<div class="page-header">
-    <h1><i class="bi bi-person-badge"></i> 
-        {% if profil %}
-            Modifier le profil de {{ selected_user.first_name }} {{ selected_user.last_name }}
-        {% elif selected_user %}
-            Compléter le profil de {{ selected_user.first_name }} {{ selected_user.last_name }}
-        {% else %}
-            Nouveau Professeur
-        {% endif %}
-    </h1>
-</div>
+{% url 'enseignement:professeur_list' as list_url %}
+{% include 'includes/page_header.html' with 
+    title=profil|yesno:"Modifier le profil,Nouveau Professeur" 
+    icon="bi-person-badge" 
+    show_button=False 
+%}
 
 {% if is_secretaire %}
 <div class="alert alert-info">
@@ -21,11 +15,11 @@
 </div>
 {% endif %}
 
-<div class="form-container">
+<div class="content-container">
     {% if form.errors %}
-    <div class="alert alert-danger">
-        <strong>Erreurs dans le formulaire :</strong>
-        <ul>
+    <div class="alert alert-danger mb-4">
+        <strong><i class="bi bi-exclamation-triangle-fill me-2"></i>Erreurs dans le formulaire :</strong>
+        <ul class="mb-0 mt-2">
             {% for field in form %}
                 {% for error in field.errors %}
                     <li>{{ field.label }}: {{ error }}</li>
@@ -49,16 +43,18 @@
             <div class="form-section-header">
                 <i class="bi bi-person-check"></i> Sélectionner un utilisateur
             </div>
-            <div class="form-group">
-                <label class="form-label">Utilisateur professeur</label>
-                <select name="user" class="form-control" required>
-                    <option value="">-- Choisir un professeur --</option>
-                    {% for u in utilisateurs %}
-                    <option value="{{ u.id }}" {% if form.nom == u.last_name and form.prenom == u.first_name %}selected{% endif %}>
-                        {{ u.last_name }} {{ u.first_name }} ({{ u.email }})
-                    </option>
-                    {% endfor %}
-                </select>
+            <div class="form-section-body">
+                <div class="form-group">
+                    <label class="form-label">Utilisateur professeur <span class="text-danger">*</span></label>
+                    <select name="user" class="form-select" required>
+                        <option value="">-- Choisir un professeur --</option>
+                        {% for u in utilisateurs %}
+                        <option value="{{ u.id }}" {% if form.nom == u.last_name and form.prenom == u.first_name %}selected{% endif %}>
+                            {{ u.last_name }} {{ u.first_name }} ({{ u.email }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
             </div>
         </div>
         {% endif %}
@@ -67,55 +63,57 @@
             <div class="form-section-header">
                 <i class="bi bi-person"></i> Informations Personnelles
             </div>
-            
-            <div class="row g-4">
+            <div class="form-section-body">
+                <div class="row g-4">
                 <div class="col-md-4">
                     <div class="form-group">
                         <label class="form-label">Nom</label>
-                        <input type="text" name="nom" class="form-control" value="{{ form.nom }}" readonly>
+                        <input type="text" name="nom" class="form-control" value="{{ profil.nom }}" readonly>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="form-group">
                         <label class="form-label">Prénom</label>
-                        <input type="text" name="prenom" class="form-control" value="{{ form.prenom }}" readonly>
+                        <input type="text" name="prenom" class="form-control" value="{{ profil.prenom }}" readonly>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="form-group">
                         <label class="form-label">Email</label>
-                        <input type="email" name="email" class="form-control" value="{{ form.email }}" readonly>
+                        <input type="email" name="email" class="form-control" value="{{ profil.email }}" readonly>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="form-group">
                         <label class="form-label">Téléphone</label>
-                        <input type="text" name="telephone" class="form-control" value="{{ form.telephone }}">
+                        <input type="text" name="telephone" class="form-control" value="{{ profil.telephone }}">
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="form-group">
                         <label class="form-label">Date d'embauche</label>
-                        <input type="date" name="date_embauche" class="form-control" value="{{ form.date_embauche }}">
+                        <input type="date" name="date_embauche" class="form-control" value="{{ profil.date_embauche|date:'Y-m-d' }}">
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="form-group">
                         <label class="form-label">Statut</label>
-                        <select name="statut" class="form-control">
-                            <option value="actif" {% if form.statut == 'actif' %}selected{% endif %}>Actif</option>
-                            <option value="inactif" {% if form.statut == 'inactif' %}selected{% endif %}>Inactif</option>
-                            <option value="suspendu" {% if form.statut == 'suspendu' %}selected{% endif %}>Suspendu</option>
+                        <select name="statut" class="form-select">
+                            <option value="actif" {% if profil.statut == 'actif' %}selected{% endif %}>Actif</option>
+                            <option value="inactif" {% if profil.statut == 'inactif' %}selected{% endif %}>Inactif</option>
+                            <option value="suspendu" {% if profil.statut == 'suspendu' %}selected{% endif %}>Suspendu</option>
                         </select>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="form-group">
                         <label class="form-label">Spécialité (Matière)</label>
-                        <select name="specialite" class="form-control">
-                            <option value="">-- Choisir une matière --</option>
-                            {% for m in matieres %}
-                            <option value="{{ m.id }}" {% if profil and profil.specialite.id == m.id %}selected{% endif %}>{{ m.nom }}</option>
+                        <select name="specialite" id="specialite" class="form-select">
+                            <option value="">-- Sélectionner une matière --</option>
+                            {% for matiere in matieres %}
+                            <option value="{{ matiere.id }}" {% if profil.user.matiere_id == matiere.id %}selected{% endif %}>
+                                {{ matiere.nom }}
+                            </option>
                             {% endfor %}
                         </select>
                     </div>
@@ -124,19 +122,20 @@
                 <div class="col-md-4">
                     <div class="form-group">
                         <label class="form-label">Salaire de base (FCFA)</label>
-                        <input type="number" name="salaire_base" class="form-control" value="{{ form.salaire_base }}">
+                        <input type="number" name="salaire_base" class="form-control" value="{{ profil.salaire_base }}">
                     </div>
                 </div>
                 {% endif %}
+                </div>
             </div>
         </div>
         
-        <div class="form-actions">
+        <div class="form-actions d-flex gap-3">
             <button type="submit" class="btn btn-primary btn-lg">
-                <i class="bi bi-check-circle"></i> Enregistrer
+                <i class="bi bi-check-circle me-2"></i>Enregistrer
             </button>
-            <a href="{% url 'enseignement:professeur_list' %}" class="btn btn-secondary btn-lg">
-                <i class="bi bi-x-circle"></i> Annuler
+            <a href="{{ list_url }}" class="btn btn-secondary btn-lg">
+                <i class="bi bi-x-circle me-2"></i>Annuler
             </a>
         </div>
     </form>

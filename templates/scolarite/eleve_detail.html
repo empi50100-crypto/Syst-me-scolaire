@@ -1,30 +1,46 @@
 {% extends 'base.html' %}
+{% load permissions_tags %}
 {% block title %}{{ eleve.nom_complet }}{% endblock %}
 
 {% block content %}
+<!-- Header personnalisé pour la fiche élève -->
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div class="d-flex align-items-center">
         {% if eleve.photo %}
-        <img src="{{ eleve.photo.url }}" alt="{{ eleve.nom_complet }}" class="rounded-circle me-3" style="width: 80px; height: 80px; object-fit: cover;">
+        <img src="{{ eleve.photo.url }}" alt="{{ eleve.nom_complet }}" class="rounded-circle me-3" style="width: 80px; height: 80px; object-fit: cover; border: 3px solid #4f46e5;">
         {% else %}
-        <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center me-3" style="width: 80px; height: 80px;">
+        <div class="rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 80px; height: 80px; background: linear-gradient(135deg, #4f46e5, #7c3aed);">
             <i class="bi bi-person text-white" style="font-size: 2.5rem;"></i>
         </div>
         {% endif %}
-        <h1>{{ eleve.nom_complet }}</h1>
+        <div>
+            <h1 class="mb-0" style="color: #1e293b; font-weight: 700;">{{ eleve.nom_complet }}</h1>
+            <span class="badge badge-{% if eleve.statut == 'actif' %}success{% else %}secondary{% endif %} mt-1">
+                <i class="bi bi-{% if eleve.statut == 'actif' %}check-circle{% else %}x-circle{% endif %} me-1"></i>
+                {{ eleve.get_statut_display }}
+            </span>
+        </div>
     </div>
-    <div>
-        <a href="{% url 'scolarite:eleve_update' eleve.pk %}" class="btn btn-warning">Modifier</a>
-        <a href="{% url 'finances:paiement_create_eleve' eleve.pk %}" class="btn btn-success">Enregistrer paiement</a>
+    <div class="d-flex gap-2">
+        <a href="{% url 'scolarite:eleve_update' eleve.pk %}" class="btn" style="background: #fef3c7; border-color: #f59e0b; color: #92400e;">
+            <i class="bi bi-pencil me-1"></i> Modifier
+        </a>
+        <a href="{% url 'finances:paiement_create_eleve' eleve.pk %}" class="btn" style="background: #d1fae5; border-color: #10b981; color: #065f46;">
+            <i class="bi bi-cash me-1"></i> Enregistrer paiement
+        </a>
     </div>
 </div>
 
-<ul class="nav nav-tabs mb-4" id="eleveTabs" role="tablist">
+<ul class="nav nav-tabs mb-4" id="eleveTabs" role="tablist" style="border-bottom: 2px solid #e2e8f0;">
     <li class="nav-item" role="presentation">
-        <button class="nav-link active" id="infos-tab" data-bs-toggle="tab" data-bs-target="#infos" type="button">Informations</button>
+        <button class="nav-link active" id="infos-tab" data-bs-toggle="tab" data-bs-target="#infos" type="button" style="border: none; border-bottom: 3px solid transparent; color: #64748b; font-weight: 500;">
+            <i class="bi bi-person me-2"></i>Informations
+        </button>
     </li>
     <li class="nav-item" role="presentation">
-        <button class="nav-link" id="documents-tab" data-bs-toggle="tab" data-bs-target="#documents" type="button">Documents</button>
+        <button class="nav-link" id="documents-tab" data-bs-toggle="tab" data-bs-target="#documents" type="button" style="border: none; border-bottom: 3px solid transparent; color: #64748b; font-weight: 500;">
+            <i class="bi bi-folder me-2"></i>Documents
+        </button>
     </li>
 </ul>
 
@@ -32,52 +48,68 @@
     <div class="tab-pane fade show active" id="infos" role="tabpanel">
         <div class="row">
             <div class="col-md-4">
-                <div class="card mb-4">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0">Informations personnelles</h5>
+                <div class="card mb-4 shadow-sm" style="border: 1px solid #e2e8f0; border-radius: 12px;">
+                    <div class="card-header text-white py-3" style="background: linear-gradient(135deg, #4f46e5, #7c3aed); border-radius: 12px 12px 0 0;">
+                        <h5 class="mb-0"><i class="bi bi-person-vcard me-2"></i>Informations personnelles</h5>
                     </div>
-                    <div class="card-body">
-                        <p><strong>Matricule:</strong> {{ eleve.matricule }}</p>
-                        <p><strong>Nom:</strong> {{ eleve.nom }}</p>
-                        <p><strong>Prénom:</strong> {{ eleve.prenom }}</p>
-                        <p><strong>Date de naissance:</strong> {{ eleve.date_naissance }}</p>
-                        <p><strong>Lieu de naissance:</strong> {{ eleve.lieu_naissance }}</p>
-                        <p><strong>Sexe:</strong> {{ eleve.get_sexe_display }}</p>
-                        <p><strong>Adresse:</strong> {{ eleve.adresse }}</p>
-                        <p><strong>Téléphone parent:</strong> {{ eleve.telephone_parent }}</p>
-                        <p><strong>Email parent:</strong> {{ eleve.email_parent }}</p>
-                        <p><strong>Statut:</strong> 
-                            <span class="badge bg-{% if eleve.statut == 'actif' %}success{% else %}secondary{% endif %}">
-                                {{ eleve.get_statut_display }}
-                            </span>
-                        </p>
+                    <div class="card-body" style="background: #f8fafc;">
+                        <div class="mb-3">
+                            <label class="text-muted small" style="color: #64748b; font-weight: 500;">Matricule</label>
+                            <p class="mb-1 fw-semibold">{{ eleve.matricule }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="text-muted small" style="color: #64748b; font-weight: 500;">Nom complet</label>
+                            <p class="mb-1 fw-semibold">{{ eleve.nom }} {{ eleve.prenom }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="text-muted small" style="color: #64748b; font-weight: 500;">Date de naissance</label>
+                            <p class="mb-1">{{ eleve.date_naissance }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="text-muted small" style="color: #64748b; font-weight: 500;">Lieu de naissance</label>
+                            <p class="mb-1">{{ eleve.lieu_naissance }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="text-muted small" style="color: #64748b; font-weight: 500;">Sexe</label>
+                            <p class="mb-1">{{ eleve.get_sexe_display }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="text-muted small" style="color: #64748b; font-weight: 500;">Adresse</label>
+                            <p class="mb-1">{{ eleve.adresse|default:"-" }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="text-muted small" style="color: #64748b; font-weight: 500;">Contact parent</label>
+                            <p class="mb-1"><i class="bi bi-telephone me-1"></i>{{ eleve.telephone_parent|default:"-" }}</p>
+                            <p class="mb-0"><i class="bi bi-envelope me-1"></i>{{ eleve.email_parent|default:"-" }}</p>
+                        </div>
                     </div>
                 </div>
             </div>
             
             <div class="col-md-8">
-                <div class="card mb-4">
-                    <div class="card-header">
-                        <h5 class="mb-0">Historique des inscriptions</h5>
+                <div class="card mb-4 shadow-sm" style="border: 1px solid #e2e8f0; border-radius: 12px;">
+                    <div class="card-header py-3" style="background: #f1f5f9; border-bottom: 1px solid #e2e8f0; border-radius: 12px 12px 0 0;">
+                        <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Historique des inscriptions</h5>
                     </div>
-                    <div class="card-body">
-                        <table class="table table-sm">
-                            <thead>
-                                <tr>
-                                    <th>Année</th>
-                                    <th>Classe</th>
-                                    <th>Moyenne</th>
-                                    <th>Mention</th>
-                                    <th>Décision</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for inscription in inscriptions %}
-                                <tr>
-                                    <td>{{ inscription.annee_scolaire.libelle }}</td>
-                                    <td>{{ inscription.classe.nom }}</td>
-                                    <td>{{ inscription.moyenne_generale|default:"-" }}/20</td>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0" id="inscriptionsTable">
+                                <thead style="background: #f8fafc;">
+                                    <tr>
+                                        <th><i class="bi bi-calendar-year me-1"></i>Année</th>
+                                        <th><i class="bi bi-collection me-1"></i>Classe</th>
+                                        <th><i class="bi bi-calculator me-1"></i>Moyenne</th>
+                                        <th><i class="bi bi-award me-1"></i>Mention</th>
+                                        <th><i class="bi bi-check-circle me-1"></i>Décision</th>
+                                        <th style="width: 80px;" class="text-center"><i class="bi bi-gear me-1"></i>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for inscription in inscriptions %}
+                                    <tr>
+                                        <td>{{ inscription.annee_scolaire.libelle }}</td>
+                                        <td><strong>{{ inscription.classe.nom }}</strong></td>
+                                        <td><span class="{% if inscription.moyenne_generale >= 10 %}text-success{% else %}text-danger{% endif %} fw-bold">{{ inscription.moyenne_generale|default:"-" }}/20</span></td>
                                     <td>{{ inscription.mention|default:"-" }}</td>
                                     <td>{{ inscription.decision|default:"-" }}</td>
                                     <td>

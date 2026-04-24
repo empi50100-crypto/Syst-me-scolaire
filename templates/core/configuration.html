@@ -1,20 +1,9 @@
 {% extends 'base.html' %}
-
-{% block title %}Configuration - SyGeS-AM{% endblock %}
+{% load permissions_tags %}
+{% block title %}Configuration{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-12">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Accueil</a></li>
-                <li class="breadcrumb-item active">Configuration</li>
-            </ol>
-        </nav>
-    </div>
-</div>
-
-<h1 class="mb-4"><i class="bi bi-gear"></i> Configuration</h1>
+{% include 'includes/page_header.html' with title="Configuration" icon="bi-gear" show_button=False %}
 
 <ul class="nav nav-tabs mb-4" id="configTabs" role="tablist">
     <li class="nav-item" role="presentation">
@@ -36,8 +25,8 @@
     <div class="tab-pane fade show active" id="annees" role="tabpanel">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h4>Années Scolaires</h4>
-            <a href="{% url 'finances:annee_scolaire' %}" class="btn btn-primary">
-                <i class="bi bi-plus-circle"></i> Nouvelle année
+            <a href="{% url 'finances:annee_scolaire' %}" class="btn" style="background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white;">
+                <i class="bi bi-plus-circle me-1"></i> Nouvelle année
             </a>
         </div>
         <div class="card">
@@ -63,13 +52,13 @@
                                 <td>{{ annee.get_type_cycle_actif_display|default:"-" }}</td>
                                 <td>
                                     {% if annee.est_active %}
-                                    <span class="badge bg-success">Active</span>
+                                    <span class="badge badge-success"><i class="bi bi-check-circle me-1"></i>Active</span>
                                     {% else %}
-                                    <span class="badge bg-secondary">Inactive</span>
+                                    <span class="badge badge-secondary"><i class="bi bi-x-circle me-1"></i>Inactive</span>
                                     {% endif %}
                                 </td>
                                 <td>
-                                    <a href="{% url 'finances:annee_scolaire_edit' annee.pk %}" class="btn btn-sm btn-outline-primary">
+                                    <a href="{% url 'finances:annee_scolaire_edit' annee.pk %}" class="btn btn-edit" title="Modifier">
                                         <i class="bi bi-pencil"></i>
                                     </a>
                                 </td>

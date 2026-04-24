@@ -1,37 +1,46 @@
 {% extends 'base.html' %}
+{% load permissions_tags %}
 {% block title %}Rapport Académique{% endblock %}
 
 {% block content %}
-<h1>Rapport Académique</h1>
-<h4 class="text-muted">{{ annee.libelle }}</h4>
+{% include 'includes/page_header.html' with title="Rapport Académique" icon="bi-graph-up" show_button=False %}
 
-<div class="card">
-    <div class="card-body">
-        <table class="table table-striped">
+<h5 class="text-muted mb-4">{{ annee.libelle }}</h5>
+
+<div class="table-container">
+    <div class="d-flex justify-content-between align-items-center px-4 py-3 bg-light border-bottom">
+        <h5 class="mb-0"><i class="bi bi-table me-2"></i>Résultats par classe</h5>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0" id="rapportTable">
             <thead>
                 <tr>
-                    <th>Classe</th>
-                    <th>Effectif</th>
-                    <th>Moyenne Classe</th>
-                    <th>Taux de Réussite</th>
+                    <th><i class="bi bi-collection me-1"></i>Classe</th>
+                    <th><i class="bi bi-people me-1"></i>Effectif</th>
+                    <th><i class="bi bi-percent me-1"></i>Moyenne Classe</th>
+                    <th><i class="bi bi-trophy me-1"></i>Taux de Réussite</th>
                 </tr>
             </thead>
             <tbody>
                 {% for s in stats %}
                 <tr>
-                    <td>{{ s.classe.nom }}</td>
+                    <td><strong>{{ s.classe.nom }}</strong></td>
                     <td>{{ s.effectif }}</td>
                     <td>{{ s.moyenne_classe }}/20</td>
                     <td>
                         <div class="progress" style="height: 20px;">
-                            <div class="progress-bar bg-success" style="width: {{ s.taux_reussite }}%">
+                            <div class="progress-bar" style="width: {% if s.taux_reussite %}{{ s.taux_reussite }}{% else %}0{% endif %}%; background: linear-gradient(135deg, #10b981, #059669);">
                                 {{ s.taux_reussite }}%
                             </div>
                         </div>
                     </td>
                 </tr>
                 {% empty %}
-                <tr><td colspan="4" class="text-center text-muted">Aucune donnée</td></tr>
+                <tr>
+                    <td colspan="4" class="p-0">
+                        {% include 'includes/empty_state.html' with icon="bi-graph-up" title="Aucune donnée" message="Aucune statistique disponible pour le moment." %}
+                    </td>
+                </tr>
                 {% endfor %}
             </tbody>
         </table>
@@ -40,8 +49,8 @@
 
 {% if user.is_direction %}
 <div class="mt-4">
-    <a href="{% url 'rapports:transition_annee' %}" class="btn btn-warning">
-        <i class="bi bi-calendar-plus"></i> Gérer la transition d'année
+    <a href="{% url 'rapports:transition_annee' %}" class="btn" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white;">
+        <i class="bi bi-calendar-plus me-1"></i> Gérer la transition d'année
     </a>
 </div>
 {% endif %}

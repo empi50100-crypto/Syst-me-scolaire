@@ -1,0 +1,18 @@
+{% comment %}
+Composant: État Vide Unifié
+Usage: {% include 'includes/empty_state.html' with icon="bi-people" title="Aucun élément" message="Commencez par ajouter un élément" button_url="url" button_text="Ajouter" %}
+{% endcomment %}
+
+<div class="empty-state">
+    <div class="empty-state-icon">
+        <i class="bi {{ icon|default:"bi-inbox" }}"></i>
+    </div>
+    <h4>{{ title|default:"Aucune donnée disponible" }}</h4>
+    <p>{{ message|default:"Les données apparaîtront ici une fois ajoutées." }}</p>
+    {% if button_url %}
+    <a href="{{ button_url }}" class="btn btn-primary btn-lg">
+        {% if button_icon %}<i class="bi {{ button_icon }}"></i>{% endif %}
+        {{ button_text|default:"Ajouter" }}
+    </a>
+    {% endif %}
+</div>

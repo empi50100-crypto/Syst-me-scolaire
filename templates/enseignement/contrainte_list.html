@@ -69,17 +69,17 @@
                         <td>{{ contrainte.motif|truncatewords:3|default:"-" }}</td>
                         <td>
                             {% if contrainte.est_recurrent %}
-                            <span class="badge bg-info">Oui</span>
+                            <span class="badge badge-info">Oui</span>
                             {% else %}
-                            <span class="badge bg-warning">Non</span>
+                            <span class="badge badge-warning">Non</span>
                             {% endif %}
                         </td>
                         <td>
-                            <div class="btn-group btn-group-sm">
-                                <a href="{% url 'enseignement:contrainte_edit' contrainte.pk %}" class="btn btn-outline-secondary" title="Modifier">
+                            <div class="action-btns">
+                                <a href="{% url 'enseignement:contrainte_edit' contrainte.pk %}" class="btn btn-edit" title="Modifier">
                                     <i class="bi bi-pencil"></i>
                                 </a>
-                                <a href="{% url 'enseignement:contrainte_delete' contrainte.pk %}" class="btn btn-outline-danger" title="Supprimer" onclick="return confirm('Supprimer cette contrainte ?')">
+                                <a href="{% url 'enseignement:contrainte_delete' contrainte.pk %}" class="btn btn-delete btn-confirm-delete" title="Supprimer" data-confirm-message="Supprimer cette contrainte ?">
                                     <i class="bi bi-trash"></i>
                                 </a>
                             </div>
@@ -92,15 +92,6 @@
     </div>
 </div>
 {% else %}
-<div class="card">
-    <div class="card-body text-center py-5">
-        <i class="bi bi-calendar-week" style="font-size: 4rem; color: var(--gray-300);"></i>
-        <h5 class="text-muted mt-3">Aucune contrainte définie</h5>
-        <p class="text-muted">Définissez les contraintes horaires pour la planification</p>
-        <a href="{% url 'enseignement:contrainte_create' %}" class="btn btn-primary">
-            <i class="bi bi-plus-circle"></i> Nouvelle contrainte
-        </a>
-    </div>
-</div>
+{% include 'includes/empty_state.html' with icon="bi-calendar-week" title="Aucune contrainte définie" message="Définissez les contraintes horaires pour la planification des cours." button_url=create_url button_text="Nouvelle contrainte" %}
 {% endif %}
 {% endblock %}

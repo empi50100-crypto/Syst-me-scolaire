@@ -1,32 +1,31 @@
 {% extends 'base.html' %}
+{% load permissions_tags %}
 {% block title %}Demandes de Modification de Permissions{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1><i class="bi bi-shield-lock"></i> Demandes de Modification de Permissions</h1>
-</div>
+{% include 'includes/page_header.html' with title="Demandes de Modification de Permissions" icon="bi-shield-lock" show_button=False %}
 
 <div class="card mb-4">
     <div class="card-header">
         <ul class="nav nav-tabs card-header-tabs" role="tablist">
             <li class="nav-item">
                 <a class="nav-link {% if not statut %}active{% endif %}" href="{% url 'authentification:permission_modification_list' %}">
-                    Toutes <span class="badge bg-dark">{{ total }}</span>
+                    Toutes <span class="badge badge-secondary">{{ total }}</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link {% if statut == 'en_attente' %}active{% endif %}" href="?statut=en_attente">
-                    En attente <span class="badge bg-warning text-dark">{{ en_attente }}</span>
+                    En attente <span class="badge badge-warning">{{ en_attente }}</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link {% if statut == 'approuve' %}active{% endif %}" href="?statut=approuve">
-                    Approuvées <span class="badge bg-success">{{ approuve }}</span>
+                    Approuvées <span class="badge badge-success">{{ approuve }}</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link {% if statut == 'rejete' %}active{% endif %}" href="?statut=rejete">
-                    Rejetées <span class="badge bg-danger">{{ rejete }}</span>
+                    Rejetées <span class="badge badge-danger">{{ rejete }}</span>
                 </a>
             </li>
         </ul>
@@ -55,39 +54,43 @@
                         <td>{{ mod.demandeur.get_full_name|default:mod.demandeur.username }}</td>
                         <td>
                             {% if mod.type_modification == 'ajout' %}
-                                <span class="badge bg-success">Ajout</span>
+                                <span class="badge badge-success"><i class="bi bi-plus-circle me-1"></i>Ajout</span>
                             {% elif mod.type_modification == 'modification' %}
-                                <span class="badge bg-primary">Modification</span>
+                                <span class="badge badge-primary"><i class="bi bi-pencil me-1"></i>Modification</span>
                             {% else %}
-                                <span class="badge bg-danger">Suppression</span>
+                                <span class="badge badge-danger"><i class="bi bi-trash me-1"></i>Suppression</span>
                             {% endif %}
                         </td>
                         <td>
                             {% for action in mod.actions_demandees %}
-                                <span class="badge bg-info text-dark">{{ action }}</span>
+                                <span class="badge badge-info">{{ action }}</span>
                             {% endfor %}
                         </td>
                         <td>{{ mod.get_niveau_display }}</td>
                         <td><small>{{ mod.created_at|date:"d/m/Y H:i" }}</small></td>
                         <td>
                             {% if mod.statut == 'en_attente' %}
-                                <span class="badge bg-warning text-dark">En attente</span>
+                                <span class="badge badge-warning"><i class="bi bi-clock me-1"></i>En attente</span>
                             {% elif mod.statut == 'approuve' %}
-                                <span class="badge bg-success">Approuvée</span>
+                                <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Approuvée</span>
                             {% else %}
-                                <span class="badge bg-danger">Rejetée</span>
+                                <span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i>Rejetée</span>
                             {% endif %}
                         </td>
                         <td class="text-center">
-                            <a href="{% url 'authentification:permission_modification_detail' mod.pk %}" class="btn btn-sm btn-info" title="Voir détails">
-                                <i class="bi bi-eye"></i>
-                            </a>
-                            {% if mod.statut == 'en_attente' %}
-                            <button type="button" class="btn btn-sm btn-success" onclick="showApproveModal({{ mod.pk }})" title="Approuver">
-                                <i class="bi bi-check-circle"></i>
-                            </button>
-                            <button type="button" class="btn btn-sm btn-danger" onclick="showRejectModal({{ mod.pk }})" title="Rejeter">
-                                <i class="bi bi-x-circle"></i>
+                            <div class="action-btns">
+                                <a href="{% url 'authentification:permission_modification_detail' mod.pk %}" class="btn btn-view" title="Voir détails">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                {% if mod.statut == 'en_attente' %}
+                                <button type="button" class="btn btn-sm btn-success" onclick="showApproveModal({{ mod.pk }})" title="Approuver">
+                                    <i class="bi bi-check-circle"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-danger" onclick="showRejectModal({{ mod.pk }})" title="Rejeter">
+                                    <i class="bi bi-x-circle"></i>
+                                </button>
+                                {% endif %}
+                            </div>
                             </button>
                             {% endif %}
                         </td>

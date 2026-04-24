@@ -1,87 +1,93 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load permissions_tags %}
 
 {% block title %}Statistiques de Présence{% endblock %}
 
 {% block content %}
-<div class="page-header">
-    <h1><i class="bi bi-pie-chart"></i> Statistiques de Présence</h1>
-    {% if annee %}
-    <span class="badge bg-primary fs-6">{{ annee.libelle }}</span>
-    {% endif %}
-</div>
+{% include 'includes/page_header.html' with title="Statistiques de Présence" icon="bi-pie-chart" show_button=False %}
 
-<div class="row mb-4">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0"><i class="bi bi-funnel me-2"></i>Filtres</h5>
+<!-- Filtres -->
+<div class="card filters-card mb-4">
+    <div class="card-header">
+        <h5><i class="bi bi-funnel"></i> Filtres</h5>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label">Classe</label>
+                <select name="classe" class="form-select">
+                    <option value="">Toutes les classes</option>
+                    {% for c in classes %}
+                    <option value="{{ c.pk }}" {% if classe_filter == c.pk|stringformat:"s" %}selected{% endif %}>{{ c.nom }}</option>
+                    {% endfor %}
+                </select>
             </div>
-            <div class="card-body">
-                <form method="get" class="row g-3">
-                    <div class="col-md-3">
-                        <label class="form-label">Classe</label>
-                        <select name="classe" class="form-select">
-                            <option value="">Toutes les classes</option>
-                            {% for c in classes %}
-                            <option value="{{ c.pk }}" {% if classe_filter == c.pk|stringformat:"s" %}selected{% endif %}>{{ c.nom }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Date début</label>
-                        <input type="date" name="date_debut" class="form-control" value="{{ date_debut }}">
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Date fin</label>
-                        <input type="date" name="date_fin" class="form-control" value="{{ date_fin }}">
-                    </div>
-                    <div class="col-md-3 d-flex align-items-end">
-                        <div class="d-flex gap-2 w-100">
-                            <button type="submit" class="btn btn-primary flex-grow-1">
-                                <i class="bi bi-search"></i> Filtrer
-                            </button>
-                            <a href="{% url 'presences:statistiques_presence' %}" class="btn btn-outline-secondary">
-                                <i class="bi bi-arrow-counterclockwise"></i>
-                            </a>
-                        </div>
-                    </div>
-                </form>
+            <div class="col-md-3">
+                <label class="form-label">Date début</label>
+                <input type="date" name="date_debut" class="form-control" value="{{ date_debut }}">
             </div>
-        </div>
+            <div class="col-md-3">
+                <label class="form-label">Date fin</label>
+                <input type="date" name="date_fin" class="form-control" value="{{ date_fin }}">
+            </div>
+            <div class="col-md-3">
+                <div class="d-flex gap-2 w-100">
+                    <button type="submit" class="btn btn-primary flex-grow-1">
+                        <i class="bi bi-search me-1"></i> Filtrer
+                    </button>
+                    <a href="{% url 'presences:statistiques_presence' %}" class="btn" style="background: #f1f5f9; border-color: #cbd5e1; color: #475569;">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                    </a>
+                </div>
+            </div>
+        </form>
     </div>
 </div>
 
+<!-- Statistiques -->
 <div class="row g-4 mb-4">
     <div class="col-md-3">
-        <div class="card stat-card success h-100">
-            <div class="card-body text-center">
-                <h6 class="text-muted">TOTAL APPELS</h6>
-                <h2>{{ total_global|default:"0" }}</h2>
+        <div class="card stat-card stat-card-primary h-100">
+            <div class="card-body">
+                <div class="stat-icon"><i class="bi bi-calendar-check"></i></div>
+                <div class="stat-content">
+                    <h6>Total Appels</h6>
+                    <h3>{{ total_global|default:"0" }}</h3>
+                </div>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card stat-card primary h-100">
-            <div class="card-body text-center">
-                <h6 class="text-muted">PRÉSENTS</h6>
-                <h2 class="text-success">{{ total_presents|default:"0" }}</h2>
+        <div class="card stat-card stat-card-success h-100">
+            <div class="card-body">
+                <div class="stat-icon"><i class="bi bi-check-circle"></i></div>
+                <div class="stat-content">
+                    <h6>Présents</h6>
+                    <h3>{{ total_presents|default:"0" }}</h3>
+                </div>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card stat-card danger h-100">
-            <div class="card-body text-center">
-                <h6 class="text-muted">ABSENTS</h6>
-                <h2 class="text-danger">{{ total_absents|default:"0" }}</h2>
+        <div class="card stat-card stat-card-danger h-100">
+            <div class="card-body">
+                <div class="stat-icon"><i class="bi bi-x-circle"></i></div>
+                <div class="stat-content">
+                    <h6>Absents</h6>
+                    <h3>{{ total_absents|default:"0" }}</h3>
+                </div>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card stat-card warning h-100">
-            <div class="card-body text-center">
-                <h6 class="text-muted">RETARDS</h6>
-                <h2 class="text-warning">{{ total_retards|default:"0" }}</h2>
+        <div class="card stat-card stat-card-warning h-100">
+            <div class="card-body">
+                <div class="stat-icon"><i class="bi bi-clock"></i></div>
+                <div class="stat-content">
+                    <h6>Retards</h6>
+                    <h3>{{ total_retards|default:"0" }}</h3>
+                </div>
             </div>
         </div>
     </div>
@@ -89,20 +95,20 @@
 
 <div class="row g-4 mb-4">
     <div class="col-md-6">
-        <div class="card h-100">
-            <div class="card-header bg-success text-white">
+        <div class="card h-100" style="border: 1px solid #e2e8f0; border-radius: 12px;">
+            <div class="card-header text-white py-3" style="background: linear-gradient(135deg, #10b981, #059669); border-radius: 12px 12px 0 0;">
                 <h5 class="mb-0"><i class="bi bi-graph-up-arrow me-2"></i>Taux de présence global</h5>
             </div>
             <div class="card-body text-center">
-                <div class="display-1 fw-bold text-success">{{ taux_global|default:"0" }}%</div>
+                <div class="display-1 fw-bold" style="color: #10b981;">{{ taux_global|default:"0" }}%</div>
                 <div class="progress mt-3" style="height: 30px;">
-                    <div class="progress-bar bg-success" style="width: {{ taux_global|default:"0" }}%">
+                    <div class="progress-bar" style="width: {% if taux_global %}{{ taux_global }}{% else %}0{% endif %}%; background: linear-gradient(135deg, #10b981, #059669);">
                         Présence
                     </div>
-                    <div class="progress-bar bg-danger" style="width: {{ total_absents|default:"0" }}%">
+                    <div class="progress-bar" style="width: {% if total_absents %}{{ total_absents }}{% else %}0{% endif %}%; background: linear-gradient(135deg, #ef4444, #dc2626);">
                         Absence
                     </div>
-                    <div class="progress-bar bg-warning" style="width: {{ total_retards|default:"0" }}%">
+                    <div class="progress-bar" style="width: {% if total_retards %}{{ total_retards }}{% else %}0{% endif %}%; background: linear-gradient(135deg, #f59e0b, #d97706);">
                         Retard
                     </div>
                 </div>
@@ -115,16 +121,16 @@
         </div>
     </div>
     <div class="col-md-6">
-        <div class="card h-100">
-            <div class="card-header bg-info text-white">
-                <h5 class="mb-0"><i class="bi bi-exclamation-triangle me-2"></i>Actions rapides</h5>
+        <div class="card h-100" style="border: 1px solid #e2e8f0; border-radius: 12px;">
+            <div class="card-header text-white py-3" style="background: linear-gradient(135deg, #0ea5e9, #0284c7); border-radius: 12px 12px 0 0;">
+                <h5 class="mb-0"><i class="bi bi-lightning-charge me-2"></i>Actions rapides</h5>
             </div>
             <div class="card-body">
                 <div class="d-grid gap-3">
-                    <a href="{% url 'presences:rapport_retards' %}" class="btn btn-outline-warning text-start py-3">
+                    <a href="{% url 'presences:rapport_retards' %}" class="btn text-start py-3" style="background: #fef3c7; border-color: #fcd34d; color: #b45309;">
                         <i class="bi bi-clock-history me-2"></i> Rapport des retards
                     </a>
-                    <a href="{% url 'presences:presence_list' %}" class="btn btn-outline-primary text-start py-3">
+                    <a href="{% url 'presences:presence_list' %}" class="btn text-start py-3" style="background: #dbeafe; border-color: #93c5fd; color: #1d4ed8;">
                         <i class="bi bi-clipboard-check me-2"></i> Voir toutes les présences
                     </a>
                 </div>
@@ -133,23 +139,22 @@
     </div>
 </div>
 
-<div class="card">
-    <div class="card-header bg-dark text-white">
+<div class="table-container">
+    <div class="d-flex justify-content-between align-items-center px-4 py-3 bg-light border-bottom">
         <h5 class="mb-0"><i class="bi bi-table me-2"></i>Statistiques par classe</h5>
     </div>
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th class="text-center">Classe</th>
-                        <th class="text-center">Total Appels</th>
-                        <th class="text-center">Présents</th>
-                        <th class="text-center">Absents</th>
-                        <th class="text-center">Retards</th>
-                        <th class="text-center">Taux de présence</th>
-                    </tr>
-                </thead>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0" id="statsTable">
+            <thead>
+                <tr>
+                    <th class="text-center"><i class="bi bi-collection me-1"></i>Classe</th>
+                    <th class="text-center"><i class="bi bi-calendar-check me-1"></i>Total</th>
+                    <th class="text-center"><i class="bi bi-check-circle me-1"></i>Présents</th>
+                    <th class="text-center"><i class="bi bi-x-circle me-1"></i>Absents</th>
+                    <th class="text-center"><i class="bi bi-clock me-1"></i>Retards</th>
+                    <th class="text-center"><i class="bi bi-percent me-1"></i>Taux</th>
+                </tr>
+            </thead>
                 <tbody>
                     {% for stat in stats_par_classe %}
                     <tr>

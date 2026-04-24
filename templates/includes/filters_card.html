@@ -1,0 +1,27 @@
+{% comment %}
+Composant: Carte de Filtres Unifiée
+Usage: {% include 'includes/filters_card.html' with title="Filtres" icon="bi-funnel" %}
+    <form method="get" class="row g-3">
+        <!-- Champs de filtre ici -->
+        <div class="col-12 mt-4 d-flex justify-content-end gap-2">
+            <a href="{{ request.path }}" class="btn btn-secondary">
+                <i class="bi bi-arrow-counterclockwise"></i> Réinitialiser
+            </a>
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-search"></i> Filtrer
+            </button>
+        </div>
+    </form>
+{% endcomment %}
+
+<div class="card filters-card">
+    <div class="card-header">
+        <h5>
+            <i class="bi {{ icon|default:"bi-funnel" }}"></i>
+            {{ title|default:"Filtres et Recherche" }}
+        </h5>
+    </div>
+    <div class="card-body">
+        {{ inner_content }}
+    </div>
+</div>

@@ -1,71 +1,61 @@
 {% extends 'base.html' %}
-
+{% load permissions_tags %}
 {% block title %}Coefficients{% endblock %}
 
 {% block content %}
-<div class="page-header">
-    <h1><i class="bi bi-calculator"></i> Coefficients des matières</h1>
-    <a href="{% url 'enseignement:coefficient_create' %}" class="btn btn-primary">
-        <i class="bi bi-plus-circle"></i> Nouveau coefficient
-    </a>
-</div>
+{% url 'enseignement:coefficient_create' as create_url %}
+{% include 'includes/page_header.html' with title="Coefficients des matières" icon="bi-calculator" show_button=True button_url=create_url button_text="Nouveau coefficient" button_icon="bi-plus-circle" %}
 
 {% if annee %}
-<div class="card mb-3">
-    <div class="card-body">
-        <span class="text-muted">
-            <i class="bi bi-calendar3"></i> Année scolaire : <strong>{{ annee.libelle }}</strong>
-        </span>
-    </div>
+<div class="alert alert-info mb-4">
+    <i class="bi bi-calendar3 me-2"></i>Année scolaire : <strong>{{ annee.libelle }}</strong>
 </div>
 {% endif %}
 
-{% if coefficients %}
-<div class="card">
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th>Classe</th>
-                        <th>Matière</th>
-                        <th>Coefficient</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for coef in coefficients %}
-                    <tr>
-                        <td>{{ coef.classe.nom }}</td>
-                        <td>{{ coef.matiere.nom }}</td>
-                        <td><span class="badge bg-primary">{{ coef.coefficient }}</span></td>
-                        <td>
-                            <div class="btn-group btn-group-sm">
-                                <a href="{% url 'enseignement:coefficient_edit' coef.pk %}" class="btn btn-outline-secondary" title="Modifier">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
-                                <a href="{% url 'enseignement:coefficient_delete' coef.pk %}" class="btn btn-outline-danger" title="Supprimer" onclick="return confirm('Supprimer ce coefficient ?')">
-                                    <i class="bi bi-trash"></i>
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+<!-- Tableau -->
+<div class="table-container">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0" id="coefficientTable">
+            <thead>
+                <tr>
+                    <th><i class="bi bi-collection me-1"></i>Classe</th>
+                    <th><i class="bi bi-book me-1"></i>Matière</th>
+                    <th><i class="bi bi-calculator me-1"></i>Coefficient</th>
+                    <th style="width: 100px;" class="text-center"><i class="bi bi-gear me-1"></i>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for coef in coefficients %}
+                <tr>
+                    <td>{{ coef.classe.nom }}</td>
+                    <td>{{ coef.matiere.nom }}</td>
+                    <td><span class="badge badge-primary">{{ coef.coefficient }}</span></td>
+                    <td class="text-center">
+                        {% can_change request.user 'coefficient_list' as can_edit %}
+                        {% can_delete request.user 'coefficient_list' as can_delete %}
+                        <div class="action-btns">
+                            {% if can_edit %}
+                            <a href="{% url 'enseignement:coefficient_edit' coef.pk %}" class="btn btn-edit" title="Modifier">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            {% endif %}
+                            {% if can_delete %}
+                            <a href="{% url 'enseignement:coefficient_delete' coef.pk %}" class="btn btn-delete btn-confirm-delete" title="Supprimer" data-confirm-message="Supprimer ce coefficient ?">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="p-0">
+                        {% include 'includes/empty_state.html' with icon="bi-calculator" title="Aucun coefficient défini" message="Définissez les coefficients pour chaque matière par classe." button_url=create_url button_text="Nouveau coefficient" %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
-{% else %}
-<div class="card">
-    <div class="card-body text-center py-5">
-        <i class="bi bi-calculator" style="font-size: 4rem; color: var(--gray-300);"></i>
-        <h5 class="text-muted mt-3">Aucun coefficient défini</h5>
-        <p class="text-muted">Définissez les coefficients pour chaque matière par classe</p>
-        <a href="{% url 'enseignement:coefficient_create' %}" class="btn btn-primary">
-            <i class="bi bi-plus-circle"></i> Nouveau coefficient
-        </a>
-    </div>
-</div>
-{% endif %}
 {% endblock %}

@@ -1,42 +1,55 @@
-{% extends "base.html" %}
-{% block title %}Niveaux scolaires - SyGeS-AM{% endblock %}
+{% extends 'base.html' %}
+{% load permissions_tags %}
+{% block title %}Niveaux scolaires{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <h2>Niveaux scolaires</h2>
-    
-    <a href="/core/niveaux/ajouter/" class="btn btn-primary mb-3">Ajouter un niveau</a>
-    
-    <div class="card">
-        <div class="card-body">
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>Code</th>
-                        <th>Libellé</th>
-                        <th>Ordre</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for niveau in niveaux %}
-                    <tr>
-                        <td>{{ niveau.niveau }}</td>
-                        <td>{{ niveau.libelle }}</td>
-                        <td>{{ niveau.ordre }}</td>
-                        <td>
-                            <a href="/core/niveaux/modifier/{{ niveau.pk }}/" class="btn btn-sm btn-warning" title="Modifier"><i class="bi bi-pencil"></i></a>
-                            <a href="/core/niveaux/supprimer/{{ niveau.pk }}/" class="btn btn-sm btn-danger" title="Supprimer" onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce niveau?');"><i class="bi bi-trash"></i></a>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="3" class="text-center">Aucun niveau trouvé</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+{% url 'core:niveau_create' as create_url %}
+{% include 'includes/page_header.html' with title="Niveaux Scolaires" icon="bi-layers" show_button=True button_url=create_url button_text="Nouveau niveau" button_icon="bi-plus-circle" %}
+
+<!-- Tableau -->
+<div class="table-container">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0" id="niveauTable">
+            <thead>
+                <tr>
+                    <th><i class="bi bi-hash me-1"></i>Code</th>
+                    <th><i class="bi bi-tag me-1"></i>Libellé</th>
+                    <th><i class="bi bi-sort-numeric-down me-1"></i>Ordre</th>
+                    <th style="width: 120px;" class="text-center"><i class="bi bi-gear me-1"></i>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for niveau in niveaux %}
+                <tr>
+                    <td><span class="badge badge-primary">{{ niveau.niveau }}</span></td>
+                    <td><strong>{{ niveau.libelle }}</strong></td>
+                    <td><span class="badge badge-secondary">{{ niveau.ordre }}</span></td>
+                    <td class="text-center">
+                        {% can_change request.user 'niveau_list' as can_edit %}
+                        {% can_delete request.user 'niveau_list' as can_delete %}
+                        <div class="action-btns">
+                            {% if can_edit %}
+                            <a href="{% url 'core:niveau_edit' niveau.pk %}" class="btn btn-edit" title="Modifier">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            {% endif %}
+                            {% if can_delete %}
+                            <a href="{% url 'core:niveau_delete' niveau.pk %}" class="btn btn-delete btn-confirm-delete" title="Supprimer" data-confirm-message="Supprimer ce niveau scolaire ?">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="p-0">
+                        {% include 'includes/empty_state.html' with icon="bi-layers" title="Aucun niveau" message="Commencez par créer un niveau scolaire." button_url=create_url button_text="Nouveau niveau" %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
 {% endblock %}

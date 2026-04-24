@@ -1,0 +1,19 @@
+{% comment %}
+Composant: Page Header Unifié
+Usage: {% include 'includes/page_header.html' with title="Titre" icon="bi-icon" show_button=True button_url="url" button_text="Texte" button_icon="bi-icon" %}
+{% endcomment %}
+
+<div class="page-header">
+    <h1 class="page-title">
+        {% if icon %}<i class="bi {{ icon }}"></i>{% endif %}
+        {{ title }}
+    </h1>
+    {% if show_button and button_url %}
+    <div class="page-header-actions">
+        <a href="{{ button_url }}" class="btn btn-primary btn-lg">
+            {% if button_icon %}<i class="bi {{ button_icon }}"></i>{% endif %}
+            {{ button_text|default:"Ajouter" }}
+        </a>
+    </div>
+    {% endif %}
+</div>

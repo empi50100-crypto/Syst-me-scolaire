@@ -1,137 +1,112 @@
 {% extends 'base.html' %}
-{% block title %}Personnel - Ressources Humaines{% endblock %}
+{% load permissions_tags %}
+{% block title %}Gestion du Personnel{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1><i class="bi bi-people"></i> Personnel de l'établissement</h1>
-    <a href="{% url 'ressources_humaines:creer_personnel' %}" class="btn btn-primary">
-        <i class="bi bi-person-plus"></i> Nouveau membre
-    </a>
-</div>
+{% url 'ressources_humaines:ajouter_personnel' as create_url %}
+{% include 'includes/page_header.html' with title="Gestion du Personnel" icon="bi-people" show_button=True button_url=create_url button_text="Ajouter un membre" button_icon="bi-plus-circle" %}
 
-<div class="row mb-4">
-    <div class="col-md-4">
-        <div class="card stat-card primary h-100">
-            <div class="card-body">
-                <h5>Total Personnel Actif</h5>
-                <h2>{{ total_actif|default:0 }} <small>personnes</small></h2>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card stat-card success h-100">
-            <div class="card-body">
-                <h5>Enseignants</h5>
-                <h2>{{ nb_enseignants|default:0 }}</h2>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card stat-card warning h-100">
-            <div class="card-body">
-                <h5>Personnel Administratif</h5>
-                <h2>{{ nb_administratifs|default:0 }}</h2>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="card mb-4">
+<!-- Filtres -->
+<div class="card filters-card mb-4">
     <div class="card-header">
+        <h5><i class="bi bi-funnel"></i> Filtres</h5>
+    </div>
+    <div class="card-body">
         <form method="get" class="row g-3 align-items-end">
-            <div class="col-md-6">
-                <label class="form-label small text-muted mb-1">Filtrer par fonction</label>
-                <select name="fonction" class="form-select">
-                    <option value="">Toutes les fonctions</option>
-                    <option value="direction" {% if fonction_filter == 'direction' %}selected{% endif %}>Direction</option>
-                    <option value="secretaire" {% if fonction_filter == 'secretaire' %}selected{% endif %}>Secrétariat</option>
-                    <option value="comptable" {% if fonction_filter == 'comptable' %}selected{% endif %}>Comptabilité</option>
-                    <option value="professeur" {% if fonction_filter == 'professeur' %}selected{% endif %}>Enseignant</option>
-                    <option value="surveillance" {% if fonction_filter == 'surveillance' %}selected{% endif %}>Surveillance</option>
-                    <option value="agent_securite" {% if fonction_filter == 'agent_securite' %}selected{% endif %}>Agent de Sécurité</option>
-                    <option value="chauffeur" {% if fonction_filter == 'chauffeur' %}selected{% endif %}>Chauffeur</option>
-                    <option value="menage" {% if fonction_filter == 'menage' %}selected{% endif %}>Agent d'entretien</option>
+            <div class="col-md-3">
+                <label class="form-label">Recherche</label>
+                <input type="text" name="search" class="form-control" value="{{ search|default:'' }}" placeholder="Nom, prénom, matricule...">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Poste</label>
+                <select name="poste" class="form-select">
+                    <option value="">Tous</option>
+                    {% for poste in postes %}
+                    <option value="{{ poste.id }}" {% if poste_filter == poste.id %}selected{% endif %}>{{ poste.nom }}</option>
+                    {% endfor %}
                 </select>
             </div>
-            <div class="col-md-6">
-                <div class="d-flex gap-2">
-                    <button type="submit" class="btn btn-primary flex-fill">Filtrer</button>
-                    <a href="{% url 'ressources_humaines:liste_personnel' %}" class="btn btn-secondary flex-fill">Réinitialiser</a>
-                </div>
+            <div class="col-md-2">
+                <label class="form-label">Type de contrat</label>
+                <select name="type_contrat" class="form-select">
+                    <option value="">Tous</option>
+                    <option value="cdi" {% if type_contrat == 'cdi' %}selected{% endif %}>CDI</option>
+                    <option value="cdd" {% if type_contrat == 'cdd' %}selected{% endif %}>CDD</option>
+                    <option value="stage" {% if type_contrat == 'stage' %}selected{% endif %}>Stage</option>
+                    <option value="vacation" {% if type_contrat == 'vacation' %}selected{% endif %}>Vacation</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Statut</label>
+                <select name="statut" class="form-select">
+                    <option value="">Tous</option>
+                    <option value="actif" {% if statut_filter == 'actif' %}selected{% endif %}>Actif</option>
+                    <option value="inactif" {% if statut_filter == 'inactif' %}selected{% endif %}>Inactif</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search me-1"></i> Filtrer
+                </button>
             </div>
         </form>
     </div>
 </div>
 
-<div class="card">
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th>Utilisateur</th>
-                        <th>Fonction</th>
-                        <th>Téléphone</th>
-                        <th>Poste</th>
-                        <th>Date Embauche</th>
-                        <th>Statut</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for p in personnel %}
-                    <tr class="{% if not p.est_actif %}text-muted{% endif %}">
-                        <td>
-                            <strong>{{ p.utilisateur.get_full_name|default:p.utilisateur.username }}</strong>
-                        </td>
-                        <td>
-                            <span class="badge bg-{% if p.fonction == 'direction' %}danger{% elif p.fonction == 'comptable' %}success{% elif p.fonction == 'professeur' %}primary{% else %}secondary{% endif %}">
-                                {{ p.get_fonction_display }}
-                            </span>
-                        </td>
-                        <td>{{ p.telephone|default:"-" }}</td>
-                        <td>{{ p.poste.titre|default:"-" }}</td>
-                        <td>{{ p.date_embauche|date:"d/m/Y"|default:"-" }}</td>
-                        <td>
-                            {% if p.est_actif %}
-                                <span class="badge bg-success">Actif</span>
-                            {% else %}
-                                <span class="badge bg-danger">Inactif</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <a href="{% url 'ressources_humaines:modifier_personnel' p.pk %}" class="btn btn-sm btn-outline-primary">
+<!-- Tableau -->
+<div class="table-container">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0" id="personnelTable">
+            <thead>
+                <tr>
+                    <th><i class="bi bi-hash me-1"></i>Matricule</th>
+                    <th><i class="bi bi-person me-1"></i>Nom & Prénom</th>
+                    <th><i class="bi bi-briefcase me-1"></i>Poste</th>
+                    <th><i class="bi bi-file-earmark-text me-1"></i>Type contrat</th>
+                    <th><i class="bi bi-calendar-event me-1"></i>Date embauche</th>
+                    <th class="text-end"><i class="bi bi-cash me-1"></i>Salaire brut</th>
+                    <th><i class="bi bi-check-circle me-1"></i>Statut</th>
+                    <th style="width: 100px;" class="text-center"><i class="bi bi-gear me-1"></i>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in personnel %}
+                <tr>
+                    <td><strong>{{ p.matricule }}</strong></td>
+                    <td>{{ p.prenom }} {{ p.nom }}</td>
+                    <td>{{ p.poste.nom|default:"-" }}</td>
+                    <td>{{ p.get_type_contrat_display|default:"-" }}</td>
+                    <td>{{ p.date_embauche|date:"d/m/Y"|default:"-" }}</td>
+                    <td class="text-end">{{ p.salaire_base|floatformat:0|default:"-" }} FCFA</td>
+                    <td>
+                        {% if p.statut == 'actif' %}
+                        <span class="badge badge-success"><i class="bi bi-check-circle me-1"></i>Actif</span>
+                        {% else %}
+                        <span class="badge badge-secondary"><i class="bi bi-x-circle me-1"></i>Inactif</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        <div class="action-btns">
+                            <a href="{% url 'ressources_humaines:modifier_personnel' p.pk %}" class="btn btn-edit" title="Modifier">
                                 <i class="bi bi-pencil"></i>
                             </a>
-                            <a href="{% url 'ressources_humaines:supprimer_personnel' p.pk %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Supprimer ce membre ?')">
+                            <a href="{% url 'ressources_humaines:supprimer_personnel' p.pk %}" class="btn btn-delete btn-confirm-delete" title="Supprimer" data-confirm-message="Supprimer ce membre ?">
                                 <i class="bi bi-trash"></i>
                             </a>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="7" class="text-center text-muted">Aucun membre du personnel enregistré</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        
-        {% if personnel.has_other_page %}
-        <nav>
-            <ul class="pagination justify-content-center">
-                {% if personnel.has_previous %}
-                <li class="page-item"><a class="page-link" href="?page=1">Première</a></li>
-                <li class="page-item"><a class="page-link" href="?page={{ personnel.previous_page_number }}">Précédente</a></li>
-                {% endif %}
-                <li class="page-item active"><span class="page-link">Page {{ personnel.number }} sur {{ personnel.paginator.num_pages }}</span></li>
-                {% if personnel.has_next %}
-                <li class="page-item"><a class="page-link" href="?page={{ personnel.next_page_number }}">Suivante</a></li>
-                <li class="page-item"><a class="page-link" href="?page={{ personnel.paginator.num_pages }}">Dernière</a></li>
-                {% endif %}
-            </ul>
-        </nav>
-        {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="p-0">
+                        {% include 'includes/empty_state.html' with icon="bi-people" title="Aucun membre du personnel" message="Aucun membre du personnel n'a été enregistré pour le moment." %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
+    
+    {% include 'includes/pagination.html' with page_obj=personnel %}
 </div>
 {% endblock %}

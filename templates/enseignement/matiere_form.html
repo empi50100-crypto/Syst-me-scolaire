@@ -1,18 +1,16 @@
 {% extends 'base.html' %}
-
-{% block title %}Matières{% endblock %}
+{% block title %}{{ action|default:"Ajouter" }} une Matière{% endblock %}
 
 {% block content %}
-<div class="page-header">
-    <h1><i class="bi bi-book"></i> {{ action|default:"Ajouter" }} une Matière</h1>
-</div>
+{% url 'enseignement:matiere_list' as list_url %}
+{% include 'includes/page_header.html' with title=action|default:"Ajouter"|add:" une Matière" icon="bi-book" show_button=False %}
 
-<div class="form-container">
+<div class="content-container">
     <form method="post">
         {% csrf_token %}
         
         {% if form.non_field_errors %}
-        <div class="alert alert-danger">
+        <div class="alert alert-danger mb-4">
             {% for error in form.non_field_errors %}
             {{ error }}
             {% endfor %}
@@ -23,73 +21,74 @@
             <div class="form-section-header">
                 <i class="bi bi-book"></i> Informations de la Matière
             </div>
-            
-            <div class="row g-4">
-                <div class="col-md-8">
-                    <div class="form-group">
-                        <label class="form-label">Nom de la matière</label>
-                        <input type="text" name="nom" id="id_nom" class="form-control" list="matieres-list" placeholder="Tapez ou sélectionnez une matière..." value="{{ form.nom.value|default_if_none:'' }}" autocomplete="off">
-                        <datalist id="matieres-list">
-                            {# Liste par défaut des matières standards #}
-                            <option value="Français">
-                            <option value="Mathématiques">
-                            <option value="Histoire-Géographie">
-                            <option value="Histoire">
-                            <option value="Géographie">
-                            <option value="SVT">
-                            <option value="Sciences de la vie et de la Terre">
-                            <option value="Biologie">
-                            <option value="Zoologie">
-                            <option value="Anglais">
-                            <option value="Espagnol">
-                            <option value="Allemand">
-                            <option value="Physique">
-                            <option value="Chimie">
-                            <option value="Latin">
-                            <option value="Philosophie">
-                            <option value="Économie">
-                            <option value="Informatique">
-                            <option value="Éducation Physique et Sportive">
-                            <option value="EPS">
-                            <option value="Musique">
-                            <option value="Arts Plastiques">
-                            <option value="Technologie">
-                            <option value="Citoyenneté">
-                            <option value="Arabe">
-                            <option value="Droit">
-                            <option value="Psychologie">
-                            <option value="Sociologie">
-                            {# Matières créées par les utilisateurs (sans doublons avec la liste par défaut) #}
-                            {% for m in matieres_existantes %}
-                            <option value="{{ m }}">
-                            {% endfor %}
-                        </datalist>
-                        {% if form.nom.errors %}
-                        <div class="text-danger small">{{ form.nom.errors }}</div>
-                        {% endif %}
-                        <div class="help-text">
-                            <i class="bi bi-info-circle"></i> Choisissez une matière existante ou tapez un nouveau nom.
+            <div class="form-section-body">
+                <div class="row g-4">
+                    <div class="col-md-8">
+                        <div class="form-group">
+                            <label class="form-label">Nom de la matière <span class="text-danger">*</span></label>
+                            <input type="text" name="nom" id="id_nom" class="form-control" list="matieres-list" placeholder="Tapez ou sélectionnez une matière..." value="{{ form.nom.value|default_if_none:'' }}" autocomplete="off">
+                            <datalist id="matieres-list">
+                                {# Liste par défaut des matières standards #}
+                                <option value="Français">
+                                <option value="Mathématiques">
+                                <option value="Histoire-Géographie">
+                                <option value="Histoire">
+                                <option value="Géographie">
+                                <option value="SVT">
+                                <option value="Sciences de la vie et de la Terre">
+                                <option value="Biologie">
+                                <option value="Zoologie">
+                                <option value="Anglais">
+                                <option value="Espagnol">
+                                <option value="Allemand">
+                                <option value="Physique">
+                                <option value="Chimie">
+                                <option value="Latin">
+                                <option value="Philosophie">
+                                <option value="Économie">
+                                <option value="Informatique">
+                                <option value="Éducation Physique et Sportive">
+                                <option value="EPS">
+                                <option value="Musique">
+                                <option value="Arts Plastiques">
+                                <option value="Technologie">
+                                <option value="Citoyenneté">
+                                <option value="Arabe">
+                                <option value="Droit">
+                                <option value="Psychologie">
+                                <option value="Sociologie">
+                                {# Matières créées par les utilisateurs (sans doublons avec la liste par défaut) #}
+                                {% for m in matieres_existantes %}
+                                <option value="{{ m }}">
+                                {% endfor %}
+                            </datalist>
+                            {% if form.nom.errors %}
+                            <div class="text-danger small mt-1">{{ form.nom.errors }}</div>
+                            {% endif %}
+                            <div class="form-text mt-1">
+                                <i class="bi bi-info-circle"></i> Choisissez une matière existante ou tapez un nouveau nom.
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label class="form-label">Coefficient</label>
-                        {{ form.coefficient }}
-                        {% if form.coefficient.errors %}
-                        <div class="text-danger small">{{ form.coefficient.errors }}</div>
-                        {% endif %}
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="form-label">Coefficient <span class="text-danger">*</span></label>
+                            {{ form.coefficient }}
+                            {% if form.coefficient.errors %}
+                            <div class="text-danger small mt-1">{{ form.coefficient.errors }}</div>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
         
-        <div class="form-actions">
+        <div class="form-actions d-flex gap-3">
             <button type="submit" class="btn btn-primary btn-lg">
-                <i class="bi bi-check-circle"></i> Enregistrer
+                <i class="bi bi-check-circle me-1"></i> {{ action|default:"Enregistrer" }}
             </button>
-            <a href="{% url 'enseignement:matiere_list' %}" class="btn btn-secondary btn-lg">
-                <i class="bi bi-x-circle"></i> Annuler
+            <a href="{{ list_url }}" class="btn btn-secondary btn-lg">
+                <i class="bi bi-x-circle me-1"></i> Annuler
             </a>
         </div>
     </form>

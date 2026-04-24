@@ -1,37 +1,46 @@
 {% extends 'base.html' %}
+{% load permissions_tags %}
 {% block title %}Personnel{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1><i class="bi bi-people"></i> Personnel de l'établissement</h1>
-    <a href="{% url 'finances:personnel_create' %}" class="btn btn-primary">
-        <i class="bi bi-person-plus"></i> Nouveau personnel
-    </a>
-</div>
+{% url 'finances:personnel_create' as create_url %}
+{% include 'includes/page_header.html' with title="Personnel de l'établissement" icon="bi-people" show_button=True button_url=create_url button_text="Nouveau personnel" button_icon="bi-person-plus" %}
 
-<div class="row mb-4">
+<!-- Statistiques -->
+<div class="row mb-4 g-3">
     <div class="col-md-6">
-        <div class="card stat-card primary h-100">
+        <div class="card stat-card stat-card-primary h-100">
             <div class="card-body">
-                <h5>Total Personnel Actif</h5>
-                <h2>{{ personnel_list|length }} <small>personnes</small></h2>
+                <div class="stat-icon"><i class="bi bi-people"></i></div>
+                <div class="stat-content">
+                    <h6>Total Personnel Actif</h6>
+                    <h2>{{ personnel_list|length }}</h2>
+                </div>
             </div>
         </div>
     </div>
     <div class="col-md-6">
-        <div class="card stat-card warning h-100">
+        <div class="card stat-card stat-card-warning h-100">
             <div class="card-body">
-                <h5>Masse Salariale Mensuelle</h5>
-                <h2>{{ total_salaires_mensuels|floatformat:0 }} <small>FCFA</small></h2>
+                <div class="stat-icon"><i class="bi bi-cash-stack"></i></div>
+                <div class="stat-content">
+                    <h6>Masse Salariale Mensuelle</h6>
+                    <h2>{{ total_salaires_mensuels|floatformat:0 }} <small>FCFA</small></h2>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<div class="card mb-4">
+<!-- Filtres -->
+<div class="card filters-card mb-4">
     <div class="card-header">
-        <form method="get" class="row g-3">
+        <h5><i class="bi bi-funnel"></i> Filtres</h5>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
             <div class="col-md-4">
+                <label class="form-label">Fonction</label>
                 <select name="fonction" class="form-select" onchange="this.form.submit()">
                     <option value="">Toutes les fonctions</option>
                     <option value="direction" {% if fonction_filter == 'direction' %}selected{% endif %}>Direction</option>
@@ -48,73 +57,85 @@
                 </select>
             </div>
             <div class="col-md-2">
-                <a href="{% url 'finances:personnel_list' %}" class="btn btn-secondary">Réinitialiser</a>
+                <a href="{% url 'finances:personnel_list' %}" class="btn btn-secondary w-100">
+                    <i class="bi bi-arrow-counterclockwise me-1"></i> Réinitialiser
+                </a>
             </div>
         </form>
     </div>
 </div>
 
-<div class="card">
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th>Nom</th>
-                        <th>Fonction</th>
-                        <th>Téléphone</th>
-                        <th>Salaire Mensuel</th>
-                        <th>Date Embauche</th>
-                        <th>Statut</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for p in personnel_list %}
-                    <tr class="{% if not p.est_actif %}text-muted{% endif %}">
-                        <td>
-                            <strong>{{ p.nom_complet }}</strong>
-                        </td>
-                        <td>
-                            <span class="badge bg-{% if p.fonction == 'direction' %}danger{% elif p.fonction == 'comptable' %}success{% elif p.fonction == 'professeur' %}primary{% else %}secondary{% endif %}">
-                                {{ p.get_fonction_display }}
-                            </span>
-                        </td>
-                        <td>{{ p.telephone|default:"-" }}</td>
-                        <td class="text-end fw-bold">{{ p.salaire_mensuel|floatformat:0 }} FCFA</td>
-                        <td>{{ p.date_embauche|date:"d/m/Y"|default:"-" }}</td>
-                        <td>
-                            {% if p.est_actif %}
-                                <span class="badge bg-success">Actif</span>
-                            {% else %}
-                                <span class="badge bg-danger">Inactif</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <a href="{% url 'finances:salaire_create' %}?personnel={{ p.pk }}" class="btn btn-sm btn-outline-success" title="Enregistrer salaire">
-                                <i class="bi bi-plus-circle"></i>
+<!-- Tableau -->
+<div class="table-container">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0" id="personnelTable">
+            <thead>
+                <tr>
+                    <th><i class="bi bi-person me-1"></i>Nom</th>
+                    <th><i class="bi bi-briefcase me-1"></i>Fonction</th>
+                    <th><i class="bi bi-telephone me-1"></i>Téléphone</th>
+                    <th><i class="bi bi-cash me-1"></i>Salaire Mensuel</th>
+                    <th><i class="bi bi-calendar-event me-1"></i>Date Embauche</th>
+                    <th><i class="bi bi-circle me-1"></i>Statut</th>
+                    <th style="width: 120px;" class="text-center"><i class="bi bi-gear me-1"></i>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in personnel_list %}
+                <tr class="{% if not p.est_actif %}table-secondary{% endif %}">
+                    <td>
+                        <strong>{{ p.nom_complet }}</strong>
+                    </td>
+                    <td>
+                        <span class="badge badge-{% if p.fonction == 'direction' %}danger{% elif p.fonction == 'comptable' %}success{% elif p.fonction == 'professeur' %}primary{% else %}secondary{% endif %}">
+                            {{ p.get_fonction_display }}
+                        </span>
+                    </td>
+                    <td>{{ p.telephone|default:"-" }}</td>
+                    <td><strong>{{ p.salaire_mensuel|floatformat:0 }} FCFA</strong></td>
+                    <td>{{ p.date_embauche|date:"d/m/Y"|default:"-" }}</td>
+                    <td>
+                        {% if p.est_actif %}
+                        <span class="badge badge-success"><i class="bi bi-check-circle me-1"></i>Actif</span>
+                        {% else %}
+                        <span class="badge badge-secondary">Inactif</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        {% can_view request.user 'personnel_list' as can_view %}
+                        {% can_change request.user 'personnel_list' as can_edit %}
+                        {% can_delete request.user 'personnel_list' as can_delete %}
+                        <div class="action-btns">
+                            {% if can_view %}
+                            <a href="{% url 'finances:personnel_detail' p.id %}" class="btn btn-view" title="Voir">
+                                <i class="bi bi-eye"></i>
                             </a>
-                            <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#salaireModal{{ p.pk }}" title="Historique salaires">
-                                <i class="bi bi-cash-stack"></i>
-                            </button>
-                            <a href="{% url 'finances:personnel_edit' p.pk %}" class="btn btn-sm btn-outline-primary">
+                            {% endif %}
+                            {% if can_edit %}
+                            <a href="{% url 'finances:personnel_edit' p.id %}" class="btn btn-edit" title="Modifier">
                                 <i class="bi bi-pencil"></i>
                             </a>
-                            <a href="{% url 'finances:personnel_delete' p.pk %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Supprimer ce personnel ?')">
+                            {% endif %}
+                            {% if can_delete %}
+                            <a href="{% url 'finances:personnel_delete' p.id %}" class="btn btn-delete btn-confirm-delete" title="Supprimer" data-confirm-message="Êtes-vous sûr de vouloir supprimer ce membre du personnel ?">
                                 <i class="bi bi-trash"></i>
                             </a>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="7" class="text-center text-muted">Aucun personnel enregistré</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="p-0">
+                        {% include 'includes/empty_state.html' with icon="bi-people" title="Aucun personnel enregistré" message="Commencez par ajouter un membre du personnel." button_url=create_url button_text="Nouveau personnel" %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
+{% endblock %}
 
 {% for p in personnel_list %}
 <div class="modal fade" id="salaireModal{{ p.pk }}" tabindex="-1">

@@ -1,19 +1,19 @@
 {% extends 'base.html' %}
-
+{% load permissions_tags %}
 {% block title %}Examens{% endblock %}
 
 {% block content %}
-<div class="page-header">
-    <h1><i class="bi bi-file-earmark-text"></i> Examens</h1>
-    <a href="{% url 'enseignement:examen_create' %}" class="btn btn-primary">
-        <i class="bi bi-plus-circle"></i> Nouvel examen
-    </a>
-</div>
+{% url 'enseignement:examen_create' as create_url %}
+{% include 'includes/page_header.html' with title="Examens" icon="bi-file-earmark-text" show_button=True button_url=create_url button_text="Nouvel examen" button_icon="bi-plus-circle" %}
 
 {% if annee %}
-<div class="card mb-3">
+<!-- Filtres -->
+<div class="card filters-card mb-4">
+    <div class="card-header">
+        <h5><i class="bi bi-funnel"></i> Filtres</h5>
+    </div>
     <div class="card-body">
-        <form method="get" class="row g-3">
+        <form method="get" class="row g-3 align-items-end">
             <div class="col-md-3">
                 <label class="form-label">Type d'examen</label>
                 <select name="type" class="form-select">
@@ -32,8 +32,8 @@
                     {% endfor %}
                 </select>
             </div>
-            <div class="col-md-2 d-flex align-items-end">
-                <button type="submit" class="btn btn-outline-primary">
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
                     <i class="bi bi-filter"></i> Filtrer
                 </button>
             </div>
@@ -42,76 +42,77 @@
 </div>
 {% endif %}
 
-{% if examens %}
-<div class="card">
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th>Nom</th>
-                        <th>Type</th>
-                        <th>Classe</th>
-                        <th>Matière</th>
-                        <th>Date</th>
-                        <th>Durée</th>
-                        <th>Lieu</th>
-                        <th>Statut</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for examen in examens %}
-                    <tr>
-                        <td>{{ examen.nom }}</td>
-                        <td><span class="badge bg-secondary">{{ examen.get_type_examen_display }}</span></td>
-                        <td>{{ examen.classe.nom }}</td>
-                        <td>{{ examen.matiere.nom }}</td>
-                        <td>{{ examen.date_examen|date:"d/m/Y" }}</td>
-                        <td>{{ examen.duree_minutes }} min</td>
-                        <td>{{ examen.lieu|default:"-" }}</td>
-                        <td>
-                            {% if examen.est_publie %}
-                            <span class="badge bg-success">Publié</span>
-                            {% else %}
-                            <span class="badge bg-warning">Non publié</span>
+<!-- Tableau -->
+<div class="table-container">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0" id="examenTable">
+            <thead>
+                <tr>
+                    <th><i class="bi bi-tag me-1"></i>Nom</th>
+                    <th><i class="bi bi-layers me-1"></i>Type</th>
+                    <th><i class="bi bi-collection me-1"></i>Classe</th>
+                    <th><i class="bi bi-book me-1"></i>Matière</th>
+                    <th><i class="bi bi-calendar-event me-1"></i>Date</th>
+                    <th><i class="bi bi-clock me-1"></i>Durée</th>
+                    <th><i class="bi bi-geo-alt me-1"></i>Lieu</th>
+                    <th><i class="bi bi-circle me-1"></i>Statut</th>
+                    <th style="width: 150px;" class="text-center"><i class="bi bi-gear me-1"></i>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for examen in examens %}
+                <tr>
+                    <td><strong>{{ examen.nom }}</strong></td>
+                    <td><span class="badge badge-secondary">{{ examen.get_type_examen_display }}</span></td>
+                    <td>{{ examen.classe.nom }}</td>
+                    <td>{{ examen.matiere.nom }}</td>
+                    <td>{{ examen.date_examen|date:"d/m/Y" }}</td>
+                    <td>{{ examen.duree_minutes }} min</td>
+                    <td>{{ examen.lieu|default:"-" }}</td>
+                    <td>
+                        {% if examen.est_publie %}
+                        <span class="badge badge-success"><i class="bi bi-check-circle me-1"></i>Publié</span>
+                        {% else %}
+                        <span class="badge badge-warning"><i class="bi bi-clock me-1"></i>Non publié</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        {% can_view request.user 'examen_list' as can_view %}
+                        {% can_change request.user 'examen_list' as can_edit %}
+                        {% can_delete request.user 'examen_list' as can_delete %}
+                        <div class="action-btns">
+                            {% if can_view %}
+                            <a href="{% url 'enseignement:examen_detail' examen.pk %}" class="btn btn-view" title="Voir">
+                                <i class="bi bi-eye"></i>
+                            </a>
                             {% endif %}
-                        </td>
-                        <td>
-                            <div class="btn-group btn-group-sm">
-                                <a href="{% url 'enseignement:examen_detail' examen.pk %}" class="btn btn-outline-primary" title="Voir">
-                                    <i class="bi bi-eye"></i>
-                                </a>
-                                <a href="{% url 'enseignement:examen_edit' examen.pk %}" class="btn btn-outline-secondary" title="Modifier">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
-                                {% if not examen.est_publie %}
-                                <a href="{% url 'enseignement:examen_generate_epreuves' examen.pk %}" class="btn btn-outline-success" title="Générer épreuves">
-                                    <i class="bi bi-people"></i>
-                                </a>
-                                {% endif %}
-                                <a href="{% url 'enseignement:examen_delete' examen.pk %}" class="btn btn-outline-danger" title="Supprimer" onclick="return confirm('Supprimer cet examen ?')">
-                                    <i class="bi bi-trash"></i>
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+                            {% if can_edit %}
+                            <a href="{% url 'enseignement:examen_edit' examen.pk %}" class="btn btn-edit" title="Modifier">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            {% endif %}
+                            {% if not examen.est_publie and can_edit %}
+                            <a href="{% url 'enseignement:examen_generate_epreuves' examen.pk %}" class="btn" style="background: #d1fae5; border: 1px solid #10b981; color: #059669;" title="Générer épreuves">
+                                <i class="bi bi-people"></i>
+                            </a>
+                            {% endif %}
+                            {% if can_delete %}
+                            <a href="{% url 'enseignement:examen_delete' examen.pk %}" class="btn btn-delete btn-confirm-delete" title="Supprimer" data-confirm-message="Supprimer cet examen ?">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="9" class="p-0">
+                        {% include 'includes/empty_state.html' with icon="bi-file-earmark-text" title="Aucun examen programmé" message="Planifiez votre premier examen pour commencer." button_url=create_url button_text="Nouvel examen" %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
-{% else %}
-<div class="card">
-    <div class="card-body text-center py-5">
-        <i class="bi bi-file-earmark-text" style="font-size: 4rem; color: var(--gray-300);"></i>
-        <h5 class="text-muted mt-3">Aucun examen programmé</h5>
-        <p class="text-muted">Planifiez votre premier examen</p>
-        <a href="{% url 'enseignement:examen_create' %}" class="btn btn-primary">
-            <i class="bi bi-plus-circle"></i> Nouvel examen
-        </a>
-    </div>
-</div>
-{% endif %}
 {% endblock %}

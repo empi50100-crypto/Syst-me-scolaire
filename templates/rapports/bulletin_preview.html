@@ -2,26 +2,24 @@
 {% block title %}Bulletin - {{ eleve.nom }}{% endblock %}
 
 {% block content %}
-<div class="page-header">
-    <h1><i class="bi bi-file-earmark-text"></i> Bulletin de {{ eleve.nom }} {{ eleve.prenom }}</h1>
-</div>
+{% include 'includes/page_header.html' with title="Bulletin" icon="bi-file-earmark-text" show_button=False %}
 
-<div class="card mt-4">
-    <div class="card-header bg-primary text-white">
-        <h5 class="mb-0"><i class="bi bi-school"></i> Bulletin scolaire - Année {{ annee.libelle }}</h5>
+<div class="card" style="border: 1px solid #e2e8f0; border-radius: 12px;">
+    <div class="card-header text-white py-3" style="background: linear-gradient(135deg, #4f46e5, #7c3aed); border-radius: 12px 12px 0 0;">
+        <h5 class="mb-0"><i class="bi bi-school me-2"></i>Bulletin scolaire - Année {{ annee.libelle }}</h5>
     </div>
     <div class="card-body">
         <div class="row mb-4">
             <div class="col-md-6">
-                <h6 class="text-muted">Informations élève</h6>
+                <h6 class="text-muted"><i class="bi bi-person me-1"></i>Informations élève</h6>
                 <p class="mb-1"><strong>Nom:</strong> {{ eleve.nom }} {{ eleve.prenom }}</p>
                 <p class="mb-1"><strong>Classe:</strong> {{ classe.nom }}</p>
                 <p class="mb-0"><strong>Matricule:</strong> {{ eleve.matricule }}</p>
             </div>
             <div class="col-md-6 text-md-end">
-                <h6 class="text-muted">Résultats</h6>
+                <h6 class="text-muted"><i class="bi bi-award me-1"></i>Résultats</h6>
                 <p class="mb-1"><strong>Moyenne générale:</strong> 
-                    <span class="badge bg-{% if moyenne_generale >= 10 %}success{% elif moyenne_generale >= 8 %}warning{% else %}danger{% endif %}">
+                    <span class="badge badge-{% if moyenne_generale >= 10 %}success{% elif moyenne_generale >= 8 %}warning{% else %}danger{% endif %}">
                         {{ moyenne_generale|default:"-" }}/20
                     </span>
                 </p>
@@ -30,15 +28,15 @@
             </div>
         </div>
 
-        <h6 class="text-muted mb-3">Notes par matière</h6>
+        <h6 class="text-muted mb-3"><i class="bi bi-book me-1"></i>Notes par matière</h6>
         <div class="table-responsive">
             <table class="table table-bordered">
-                <thead class="table-light">
+                <thead>
                     <tr>
-                        <th>Matière</th>
-                        <th>Coefficient</th>
-                        <th>Note</th>
-                        <th>Moyenne classe</th>
+                        <th><i class="bi bi-book me-1"></i>Matière</th>
+                        <th><i class="bi bi-calculator me-1"></i>Coefficient</th>
+                        <th><i class="bi bi-percent me-1"></i>Note</th>
+                        <th><i class="bi bi-people me-1"></i>Moyenne classe</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -47,7 +45,7 @@
                         <td>{{ matiere.nom }}</td>
                         <td>{{ matiere.coefficient }}</td>
                         <td>
-                            <span class="badge bg-{% if data.note >= 10 %}success{% elif data.note >= 8 %}warning{% else %}danger{% endif %}">
+                            <span class="badge badge-{% if data.note >= 10 %}success{% elif data.note >= 8 %}warning{% else %}danger{% endif %}">
                                 {{ data.note }}/20
                             </span>
                         </td>
@@ -64,17 +62,17 @@
 
         {% if bulletin.appreciation %}
         <div class="mt-4 p-3 bg-light rounded">
-            <h6 class="text-muted">Appréciation du professeur</h6>
+            <h6 class="text-muted"><i class="bi bi-chat-square-text me-1"></i>Appréciation du professeur</h6>
             <p class="mb-0">{{ bulletin.appreciation }}</p>
         </div>
         {% endif %}
     </div>
-    <div class="card-footer">
-        <a href="{% url 'rapports:bulletin_list' %}" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left"></i> Retour à la liste
+    <div class="card-footer bg-light">
+        <a href="{% url 'rapports:bulletin_list' %}" class="btn" style="background: #f1f5f9; border-color: #cbd5e1; color: #475569;">
+            <i class="bi bi-arrow-left me-1"></i> Retour à la liste
         </a>
-        <a href="{% url 'rapports:exporter_bulletin_pdf' bulletin.pk %}" class="btn btn-primary">
-            <i class="bi bi-download"></i> Exporter en PDF
+        <a href="{% url 'rapports:exporter_bulletin_pdf' bulletin.pk %}" class="btn" style="background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white;">
+            <i class="bi bi-download me-1"></i> Exporter en PDF
         </a>
     </div>
 </div>

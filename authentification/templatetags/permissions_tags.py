@@ -30,7 +30,7 @@ def can_delete(Utilisateur, module_code):
         return False
     return Utilisateur.has_module_permission(module_code, 'delete')
 
-@register.filter
+@register.simple_tag
 def can_view(Utilisateur, module_code):
     """Vérifie si l'utilisateur peut voir (read) dans un module"""
     if not Utilisateur.is_authenticated:

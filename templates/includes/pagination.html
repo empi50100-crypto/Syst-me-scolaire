@@ -1,0 +1,69 @@
+{% comment %}
+Composant: Pagination Unifiée
+Usage: {% include 'includes/pagination.html' with page_obj=eleves %}
+
+Le page_obj doit être un objet pagination Django avec:
+- has_other_pages
+- has_previous / has_next
+- previous_page_number / next_page_number
+- paginator.num_pages
+- number
+{% endcomment %}
+
+{% if page_obj.has_other_pages %}
+<nav aria-label="Pagination" class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page=1{{ extra_params|default:'' }}">
+                <i class="bi bi-chevron-double-left"></i>
+            </a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{{ extra_params|default:'' }}">
+                <i class="bi bi-chevron-left"></i>
+            </a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+            <span class="page-link"><i class="bi bi-chevron-double-left"></i></span>
+        </li>
+        <li class="page-item disabled">
+            <span class="page-link"><i class="bi bi-chevron-left"></i></span>
+        </li>
+        {% endif %}
+        
+        {% for i in page_obj.paginator.page_range %}
+            {% if page_obj.number == i %}
+            <li class="page-item active">
+                <span class="page-link">{{ i }}</span>
+            </li>
+            {% elif i > page_obj.number|add:-3 and i < page_obj.number|add:3 %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ i }}{{ extra_params|default:'' }}">{{ i }}</a>
+            </li>
+            {% endif %}
+        {% endfor %}
+        
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}{{ extra_params|default:'' }}">
+                <i class="bi bi-chevron-right"></i>
+            </a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{{ extra_params|default:'' }}">
+                <i class="bi bi-chevron-double-right"></i>
+            </a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+            <span class="page-link"><i class="bi bi-chevron-right"></i></span>
+        </li>
+        <li class="page-item disabled">
+            <span class="page-link"><i class="bi bi-chevron-double-right"></i></span>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}

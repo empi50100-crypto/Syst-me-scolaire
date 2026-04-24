@@ -3,32 +3,26 @@
 {% block title %}Bourses & Remises - SyGeS-AM{% endblock %}
 
 {% block content %}
+{% url 'finances:bourse_create' as create_url %}
+{% include 'includes/page_header.html' with title="Bourses et Remises" icon="bi-gift" show_button=True button_url=create_url button_text="Nouvelle bourse/remise" button_icon="bi-plus-circle" %}
+
 <div class="row">
     <div class="col-md-12">
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Accueil</a></li>
                 <li class="breadcrumb-item"><a href="{% url 'finances:frais_list' %}">Finances</a></li>
-                <li class="breadcrumb-item active">Bourses & Remises</li>
+                <li class="breadcrumb-item active">Bourses et Remises</li>
             </ol>
         </nav>
     </div>
-</div>
-
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1><i class="bi bi-award"></i> Bourses & Remises</h1>
-    {% if user.is_direction or user.is_superadmin %}
-    <a href="{% url 'finances:bourse_create' %}" class="btn btn-primary">
-        <i class="bi bi-plus-circle"></i> Nouvelle bourse/remise
-    </a>
-    {% endif %}
 </div>
 
 <div class="row">
     <div class="col-md-6">
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0">Bourses & Remises disponibles</h5>
+                <h5 class="mb-0">Bourses et Remises disponibles</h5>
             </div>
             <div class="card-body">
                 {% if bourses %}
@@ -47,9 +41,9 @@
                                 <td>{{ bourse.nom }}</td>
                                 <td>
                                     {% if bourse.type_remise == 'bourse' %}
-                                        <span class="badge bg-primary">Bourse</span>
+                                        <span class="badge badge-primary">{{ bourse.type }}</span>
                                     {% else %}
-                                        <span class="badge bg-info">Remise</span>
+                                        <span class="badge badge-info">{{ bourse.pourcentage }}%</span>
                                     {% endif %}
                                 </td>
                                 <td><strong>{{ bourse.pourcentage }}%</strong></td>
@@ -66,20 +60,20 @@
     </div>
     
     <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">Élèves boursiers</h5>
+        <div class="card h-100 shadow-sm">
+            <div class="card-header py-3" style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white;">
+                <h5 class="mb-0"><i class="bi bi-people me-2"></i>Élèves boursiers</h5>
             </div>
             <div class="card-body">
                 {% if eleves_bourses %}
                 <div class="table-responsive">
-                    <table class="table">
+                    <table class="table table-sm table-hover mb-0">
                         <thead>
                             <tr>
-                                <th>Élève</th>
-                                <th>Bourse</th>
-                                <th>Année</th>
-                                <th>%</th>
+                                <th><i class="bi bi-person me-1"></i>Élève</th>
+                                <th><i class="bi bi-gift me-1"></i>Bourse</th>
+                                <th><i class="bi bi-calendar-year me-1"></i>Année</th>
+                                <th><i class="bi bi-percent me-1"></i>%</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -99,7 +93,7 @@
                     </table>
                 </div>
                 {% else %}
-                <p class="text-muted text-center mb-0">Aucun élève boursier enregistré</p>
+                <p class="text-muted text-center mb-0 fst-italic">Aucun élève boursier enregistré</p>
                 {% endif %}
             </div>
         </div>

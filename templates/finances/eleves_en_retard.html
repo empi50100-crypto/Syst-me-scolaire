@@ -1,8 +1,11 @@
 {% extends 'base.html' %}
+{% load permissions_tags %}
 
-{% block title %}Relances{% endblock %}
+{% block title %}Élèves en retard de paiement{% endblock %}
 
 {% block content %}
+{% include 'includes/page_header.html' with title="Relances et Élèves en retard" icon="bi-exclamation-triangle" show_button=False %}
+
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1><i class="bi bi-exclamation-triangle"></i> Relances & Retards de Paiement</h1>
     <div>
@@ -111,9 +114,9 @@
                                 <td class="text-end text-danger fw-bold">{{ item.montant_restant|floatformat:0 }} Fcfa</td>
                                 <td>
                                     {% if item.cycle.date_fin < today %}
-                                    <span class="badge bg-danger">Expiré</span>
+                                    <span class="badge badge-danger"><i class="bi bi-calendar-x me-1"></i>Expiré</span>
                                     {% else %}
-                                    <span class="badge bg-warning text-dark">En cours</span>
+                                    <span class="badge badge-warning"><i class="bi bi-clock me-1"></i>En cours</span>
                                     {% endif %}
                                 </td>
                             </tr>
@@ -154,17 +157,17 @@
                                     <strong>{{ rappel.eleve.nom }} {{ rappel.eleve.prenom }}</strong>
                                     <br><small class="text-muted">{{ rappel.eleve.matricule }}</small>
                                 </td>
-                                <td><span class="badge bg-info">{{ rappel.type_rappel }}</span></td>
+                                <td><span class="badge badge-info">{{ rappel.type_rappel }}</span></td>
                                 <td>{{ rappel.date_emission|date:"d/m/Y" }}</td>
                                 <td>{{ rappel.date_echeance|date:"d/m/Y" }}</td>
                                 <td class="text-end fw-bold text-danger">{{ rappel.montant_due|floatformat:0 }} Fcfa</td>
                                 <td>
                                     {% if rappel.statut == 'envoye' %}
-                                    <span class="badge bg-warning text-dark">Envoyé</span>
+                                    <span class="badge badge-warning"><i class="bi bi-send me-1"></i>Envoyé</span>
                                     {% elif rappel.statut == 'acquitte' %}
-                                    <span class="badge bg-success">Acquitté</span>
+                                    <span class="badge badge-success"><i class="bi bi-check-circle me-1"></i>Acquitté</span>
                                     {% else %}
-                                    <span class="badge bg-secondary">Annulé</span>
+                                    <span class="badge badge-secondary"><i class="bi bi-x-circle me-1"></i>Annulé</span>
                                     {% endif %}
                                 </td>
                             </tr>

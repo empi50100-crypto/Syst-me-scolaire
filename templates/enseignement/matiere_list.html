@@ -1,21 +1,22 @@
 {% extends 'base.html' %}
+{% load permissions_tags %}
 {% block title %}Matières{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>Liste des Matières</h1>
-    <a href="{% url 'enseignement:matiere_create' %}" class="btn btn-primary">
-        <i class="bi bi-plus-circle"></i> Nouvelle matière
-    </a>
-</div>
+{% can_add request.user 'matiere_list' as can_add_matiere %}
+{% url 'enseignement:matiere_create' as create_url %}
+{% include 'includes/page_header.html' with title="Liste des Matières" icon="bi-book" show_button=can_add_matiere button_url=create_url button_text="Nouvelle matière" button_icon="bi-plus-circle" %}
 
-<!-- Filtres de recherche -->
-<div class="card mb-4">
+<!-- Filtres -->
+<div class="card filters-card mb-4">
+    <div class="card-header">
+        <h5><i class="bi bi-funnel"></i> Recherche</h5>
+    </div>
     <div class="card-body">
         <form method="get" class="row g-3 align-items-end">
             <div class="col-md-8">
-                <label class="form-label fw-semibold text-muted small mb-1">Recherche</label>
-                <input type="text" name="search" id="search-matiere" class="form-control form-control-lg" list="matieres-existantes-list" placeholder="Cliquez pour voir les matières existantes ou tapez..." value="{{ search }}" autocomplete="off">
+                <label class="form-label">Recherche</label>
+                <input type="text" name="search" id="search-matiere" class="form-control" list="matieres-existantes-list" placeholder="Cliquez pour voir les matières existantes..." value="{{ search }}" autocomplete="off">
                 <datalist id="matieres-existantes-list">
                     {% for m in matieres_existantes %}
                     <option value="{{ m }}">
@@ -24,11 +25,11 @@
             </div>
             <div class="col-md-4">
                 <div class="d-flex gap-2">
-                    <button type="submit" class="btn btn-primary flex-fill py-2">
-                        <i class="bi bi-funnel-fill me-1"></i> Filtrer
+                    <button type="submit" class="btn btn-primary flex-fill">
+                        <i class="bi bi-funnel"></i> Filtrer
                     </button>
-                    <a href="{% url 'enseignement:matiere_list' %}" class="btn btn-outline-secondary py-2">
-                        <i class="bi bi-arrow-counterclockwise me-1"></i> Réinitialiser
+                    <a href="{% url 'enseignement:matiere_list' %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-counterclockwise"></i>
                     </a>
                 </div>
             </div>
@@ -36,22 +37,23 @@
     </div>
 </div>
 
-<div class="card">
-    <div class="card-body">
-        {% if search %}
-        <div class="alert alert-info">
-            <i class="bi bi-info-circle"></i> Résultats de la recherche pour : <strong>{{ search }}</strong>
-            <span class="badge bg-primary ms-2">{{ matieres|length }} matière(s)</span>
-        </div>
-        {% endif %}
+{% if search %}
+<div class="alert alert-info mb-4">
+    <i class="bi bi-info-circle me-1"></i> Résultats pour : <strong>{{ search }}</strong>
+    <span class="badge badge-primary ms-2">{{ matieres|length }} matière(s)</span>
+</div>
+{% endif %}
 
-        <table class="table table-striped">
+<!-- Tableau -->
+<div class="table-container">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0" id="matiereTable">
             <thead>
                 <tr>
-                    <th>Nom</th>
-                    <th>Classe</th>
-                    <th>Coefficient</th>
-                    <th>Actions</th>
+                    <th><i class="bi bi-book me-1"></i>Nom</th>
+                    <th><i class="bi bi-collection me-1"></i>Classe(s)</th>
+                    <th><i class="bi bi-calculator me-1"></i>Coeff.</th>
+                    <th style="width: 100px;" class="text-center"><i class="bi bi-gear me-1"></i>Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -62,25 +64,37 @@
                         {% if matiere.classes.all %}
                             <div class="d-flex flex-wrap gap-1">
                             {% for classe in matiere.classes.all %}
-                                <span class="badge bg-info text-dark">{{ classe.nom }}</span>
+                                <span class="badge badge-info">{{ classe.nom }}</span>
                             {% endfor %}
                             </div>
                         {% else %}
                             <span class="text-muted fst-italic">Non attribuée</span>
                         {% endif %}
                     </td>
-                    <td>{{ matiere.coefficient }}</td>
-                    <td>
-                        <a href="{% url 'enseignement:matiere_edit' matiere.pk %}" class="btn btn-sm btn-outline-primary" title="Modifier">
-                            <i class="bi bi-pencil"></i>
-                        </a>
-                        <a href="{% url 'enseignement:matiere_delete' matiere.pk %}" class="btn btn-sm btn-outline-danger" title="Supprimer">
-                            <i class="bi bi-trash"></i>
-                        </a>
+                    <td><span class="badge badge-secondary">{{ matiere.coefficient }}</span></td>
+                    <td class="text-center">
+                        {% can_change request.user 'matiere_list' as can_edit %}
+                        {% can_delete request.user 'matiere_list' as can_delete %}
+                        <div class="action-btns">
+                            {% if can_edit %}
+                            <a href="{% url 'enseignement:matiere_edit' matiere.pk %}" class="btn btn-edit" title="Modifier">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            {% endif %}
+                            {% if can_delete %}
+                            <a href="{% url 'enseignement:matiere_delete' matiere.pk %}" class="btn btn-delete" title="Supprimer">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                            {% endif %}
+                        </div>
                     </td>
                 </tr>
                 {% empty %}
-                <tr><td colspan="4" class="text-center text-muted">Aucune matière</td></tr>
+                <tr>
+                    <td colspan="4" class="p-0">
+                        {% include 'includes/empty_state.html' with icon="bi-book" title="Aucune matière" message="Commencez par créer une nouvelle matière." button_url=create_url button_text="Nouvelle matière" %}
+                    </td>
+                </tr>
                 {% endfor %}
             </tbody>
         </table>

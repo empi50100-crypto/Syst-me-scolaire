@@ -70,6 +70,13 @@ class OperationCaisseForm(forms.ModelForm):
             'motif': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Motif de l\'opération'}),
             'personnel': forms.Select(attrs={'class': 'form-select'}),
         }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field_name in self.fields:
+            if field_name not in ['montant', 'categorie', 'beneficiaire', 'motif']:
+                if 'class' not in self.fields[field_name].widget.attrs:
+                    self.fields[field_name].widget.attrs['class'] = 'form-control'
 
 
 class CycleForm(forms.ModelForm):

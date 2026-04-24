@@ -227,56 +227,48 @@ def salle_list_view(request):
 
 @login_required
 def professeur_create_view(request):
-    if not request.user.has_module_permission('professeur_list', 'write'):
-        messages.error(request, "Vous n'avez pas l'autorisation d'ajouter des professeurs.")
+    if not request.user.est_direction() and not request.user.est_secretaire() and not request.user.est_admin():
+        messages.error(request, "Vous n'avez pas la permission d'ajouter un professeur.")
         return redirect('enseignement:professeur_list')
     
-    # Get pre-selected user from query param or POST
-    selected_user_id = request.GET.get('user') or request.POST.get('user')
-    selected_user = None
-    
     if request.method == 'POST':
-        user_id = request.POST.get('user')
-        statut = request.POST.get('statut', 'actif')
-        matiere_id = request.POST.get('specialite')
+        form_data = request.POST
+        user_id = form_data.get('user')
+        specialite_id = form_data.get('specialite')
+        statut = form_data.get('statut', 'actif')
         
-        if user_id:
-            user = get_object_or_404(Utilisateur, pk=user_id)
-            prof = ProfilProfesseur.objects.create(
-                user=user,
-                statut=statut,
-                specialite_id=matiere_id
-            )
-            messages.success(request, f'Profil professeur créé pour {user.get_full_name()}.')
+        try:
+            user = Utilisateur.objects.get(pk=user_id)
+            
+            # Créer ou mettre à jour le profil professeur
+            profil, created = ProfilProfesseur.objects.get_or_create(user=user)
+            if specialite_id:
+                profil.specialite_id = specialite_id
+            profil.statut = statut
+            profil.save()
+            
+            # Mettre à jour le rôle si nécessaire
+            if not user.est_professeur():
+                user.role = 'professeur'
+                user.save()
+            
+            messages.success(request, f"Le professeur {user.get_full_name()} a été ajouté avec succès.")
             return redirect('enseignement:professeur_list')
+        except Utilisateur.DoesNotExist:
+            messages.error(request, "L'utilisateur sélectionné n'existe pas.")
     
-    # If a user is selected (from the list), get their data for pre-filling
-    if selected_user_id:
-        selected_user = get_object_or_404(Utilisateur, pk=selected_user_id, role='professeur')
+    # Récupérer les utilisateurs qui ne sont pas déjà professeurs
+    professeur_user_ids = ProfilProfesseur.objects.values_list('user_id', flat=True)
+    users = Utilisateur.objects.filter(is_active=True).exclude(id__in=professeur_user_ids)
     
-    # Create form object with user data pre-filled
-    # Use date_joined as default for date_embauche (formatted as YYYY-MM-DD for HTML date input)
-    date_embauche_default = selected_user.date_joined.strftime('%Y-%m-%d') if selected_user and selected_user.date_joined else ''
-    
-    form = {
-        'nom': selected_user.last_name if selected_user else '',
-        'prenom': selected_user.first_name if selected_user else '',
-        'email': selected_user.email if selected_user else '',
-        'telephone': selected_user.telephone if selected_user else '',
-        'date_embauche': date_embauche_default,
-        'statut': 'actif',
-        'salaire_base': '',
-    }
-    
-    # Users without a profil_professeur
-    utilisateurs = Utilisateur.objects.filter(role='professeur', profil_professeur__isnull=True)
-    matieres_list = Matiere.objects.all()
+    # Filtrer pour n'afficher que les noms uniques de matières (sans doublons de coefficients)
+    from django.db.models import Min
+    ids_uniques = Matiere.objects.values('nom').annotate(id_min=Min('id')).values_list('id_min', flat=True)
+    matieres = Matiere.objects.filter(id__in=ids_uniques).order_by('nom')
     
     return render(request, 'enseignement/professeur_form.html', {
-        'form': form,
-        'utilisateurs': utilisateurs,
-        'matieres': matieres_list,
-        'selected_user': selected_user,
+        'users': users,
+        'matieres': matieres,
         'is_direction_or_compta': request.user.est_direction() or request.user.est_comptable(),
         'is_secretaire': request.user.est_secretaire(),
         'is_direction': request.user.est_direction(),
@@ -305,17 +297,32 @@ def professeur_edit_view(request, pk):
         return redirect('enseignement:professeur_list')
     
     # Pre-fill form with existing data
+    # Date d'embauche : utiliser date_joined (création du compte) par défaut, format YYYY-MM-DD
+    if profil.user.date_joined:
+        date_embauche = profil.user.date_joined.strftime('%Y-%m-%d')
+    else:
+        date_embauche = ''
+    
     form = {
         'nom': profil.user.last_name,
         'prenom': profil.user.first_name,
         'email': profil.user.email,
         'telephone': profil.user.telephone,
-        'date_embauche': '',
+        'date_embauche': date_embauche,
         'statut': profil.statut,
         'salaire_base': '',
     }
     
-    matieres_list = Matiere.objects.all()
+    # Filtrer pour n'afficher que les noms uniques de matières (sans doublons de coefficients)
+    from django.db.models import Min
+    ids_uniques = Matiere.objects.values('nom').annotate(id_min=Min('id')).values_list('id_min', flat=True)
+    matieres_list = Matiere.objects.filter(id__in=ids_uniques).order_by('nom')
+    
+    # Si le professeur a une matière qui n'est pas dans la liste filtrée, l'ajouter
+    if profil.user.matiere_id and not matieres_list.filter(id=profil.user.matiere_id).exists():
+        matiere_actuelle = Matiere.objects.filter(id=profil.user.matiere_id).first()
+        if matiere_actuelle:
+            matieres_list = list(matieres_list) + [matiere_actuelle]
     
     return render(request, 'enseignement/professeur_form.html', {
         'form': form,

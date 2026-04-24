@@ -1,22 +1,24 @@
 {% extends 'base.html' %}
+{% load permissions_tags %}
 
 {% block title %}{% if coefficient %}Modifier{% else %}Nouveau{% endif %} coefficient{% endblock %}
 
 {% block content %}
-<div class="page-header">
-    <h1><i class="bi bi-calculator"></i> {% if coefficient %}Modifier{% else %}Nouveau{% endif %} coefficient</h1>
-</div>
+{% include 'includes/page_header.html' with title="Coefficient" icon="bi-calculator" show_button=False %}
 
-<div class="card">
+<div class="card" style="border: 1px solid #e2e8f0; border-radius: 12px;">
+    <div class="card-header text-white py-3" style="background: linear-gradient(135deg, #4f46e5, #7c3aed); border-radius: 12px 12px 0 0;">
+        <h5 class="mb-0"><i class="bi bi-calculator me-2"></i>{% if coefficient %}Modifier{% else %}Nouveau{% endif %} coefficient</h5>
+    </div>
     <div class="card-body">
         <form method="post">
             {% csrf_token %}
             {{ form.as_p }}
             <div class="mt-4">
-                <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-check-circle"></i> Enregistrer
+                <button type="submit" class="btn" style="background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white;">
+                    <i class="bi bi-check-circle me-1"></i> Enregistrer
                 </button>
-                <a href="{% url 'enseignement:coefficient_list' %}" class="btn btn-outline-secondary">Annuler</a>
+                <a href="{% url 'enseignement:coefficient_list' %}" class="btn" style="background: #f1f5f9; border-color: #cbd5e1; color: #475569;">Annuler</a>
             </div>
         </form>
     </div>

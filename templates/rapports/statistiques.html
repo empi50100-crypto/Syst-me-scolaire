@@ -19,71 +19,40 @@
 </div>
 
 <div class="row g-4">
-    <div class="col-md-6 col-lg-3">
-        <div class="card stat-card">
-            <div class="card-body text-center">
-                <div class="stat-icon bg-primary">
-                    <i class="bi bi-people-fill"></i>
-                </div>
-                <h3 class="stat-value">{{ eleves_count|default:0 }}</h3>
-                <p class="stat-label">Élèves</p>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-6 col-lg-3">
-        <div class="card stat-card">
-            <div class="card-body text-center">
-                <div class="stat-icon bg-success">
-                    <i class="bi bi-collection"></i>
-                </div>
-                <h3 class="stat-value">{{ classes_count|default:0 }}</h3>
-                <p class="stat-label">Classes</p>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-6 col-lg-3">
-        <div class="card stat-card">
-            <div class="card-body text-center">
-                <div class="stat-icon bg-info">
-                    <i class="bi bi-mortarboard"></i>
-                </div>
-                <h3 class="stat-value">{{ professeurs_count|default:0 }}</h3>
-                <p class="stat-label">Professeurs</p>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-6 col-lg-3">
-        <div class="card stat-card">
-            <div class="card-body text-center">
-                <div class="stat-icon bg-warning">
-                    <i class="bi bi-currency-exchange"></i>
-                </div>
-                <h3 class="stat-value">{{ total_recettes|default:0|floatformat:0 }}</h3>
-                <p class="stat-label">Recettes (FCFA)</p>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="row mt-4">
     <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-pie-chart"></i> Taux de Réussite</h5>
+        <div class="card" style="border: 1px solid #e2e8f0; border-radius: 12px;">
+            <div class="card-header text-white py-3" style="background: linear-gradient(135deg, #4f46e5, #7c3aed); border-radius: 12px 12px 0 0;">
+                <h5 class="mb-0"><i class="bi bi-people me-2"></i>Répartition par Classe</h5>
             </div>
             <div class="card-body">
-                <p class="text-muted">Graphique des taux de réussite par classe.</p>
+                <table class="table table-sm table-hover">
+                    <thead>
+                        <tr>
+                            <th><i class="bi bi-collection me-1"></i>Classe</th>
+                            <th><i class="bi bi-people me-1"></i>Effectif</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for classe in stats.repartition_classes %}
+                        <tr>
+                            <td>{{ classe.classe__nom }}</td>
+                            <td><span class="badge badge-primary">{{ classe.total }}</span></td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="2" class="text-center text-muted">Aucune donnée</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
     
     <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-bar-chart"></i> Performance par Matière</h5>
+        <div class="card" style="border: 1px solid #e2e8f0; border-radius: 12px;">
+            <div class="card-header text-white py-3" style="background: linear-gradient(135deg, #0ea5e9, #0284c7); border-radius: 12px 12px 0 0;">
+                <h5 class="mb-0"><i class="bi bi-bar-chart me-2"></i>Performance par Matière</h5>
             </div>
             <div class="card-body">
                 <p class="text-muted">Graphique de performance par matière.</p>

@@ -1,68 +1,71 @@
 {% extends 'base.html' %}
+{% load permissions_tags %}
 {% block title %}Attributions{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>Attributions Enseignants & Emploi du temps</h1>
-    <a href="{% url 'enseignement:attribution_create' %}" class="btn btn-primary">
-        <i class="bi bi-plus-circle"></i> Nouvelle attribution
-    </a>
-</div>
+{% url 'enseignement:attribution_create' as create_url %}
+{% include 'includes/page_header.html' with title="Attributions Enseignants & Emploi du temps" icon="bi-calendar-check" show_button=True button_url=create_url button_text="Nouvelle attribution" button_icon="bi-plus-circle" %}
 
-<div class="card">
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-striped table-hover">
-                <thead>
-                    <tr>
-                        <th>Professeur</th>
-                        <th>Classe</th>
-                        <th>Matière</th>
-                        <th style="min-width: 220px;">Horaire</th>
-                        <th>Année</th>
-                        <th class="text-center">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for ens in Professeurs %}
-                    <tr>
-                        <td>{{ ens.professeur }}</td>
-                        <td>{{ ens.classe.nom }}</td>
-                        <td>{{ ens.matiere.nom }}</td>
-                        <td>
-                            {% if ens.horaires %}
-                            <div class="d-flex flex-wrap gap-2">
-                                {% for h in ens.horaires %}
-                                <span class="badge bg-info">
-                                    {{ h.jour|capfirst }} {{ h.heure_debut }}-{{ h.heure_fin }}
-                                </span>
-                                {% endfor %}
-                            </div>
-                            {% else %}
-                            <span class="text-muted">-</span>
-                            {% endif %}
-                        </td>
-                        <td>{{ ens.annee_scolaire.libelle }}</td>
-                        <td class="text-center">
-                            <a href="{% url 'enseignement:attribution_edit' ens.pk %}" class="btn btn-sm btn-outline-primary" title="Modifier">
+<!-- Tableau -->
+<div class="table-container">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0" id="attributionTable">
+            <thead>
+                <tr>
+                    <th><i class="bi bi-person-workspace me-1"></i>Professeur</th>
+                    <th><i class="bi bi-collection me-1"></i>Classe</th>
+                    <th><i class="bi bi-book me-1"></i>Matière</th>
+                    <th style="min-width: 220px;"><i class="bi bi-clock me-1"></i>Horaire</th>
+                    <th><i class="bi bi-calendar-year me-1"></i>Année</th>
+                    <th style="width: 100px;" class="text-center"><i class="bi bi-gear me-1"></i>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ens in Professeurs %}
+                <tr>
+                    <td><strong>{{ ens.professeur }}</strong></td>
+                    <td>{{ ens.classe.nom }}</td>
+                    <td><span class="badge badge-info">{{ ens.matiere.nom }}</span></td>
+                    <td>
+                        {% if ens.horaires %}
+                        <div class="d-flex flex-wrap gap-2">
+                            {% for h in ens.horaires %}
+                            <span class="badge badge-info">
+                                <i class="bi bi-clock me-1"></i>{{ h.jour|capfirst }} {{ h.heure_debut }}-{{ h.heure_fin }}
+                            </span>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <span class="text-muted fst-italic">-</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ ens.annee_scolaire.libelle }}</td>
+                    <td class="text-center">
+                        {% can_change request.user 'attribution_list' as can_edit %}
+                        {% can_delete request.user 'attribution_list' as can_delete %}
+                        <div class="action-btns">
+                            {% if can_edit %}
+                            <a href="{% url 'enseignement:attribution_edit' ens.pk %}" class="btn btn-edit" title="Modifier">
                                 <i class="bi bi-pencil"></i>
                             </a>
-                            <a href="{% url 'enseignement:attribution_delete' ens.pk %}" class="btn btn-sm btn-outline-danger" title="Supprimer" onclick="return confirm('Supprimer cette attribution ?')">
+                            {% endif %}
+                            {% if can_delete %}
+                            <a href="{% url 'enseignement:attribution_delete' ens.pk %}" class="btn btn-delete btn-confirm-delete" title="Supprimer" data-confirm-message="Supprimer cette attribution ?">
                                 <i class="bi bi-trash"></i>
                             </a>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="6" class="text-center text-muted py-4">
-                            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
-                            Aucune attribution
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="p-0">
+                        {% include 'includes/empty_state.html' with icon="bi-calendar-check" title="Aucune attribution" message="Attribuez des matières aux professeurs et définissez les emplois du temps." button_url=create_url button_text="Nouvelle attribution" %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
 {% endblock %}

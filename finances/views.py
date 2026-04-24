@@ -55,15 +55,32 @@ def caisse(request):
     if not request.user.has_module_permission('caisse', 'read'):
         messages.error(request, "Vous n'avez pas l'autorisation.")
         return redirect('dashboard')
-    annee_actuelle = AnneeScolaire.objects.filter(est_actif=True).first()
+    annee_actuelle = AnneeScolaire.objects.filter(est_active=True).first()
+    
+    if request.method == 'POST':
+        form = OperationCaisseForm(request.POST)
+        if form.is_valid():
+            operation = form.save(commit=False)
+            operation.enregistre_par = request.user
+            operation.save()
+            messages.success(request, 'Opération ajoutée avec succès.')
+            return redirect('finances:caisse')
+    else:
+        form = OperationCaisseForm()
+    
     operations = OperationCaisse.objects.all().order_by('-date_operation')[:50]
-    solde_total = OperationCaisse.objects.aggregate(
-        total=Sum('montant')
-    )['total'] or 0
+    categories_existantes = list(OperationCaisse.objects.values_list('categorie', flat=True).distinct())
+    total_encaissements = OperationCaisse.objects.filter(type_operation='encaissement').aggregate(Sum('montant'))['montant__sum'] or 0
+    total_decaissements = OperationCaisse.objects.filter(type_operation='decaissement').aggregate(Sum('montant'))['montant__sum'] or 0
+    
     return render(request, 'finances/caisse.html', {
         'operations': operations,
-        'solde_total': solde_total,
-        'annee_actuelle': annee_actuelle
+        'form': form,
+        'categories_existantes': categories_existantes,
+        'total_encaissements': total_encaissements,
+        'total_decaissements': total_decaissements,
+        'solde': total_encaissements - total_decaissements,
+        'annee': annee_actuelle
     })
 
 
@@ -318,7 +335,7 @@ def charge_fixe_create(request):
             return redirect('finances:charges_list')
     else:
         form = ChargeFixeForm()
-    return render(request, 'finances/charge_form.html', {'form': form, 'type': 'fixe'})
+    return render(request, 'finances/charge_fixe_form.html', {'form': form, 'type': 'fixe'})
 
 
 @login_required
@@ -335,7 +352,7 @@ def charge_fixe_edit(request, pk):
             return redirect('finances:charges_list')
     else:
         form = ChargeFixeForm(instance=charge)
-    return render(request, 'finances/charge_form.html', {'form': form, 'charge': charge, 'type': 'fixe'})
+    return render(request, 'finances/charge_fixe_form.html', {'form': form, 'charge': charge, 'type': 'fixe'})
 
 
 @login_required
@@ -364,7 +381,7 @@ def charge_operationnelle_create(request):
             return redirect('finances:charges_list')
     else:
         form = ChargeOperationnelleForm()
-    return render(request, 'finances/charge_form.html', {'form': form, 'type': 'operationnelle'})
+    return render(request, 'finances/charge_operationnelle_form.html', {'form': form, 'type': 'operationnelle'})
 
 
 @login_required
@@ -381,7 +398,7 @@ def charge_operationnelle_edit(request, pk):
             return redirect('finances:charges_list')
     else:
         form = ChargeOperationnelleForm(instance=charge)
-    return render(request, 'finances/charge_form.html', {'form': form, 'charge': charge, 'type': 'operationnelle'})
+    return render(request, 'finances/charge_operationnelle_form.html', {'form': form, 'charge': charge, 'type': 'operationnelle'})
 
 
 @login_required
@@ -403,7 +420,7 @@ def personnel_list(request):
         messages.error(request, "Vous n'avez pas l'autorisation.")
         return redirect('dashboard')
     personnel_list = MembrePersonnel.objects.select_related('utilisateur').all().order_by('-date_embauche')
-    total_salaires_mensuels = sum(p.salaire_base or 0 for p in personnel_list if p.est_actif)
+    total_salaires_mensuels = sum(p.salaire_base or 0 for p in personnel_list if p.est_active)
     
     return render(request, 'finances/personnel_list.html', {
         'personnel_list': personnel_list,
@@ -572,9 +589,10 @@ def rapport_financier(request):
 @login_required
 def rappel_list(request):
     if not request.user.has_module_permission('rappels', 'read'):
-        messages.error(request, "Vous n'avez pas l'autorisation de voir les rappels.")
+        messages.error(request, "Vous n'avez pas l'autorisation.")
         return redirect('dashboard')
     
+    from scolarite.models import EleveInscription
     annee = AnneeScolaire.objects.filter(est_active=True).first()
     eleves_en_retard = []
     

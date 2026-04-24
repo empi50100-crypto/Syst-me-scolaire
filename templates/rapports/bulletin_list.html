@@ -1,25 +1,22 @@
 {% extends 'base.html' %}
+{% load permissions_tags %}
 {% block title %}Bulletins{% endblock %}
 
 {% block content %}
-<div class="page-header">
-    <div class="d-flex justify-content-between align-items-center">
-        <h1><i class="bi bi-file-earmark-spreadsheet"></i> Bulletins de Notes</h1>
-        {% if classes %}
-        <a href="{% url 'rapports:bulletins_par_classe' classes.0.pk %}" class="btn btn-success">
-            <i class="bi bi-file-earmark-plus"></i> Générer Bulletins PDF
-        </a>
-        {% endif %}
-    </div>
-</div>
+{% url 'rapports:bulletins_par_classe' as bulletins_url %}
+{% include 'includes/page_header.html' with title="Bulletins de Notes" icon="bi-file-earmark-spreadsheet" show_button=False %}
 
-<div class="card mb-4">
+<!-- Filtres -->
+<div class="card filters-card mb-4">
+    <div class="card-header">
+        <h5><i class="bi bi-funnel"></i> Filtres</h5>
+    </div>
     <div class="card-body">
-        <form method="get" class="row g-3">
+        <form method="get" class="row g-3 align-items-end">
             <div class="col-12 col-md-3">
                 <label class="form-label">Classe</label>
                 <select name="classe" class="form-select" onchange="this.form.submit()">
-                    <option value="">-- Toutes les classes --</option>
+                    <option value="">Toutes les classes</option>
                     {% for classe in classes %}
                     <option value="{{ classe.pk }}" {% if selected_classe.pk == classe.pk %}selected{% endif %}>
                         {{ classe }}
@@ -30,7 +27,7 @@
             <div class="col-12 col-md-3">
                 <label class="form-label">Période</label>
                 <select name="cycle" class="form-select" onchange="this.form.submit()">
-                    <option value="">-- Toutes les périodes --</option>
+                    <option value="">Toutes les périodes</option>
                     {% for cycle in cycles %}
                     <option value="{{ cycle.pk }}" {% if selected_cycle.pk == cycle.pk %}selected{% endif %}>
                         {{ cycle.libelle }}
@@ -42,9 +39,9 @@
                 <label class="form-label">Rechercher</label>
                 <input type="text" name="search" class="form-control" placeholder="Nom, prénom ou matricule..." value="{{ search }}">
             </div>
-            <div class="col-12 col-md-2 d-flex align-items-end">
+            <div class="col-12 col-md-3">
                 <button type="submit" class="btn btn-primary w-100">
-                    <i class="bi bi-search"></i> Filtrer
+                    <i class="bi bi-search me-1"></i> Filtrer
                 </button>
             </div>
         </form>
@@ -52,60 +49,63 @@
 </div>
 
 {% if inscriptions_data %}
-<div class="card mb-4">
-    <div class="card-header bg-primary text-white">
-        <h5 class="mb-0">Notes des élèves{% if selected_classe %} - {{ selected_classe }}{% endif %}{% if selected_cycle %} - {{ selected_cycle.libelle }}{% endif %}</h5>
+<!-- Tableau -->
+<div class="table-container">
+    <div class="d-flex justify-content-between align-items-center px-4 py-3 bg-light border-bottom">
+        <h5 class="mb-0"><i class="bi bi-list-ul me-2"></i>Notes des élèves{% if selected_classe %} - {{ selected_classe }}{% endif %}{% if selected_cycle %} - {{ selected_cycle.libelle }}{% endif %}</h5>
+        {% if classes %}
+        <a href="{% url 'rapports:bulletins_par_classe' classes.0.pk %}" class="btn btn-success">
+            <i class="bi bi-file-earmark-plus me-1"></i> Générer PDF
+        </a>
+        {% endif %}
     </div>
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-striped table-hover mb-0">
-                <thead>
-                    <tr>
-                        <th>Rang</th>
-                        <th>Matricule</th>
-                        <th>Nom</th>
-                        <th>Prénom</th>
-                        <th class="text-center">Moyenne</th>
-                        <th class="text-center">Mention</th>
-                        <th class="text-center">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in inscriptions_data %}
-                    <tr>
-                        <td>{{ item.rang }}</td>
-                        <td>{{ item.inscription.eleve.matricule }}</td>
-                        <td><strong>{{ item.inscription.eleve.nom }}</strong></td>
-                        <td>{{ item.inscription.eleve.prenom }}</td>
-                        <td class="text-center">
-                            {% if item.moyenne_generale %}
-                            <span class="badge {% if item.moyenne_generale >= 10 %}bg-success{% elif item.moyenne_generale >= 5 %}bg-warning text-dark{% else %}bg-danger{% endif %} fs-6">
-                                {{ item.moyenne_generale|floatformat:2 }}/20
-                            </span>
-                            {% else %}
-                            <span class="badge bg-secondary">-</span>
-                            {% endif %}
-                        </td>
-                        <td class="text-center">
-                            {% if item.moyenne_generale %}
-                                {% if item.moyenne_generale >= 16 %}Excellent
-                                {% elif item.moyenne_generale >= 14 %}Très Bien
-                                {% elif item.moyenne_generale >= 12 %}Bien
-                                {% elif item.moyenne_generale >= 10 %}Passable
-                                {% else %}Insuffisant{% endif %}
-                            {% else %}
-                            -
-                            {% endif %}
-                        </td>
-                        <td class="text-center">
-                            <a href="{% url 'enseignement:bulletin_eleve' item.inscription.eleve.pk %}" class="btn btn-sm btn-outline-primary" title="Voir bulletin">
-                                <i class="bi bi-eye"></i>
-                            </a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0" id="bulletinTable">
+            <thead>
+                <tr>
+                    <th><i class="bi bi-hash me-1"></i>Rang</th>
+                    <th><i class="bi bi-upc-scan me-1"></i>Matricule</th>
+                    <th><i class="bi bi-person me-1"></i>Nom</th>
+                    <th><i class="bi bi-person me-1"></i>Prénom</th>
+                    <th class="text-center"><i class="bi bi-calculator me-1"></i>Moyenne</th>
+                    <th class="text-center"><i class="bi bi-award me-1"></i>Mention</th>
+                    <th class="text-center"><i class="bi bi-eye me-1"></i>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in inscriptions_data %}
+                <tr>
+                    <td><span class="badge badge-secondary">{{ item.rang }}</span></td>
+                    <td>{{ item.inscription.eleve.matricule }}</td>
+                    <td><strong>{{ item.inscription.eleve.nom }}</strong></td>
+                    <td>{{ item.inscription.eleve.prenom }}</td>
+                    <td class="text-center">
+                        <span class="{% if item.moyenne_generale >= 10 %}text-success{% else %}text-danger{% endif %} fw-bold">
+                            {{ item.moyenne_generale|floatformat:2 }}
+                        </span>
+                    </td>
+                    <td class="text-center">
+                        {% if item.moyenne_generale >= 16 %}
+                            <span class="badge badge-success">{{ item.mention }}</span>
+                        {% elif item.moyenne_generale >= 14 %}
+                            <span class="badge badge-info">{{ item.mention }}</span>
+                        {% elif item.moyenne_generale >= 12 %}
+                            <span class="badge badge-primary">{{ item.mention }}</span>
+                        {% elif item.moyenne_generale >= 10 %}
+                            <span class="badge badge-warning">{{ item.mention }}</span>
+                        {% else %}
+                            <span class="badge badge-danger">{{ item.mention }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        <a href="{% url 'rapports:bulletin_eleve' item.inscription.pk %}?cycle={{ selected_cycle.pk }}" class="btn btn-view" style="background: #dbeafe; border-color: #3b82f6; color: #1d4ed8;" title="Voir le bulletin">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
         </div>
     </div>
 </div>

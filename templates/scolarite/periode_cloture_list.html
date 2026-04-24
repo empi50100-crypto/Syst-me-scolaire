@@ -1,45 +1,33 @@
 {% extends 'base.html' %}
-
-{% block title %}Clôture des Périodes - SyGeS-AM{% endblock %}
+{% load permissions_tags %}
+{% block title %}Clôture des Périodes{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-12">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Accueil</a></li>
-                <li class="breadcrumb-item active">Clôture des Périodes</li>
-            </ol>
-        </nav>
-    </div>
-</div>
+{% include 'includes/page_header.html' with title="Clôture des Périodes" icon="bi-lock" show_button=False %}
 
-<h1 class="mb-4"><i class="bi bi-lock"></i> Clôture des Périodes (Trimestres/Semestres)</h1>
-
-<div class="alert alert-info">
-    <i class="bi bi-info-circle"></i>
+<div class="alert alert-info mb-4">
+    <i class="bi bi-info-circle me-2"></i>
     <strong>Comment ça marche :</strong>
-    <ul class="mb-0">
+    <ul class="mb-0 mt-2">
         <li>Chaque professeur principal doit clôturer les périodes de ses classes.</li>
         <li>Jusqu'à ce qu'une période soit clôturée, toutes les disciplines sont considérées comme appartenant à la période précédente.</li>
         <li>Exemple : Si le Trimestre 1 n'est pas clôturé, les nouvelles disciplines iront dans le Trimestre 1.</li>
     </ul>
 </div>
 
-<div class="card">
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead class="table-dark">
-                    <tr>
-                        <th>Classe</th>
-                        <th>Professeur Principal</th>
-                        <th>Trimestre 1</th>
-                        <th>Trimestre 2</th>
-                        <th>Trimestre 3</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
+<div class="table-container">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0" id="periodeClotureTable">
+            <thead>
+                <tr>
+                    <th><i class="bi bi-collection me-1"></i>Classe</th>
+                    <th><i class="bi bi-person-workspace me-1"></i>Professeur Principal</th>
+                    <th><i class="bi bi-1-circle me-1"></i>Trimestre 1</th>
+                    <th><i class="bi bi-2-circle me-1"></i>Trimestre 2</th>
+                    <th><i class="bi bi-3-circle me-1"></i>Trimestre 3</th>
+                    <th style="width: 100px;" class="text-center"><i class="bi bi-gear me-1"></i>Actions</th>
+                </tr>
+            </thead>
                 <tbody>
                     {% for data in classe_data %}
                     <tr>
@@ -47,12 +35,12 @@
                         <td>{{ data.classe.professeur_principal.user.get_full_name|default:"-" }}</td>
                         <td>
                             {% if data.clotures.1 %}
-                            <span class="badge bg-success">
-                                <i class="bi bi-check-circle"></i> Cloturé le {{ data.clotures.1.date_cloture|date:"d/m/Y" }}
+                            <span class="badge badge-success">
+                                <i class="bi bi-check-circle me-1"></i>Cloturé le {{ data.clotures.1.date_cloture|date:"d/m/Y" }}
                             </span>
-                            <form method="post" action="{% url 'scolarite:periode_cloture_delete' data.classe.id 1 %}" class="d-inline">
+                            <form method="post" action="{% url 'scolarite:periode_cloture_delete' data.classe.id 1 %}" class="d-inline ms-1">
                                 {% csrf_token %}
-                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Supprimer la clôture du Trimestre 1?')">
+                                <button type="submit" class="btn btn-sm" style="background: #fee2e2; border: 1px solid #ef4444; color: #dc2626; padding: 2px 8px;" onclick="return confirm('Supprimer la clôture du Trimestre 1?')">
                                     <i class="bi bi-trash"></i>
                                 </button>
                             </form>
@@ -63,12 +51,12 @@
                         <td>
                             {% if data.type_cycle == 'trimestriel' %}
                                 {% if data.clotures.2 %}
-                                <span class="badge bg-success">
-                                    <i class="bi bi-check-circle"></i> Cloturé le {{ data.clotures.2.date_cloture|date:"d/m/Y" }}
+                                <span class="badge badge-success">
+                                    <i class="bi bi-check-circle me-1"></i>Cloturé le {{ data.clotures.2.date_cloture|date:"d/m/Y" }}
                                 </span>
-                                <form method="post" action="{% url 'scolarite:periode_cloture_delete' data.classe.id 2 %}" class="d-inline">
+                                <form method="post" action="{% url 'scolarite:periode_cloture_delete' data.classe.id 2 %}" class="d-inline ms-1">
                                     {% csrf_token %}
-                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Supprimer la clôture du Trimestre 2?')">
+                                    <button type="submit" class="btn btn-sm" style="background: #fee2e2; border: 1px solid #ef4444; color: #dc2626; padding: 2px 8px;" onclick="return confirm('Supprimer la clôture du Trimestre 2?')">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </form>

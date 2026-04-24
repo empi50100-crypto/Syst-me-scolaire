@@ -1,20 +1,25 @@
 {% extends 'base.html' %}
-{% block title %}Reçu de Paiement{% endblock %}
+{% load permissions_tags %}
+{% block title %}Reçu de paiement{% endblock %}
 
 {% block content %}
+<!-- Header avec boutons d'action (masqué à l'impression) -->
+<div class="d-flex justify-content-between align-items-center mb-4 no-print">
+    <div>
+        <h1 style="color: #1e293b; font-weight: 700;"><i class="bi bi-receipt me-2" style="color: #4f46e5;"></i>Reçu de paiement</h1>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'finances:historique_paiements_eleve' paiement.eleve.pk %}" class="btn" style="background: #f1f5f9; border-color: #cbd5e1; color: #475569;">
+            <i class="bi bi-arrow-left me-1"></i> Retour
+        </a>
+        <button onclick="window.print()" class="btn" style="background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white;">
+            <i class="bi bi-printer me-1"></i> Imprimer
+        </button>
+    </div>
+</div>
+
 <div class="container py-4" id="recu-container">
     <div class="card">
-        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-            <h4 class="mb-0"><i class="bi bi-receipt"></i> Reçu de Paiement</h4>
-            <div>
-                <button onclick="window.print()" class="btn btn-light me-2">
-                    <i class="bi bi-printer"></i> Imprimer
-                </button>
-                <a href="{% url 'finances:paiement_list' %}" class="btn btn-outline-light">
-                    <i class="bi bi-arrow-left"></i> Retour
-                </a>
-            </div>
-        </div>
         <div class="card-body" id="printable-area">
             <div class="recu-document">
                 <div class="recu-header text-center border-bottom pb-3 mb-4">
@@ -26,7 +31,7 @@
                 <div class="recu-info mb-4">
                     <div class="row">
                         <div class="col-md-6">
-                            <p><strong>N° Reçu:</strong> <span class="text-primary">RCU-{{ paiement.pk|stringformat:"05d" }}</span></p>
+                            <p><strong>N° Reçu:</strong> <span class="badge badge-warning">{{ paiement.statut }}</span> RCU-{{ paiement.pk|stringformat:"05d" }}</span></p>
                             <p><strong>Date:</strong> {{ paiement.date_paiement|date:"d/m/Y" }}</p>
                             <p><strong>Mode de paiement:</strong> {{ paiement.get_mode_paiement_display }}</p>
                             {% if paiement.reference %}<p><strong>Référence:</strong> {{ paiement.reference }}</p>{% endif %}
@@ -82,15 +87,15 @@
                     </table>
                 </div>
 
-                <div class="recu-montant文字 text-center my-4 p-3 bg-success bg-opacity-10 rounded">
+                <div class="text-center my-4 p-3 rounded" style="background: linear-gradient(135deg, #d1fae5, #a7f3d0); border: 2px solid #10b981;">
                     <p class="mb-1 text-muted">Montant en lettres</p>
-                    <h3 class="text-success mb-0">{{ paiement.montant|filesizeformat|slice:":-4" }} {% if paiement.montant < 100000 %}FCFA{% endif %}</h3>
+                    <h3 class="mb-0" style="color: #065f46; font-weight: 700;">{{ paiement.montant|filesizeformat|slice:":-4" }} {% if paiement.montant < 100000 %}FCFA{% endif %}</h3>
                 </div>
 
                 <div class="recu-solde mt-4">
                     <div class="row">
                         <div class="col-md-6">
-                            <p><strong>Cumul déjà payé:</strong> <span class="text-success">{{ total_paye|sub:paiement.montant|floatformat:0 }} FCFA</span></p>
+                            <p><strong>Cumul déjà payé:</strong> <span class="badge badge-success">{{ paiement.statut }}</span> {{ total_paye|sub:paiement.montant|floatformat:0 }} FCFA</span></p>
                         </div>
                         <div class="col-md-6 text-end">
                             <p><strong>Total payé (cumul):</strong> <span class="text-success fw-bold">{{ total_paye|floatformat:0 }} FCFA</span></p>

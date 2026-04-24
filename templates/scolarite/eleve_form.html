@@ -3,70 +3,88 @@
 {% block title %}{{ action }} élève{% endblock %}
 
 {% block content %}
-<div class="page-header">
-    <h1><i class="bi bi-person-plus"></i> {{ action }} un élève</h1>
-</div>
+{% include 'includes/page_header.html' with title=action|add:" un élève" icon="bi-person-plus" %}
 
 <div class="form-container">
     <form method="post" enctype="multipart/form-data" action="">
         {% csrf_token %}
         
+        {% if form.errors %}
+        <div class="alert alert-danger mb-4">
+            <i class="bi bi-exclamation-triangle"></i>
+            <div>
+                <strong>Erreurs dans le formulaire :</strong>
+                <ul class="mb-0 mt-2">
+                    {% for field in form %}
+                        {% for error in field.errors %}
+                            <li>{{ field.label }}: {{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                    {% for error in form.non_field_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+        
         <div class="form-section">
             <div class="form-section-header">
                 <i class="bi bi-person"></i> Informations Personnelles
             </div>
-            
-            <div class="row g-4">
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label class="form-label">Nom</label>
-                        {{ form.nom }}
+            <div class="form-section-body">
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="form-label">Nom <span class="text-danger">*</span></label>
+                            {{ form.nom }}
+                        </div>
                     </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label class="form-label">Prénom</label>
-                        {{ form.prenom }}
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="form-label">Prénom <span class="text-danger">*</span></label>
+                            {{ form.prenom }}
+                        </div>
                     </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label class="form-label">Sexe</label>
-                        {{ form.sexe }}
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="form-label">Sexe <span class="text-danger">*</span></label>
+                            {{ form.sexe }}
+                        </div>
                     </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label class="form-label">Date de naissance</label>
-                        {% if eleve and eleve.date_naissance %}
-                        <input type="date" name="date_naissance" class="form-control" value="{{ eleve.date_naissance|date:'Y-m-d' }}">
-                        {% else %}
-                        {{ form.date_naissance }}
-                        {% endif %}
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Date de naissance</label>
+                            {% if eleve and eleve.date_naissance %}
+                            <input type="date" name="date_naissance" class="form-control" value="{{ eleve.date_naissance|date:'Y-m-d' }}">
+                            {% else %}
+                            {{ form.date_naissance }}
+                            {% endif %}
+                        </div>
                     </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label class="form-label">Lieu de naissance</label>
-                        {{ form.lieu_naissance }}
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Lieu de naissance</label>
+                            {{ form.lieu_naissance }}
+                        </div>
                     </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label class="form-label">Adresse</label>
-                        {{ form.adresse }}
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Adresse</label>
+                            {{ form.adresse }}
+                        </div>
                     </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="form-group">
-                        <label class="form-label">Téléphone parent</label>
-                        {{ form.telephone_parent }}
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label class="form-label">Téléphone parent</label>
+                            {{ form.telephone_parent }}
+                        </div>
                     </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="form-group">
-                        <label class="form-label">Email parent</label>
-                        {{ form.email_parent }}
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label class="form-label">Email parent</label>
+                            {{ form.email_parent }}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -76,9 +94,9 @@
             <div class="form-section-header">
                 <i class="bi bi-file-earmark-text"></i> Documents de l'élève
             </div>
-            <div class="card mb-3">
-                <div class="card-body">
-                    <p class="text-muted mb-2">Ajoutez les documents de l'élève (acte de naissance, certificat médical, etc.)</p>
+            <div class="form-section-body">
+                <p class="text-muted mb-3"><i class="bi bi-info-circle"></i> Ajoutez les documents de l'élève (acte de naissance, certificat médical, etc.)</p>
+                <div class="table-container mb-3">
                     <table class="table table-bordered" id="documents-table">
                         <thead>
                             <tr>
@@ -106,10 +124,11 @@
                         </tbody>
                     </table>
                     {{ document_formset.management_form }}
-                    <button type="button" class="btn btn-outline-primary btn-sm" id="add-doc" onclick="addDocument()">
-                        <i class="bi bi-plus-circle"></i> Ajouter un document
-                    </button>
+                    </div>
                 </div>
+                <button type="button" class="btn btn-outline-primary" id="add-doc" onclick="addDocument()">
+                    <i class="bi bi-plus-circle"></i> Ajouter un document
+                </button>
             </div>
         </div>
         
@@ -117,8 +136,8 @@
             <div class="form-section-header">
                 <i class="bi bi-info-circle"></i> Informations Supplémentaires
             </div>
-            
-            <div class="row g-4">
+            <div class="form-section-body">
+                <div class="row g-4">
                 <div class="col-md-4">
                     <div class="form-group">
                         <label class="form-label">Photo de l'élève</label>
@@ -148,6 +167,7 @@
                         <label class="form-label">Observations</label>
                         {{ form.observations }}
                     </div>
+                </div>
                 </div>
             </div>
         </div>

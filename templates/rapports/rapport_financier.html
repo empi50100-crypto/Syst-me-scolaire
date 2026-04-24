@@ -1,56 +1,81 @@
 {% extends 'base.html' %}
+{% load permissions_tags %}
 {% block title %}Rapport Financier{% endblock %}
 
 {% block content %}
-<h1>Rapport Financier</h1>
-<h4 class="text-muted">{{ annee.libelle }}</h4>
+{% include 'includes/page_header.html' with title="Rapport Financier" icon="bi-cash-coin" show_button=False %}
 
+<h5 class="text-muted mb-4">{{ annee.libelle }}</h5>
+
+<!-- Statistiques -->
 <div class="row g-4 mb-4">
     <div class="col-md-4">
-        <div class="card card-stat primary">
+        <div class="card stat-card stat-card-primary h-100">
             <div class="card-body">
-                <h5 class="card-title">Total Frais</h5>
-                <h3>{{ total_frais }} FCFA</h3>
+                <div class="stat-icon"><i class="bi bi-cash-stack"></i></div>
+                <div class="stat-content">
+                    <h6>Total Frais</h6>
+                    <h3>{{ total_frais }} FCFA</h3>
+                </div>
             </div>
         </div>
     </div>
     <div class="col-md-4">
-        <div class="card card-stat success">
+        <div class="card stat-card stat-card-success h-100">
             <div class="card-body">
-                <h5 class="card-title">Encaissé</h5>
-                <h3>{{ total_encaisse }} FCFA</h3>
+                <div class="stat-icon"><i class="bi bi-check-circle"></i></div>
+                <div class="stat-content">
+                    <h6>Encaissé</h6>
+                    <h3>{{ total_encaisse }} FCFA</h3>
+                </div>
             </div>
         </div>
     </div>
     <div class="col-md-4">
-        <div class="card card-stat warning">
+        <div class="card stat-card stat-card-warning h-100">
             <div class="card-body">
-                <h5 class="card-title">Taux Recouvrement</h5>
-                <h3>{{ taux_recouvrement }}%</h3>
+                <div class="stat-icon"><i class="bi bi-percent"></i></div>
+                <div class="stat-content">
+                    <h6>Taux Recouvrement</h6>
+                    <h3>{{ taux_recouvrement }}%</h3>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<h4>Par type de frais</h4>
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>Type</th>
-            <th>Total Dû</th>
-            <th>Encaissé</th>
-            <th>Reste</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for s in stats_par_type %}
-        <tr>
-            <td>{{ s.type }}</td>
-            <td>{{ s.total }} FCFA</td>
-            <td>{{ s.encaisse }} FCFA</td>
-            <td>{{ s.reste }} FCFA</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+<!-- Tableau -->
+<div class="table-container">
+    <div class="d-flex justify-content-between align-items-center px-4 py-3 bg-light border-bottom">
+        <h5 class="mb-0"><i class="bi bi-table me-2"></i>Par type de frais</h5>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0" id="financierTable">
+            <thead>
+                <tr>
+                    <th><i class="bi bi-tag me-1"></i>Type</th>
+                    <th class="text-end"><i class="bi bi-cash me-1"></i>Total Dû</th>
+                    <th class="text-end"><i class="bi bi-check-circle me-1"></i>Encaissé</th>
+                    <th class="text-end"><i class="bi bi-exclamation-circle me-1"></i>Reste</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in stats_par_type %}
+                <tr>
+                    <td><strong>{{ s.type }}</strong></td>
+                    <td class="text-end">{{ s.total }} FCFA</td>
+                    <td class="text-end"><span style="color: #10b981;">{{ s.encaisse }} FCFA</span></td>
+                    <td class="text-end"><span style="color: #ef4444;">{{ s.reste }} FCFA</span></td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="p-0">
+                        {% include 'includes/empty_state.html' with icon="bi-cash-coin" title="Aucune donnée" message="Aucune statistique financière disponible pour le moment." %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
 {% endblock %}

@@ -53,51 +53,51 @@
                         <th>Échéance</th>
                         <th>Élève</th>
                         <th>Montant</th>
-                        <th>Payé</th>
                         <th>Statut</th>
-                        <th>Actions</th>
+                        <th class="text-center">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for facture in factures %}
                     <tr>
-                        <td><strong>{{ facture.numero_facture }}</strong></td>
+                        <td>{{ facture.numero }}</td>
                         <td>{{ facture.date_facture|date:"d/m/Y" }}</td>
                         <td>{{ facture.date_echeance|date:"d/m/Y" }}</td>
-                        <td>
-                            <a href="{% url 'scolarite:eleve_detail' facture.eleve.pk %}">
-                                {{ facture.eleve.nom_complet }}
-                            </a>
-                        </td>
-                        <td><strong>{{ facture.montant_total|floatformat:0 }} FCFA</strong></td>
-                        <td>{{ facture.montant_paye|floatformat:0 }} FCFA</td>
+                        <td>{{ facture.inscription.eleve.nomComplet }}</td>
+                        <td class="fw-bold">{{ facture.montant|floatformat:0 }} FCA</td>
                         <td>
                             {% if facture.statut == 'payee' %}
-                                <span class="badge bg-success">Payée</span>
+                            <span class="badge bg-success">Payée</span>
                             {% elif facture.statut == 'partiellement_payee' %}
-                                <span class="badge bg-warning">Partiellement payée</span>
+                            <span class="badge bg-warning">Partiellement payée</span>
                             {% elif facture.statut == 'annulee' %}
-                                <span class="badge bg-secondary">Annulée</span>
+                            <span class="badge bg-secondary">Annulée</span>
                             {% else %}
-                                <span class="badge bg-danger">En attente</span>
+                            <span class="badge bg-danger">En attente</span>
                             {% endif %}
                         </td>
-                        <td>
-                            <div class="btn-group btn-group-sm">
-                                <a href="{% url 'finances:facture_detail' facture.pk %}" class="btn btn-outline-primary" title="Voir">
+                        <td class="text-center">
+                            <div class="btn-group" role="group">
+                                <a href="{% url 'finances:facture_detail' facture.pk %}" class="btn btn-view" title="Voir">
                                     <i class="bi bi-eye"></i>
                                 </a>
-                                <a href="{% url 'finances:facture_pdf' facture.pk %}" class="btn btn-outline-success" title="Télécharger PDF">
-                                    <i class="bi bi-file-pdf"></i>
+                                <a href="{% url 'finances:facture_edit' facture.pk %}" class="btn btn-edit" title="Modifier">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="{% url 'finances:facture_print' facture.pk %}" class="btn btn-edit" style="background: #e0e7ff; border-color: #6366f1; color: #4f46e5;" title="Imprimer" target="_blank">
+                                    <i class="bi bi-printer"></i>
                                 </a>
                             </div>
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="8" class="text-center text-muted py-4">
-                            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
-                            Aucune facture trouvée
+                        <td colspan="7" class="text-center text-muted p-4">
+                            <i class="bi bi-file-earmark-text" style="font-size: 2rem;"></i>
+                            <p class="mt-2">Aucune facture trouvée.</p>
+                            <a href="{% url 'finances:facture_create' %}" class="btn btn-primary btn-sm">
+                                <i class="bi bi-plus-circle"></i> Nouvelle facture
+                            </a>
                         </td>
                     </tr>
                     {% endfor %}
@@ -106,19 +106,7 @@
         </div>
 
         {% if factures.has_other_pages %}
-        <nav>
-            <ul class="pagination justify-content-center">
-                {% if factures.has_previous %}
-                <li class="page-item"><a class="page-link" href="?page=1">Première</a></li>
-                <li class="page-item"><a class="page-link" href="?page={{ factures.previous_page_number }}">Précédente</a></li>
-                {% endif %}
-                <li class="page-item active"><span class="page-link">Page {{ factures.number }} / {{ factures.paginator.num_pages }}</span></li>
-                {% if factures.has_next %}
-                <li class="page-item"><a class="page-link" href="?page={{ factures.next_page_number }}">Suivante</a></li>
-                <li class="page-item"><a class="page-link" href="?page={{ factures.paginator.num_pages }}">Dernière</a></li>
-                {% endif %}
-            </ul>
-        </nav>
+        {% include 'includes/pagination.html' with page_obj=factures %}
         {% endif %}
     </div>
 </div>

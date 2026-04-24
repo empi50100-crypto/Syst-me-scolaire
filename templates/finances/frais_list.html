@@ -1,41 +1,39 @@
 {% extends 'base.html' %}
-{% block title %}Frais{% endblock %}
+{% load permissions_tags %}
+{% block title %}Configuration des Frais{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>Configuration des Frais</h1>
-    <a href="{% url 'finances:frais_create' %}" class="btn btn-primary">
-        <i class="bi bi-plus-circle"></i> Nouveau frais
-    </a>
-</div>
+{% url 'finances:frais_create' as create_url %}
+{% include 'includes/page_header.html' with title="Configuration des Frais" icon="bi-cash-stack" show_button=True button_url=create_url button_text="Nouveau frais" button_icon="bi-plus-circle" %}
 
-<div class="card">
-    <div class="card-body">
-        <table class="table table-striped">
+<!-- Tableau -->
+<div class="table-container">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0" id="fraisTable">
             <thead>
                 <tr>
-                    <th>Type</th>
-                    <th>Application</th>
-                    <th>Année</th>
-                    <th>Montant</th>
-                    <th>Description</th>
-                    <th>Actions</th>
+                    <th><i class="bi bi-tag me-1"></i>Type</th>
+                    <th><i class="bi bi-layers me-1"></i>Application</th>
+                    <th><i class="bi bi-calendar-year me-1"></i>Année</th>
+                    <th><i class="bi bi-cash me-1"></i>Montant</th>
+                    <th><i class="bi bi-text-paragraph me-1"></i>Description</th>
+                    <th style="width: 100px;" class="text-center"><i class="bi bi-gear me-1"></i>Actions</th>
                 </tr>
             </thead>
             <tbody>
                 {% for frais in frais %}
                 <tr>
-                    <td><span class="badge bg-primary">{{ frais.get_type_frais_display }}</span></td>
+                    <td><span class="badge badge-primary">{{ frais.get_type_frais_display }}</span></td>
                     <td>
                         {% if frais.mode_application == 'general' %}
-                            <span class="badge bg-success">Toutes les classes</span>
+                            <span class="badge badge-success">Toutes les classes</span>
                         {% elif frais.mode_application == 'niveau' %}
-                            <span class="badge bg-info text-dark">{{ frais.get_niveau_display }}{% if frais.filiere %} {{ frais.filiere }}{% endif %}</span>
+                            <span class="badge badge-info">{{ frais.get_niveau_display }}{% if frais.filiere %} {{ frais.filiere }}{% endif %}</span>
                         {% else %}
                             {% if frais.classe %}
                                 {{ frais.classe.nom }}{% if frais.classe.filiere %} {{ frais.classe.filiere }}{% endif %}
                             {% else %}
-                                <span class="text-muted">Non spécifié</span>
+                                <span class="text-muted fst-italic">Non spécifié</span>
                             {% endif %}
                         {% endif %}
                     </td>
@@ -46,16 +44,25 @@
                             <span class="text-muted">-</span>
                         {% endif %}
                     </td>
-                    <td><strong>{{ frais.montant }} Fcfa</strong></td>
+                    <td><strong>{{ frais.montant }} FCFA</strong></td>
                     <td>{{ frais.description|default:"-" }}</td>
-                    <td>
-                        <a href="{% url 'finances:frais_update' frais.id %}" class="btn btn-sm btn-warning">
-                            <i class="bi bi-pencil"></i>
-                        </a>
+                    <td class="text-center">
+                        {% can_change request.user 'frais_list' as can_edit %}
+                        <div class="action-btns">
+                            {% if can_edit %}
+                            <a href="{% url 'finances:frais_update' frais.id %}" class="btn btn-edit" title="Modifier">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            {% endif %}
+                        </div>
                     </td>
                 </tr>
                 {% empty %}
-                <tr><td colspan="6" class="text-center text-muted">Aucun frais configuré. Cliquez sur "Nouveau frais" pour commencer.</td></tr>
+                <tr>
+                    <td colspan="6" class="p-0">
+                        {% include 'includes/empty_state.html' with icon="bi-cash-stack" title="Aucun frais configuré" message="Commencez par créer un nouveau frais scolaire." button_url=create_url button_text="Nouveau frais" %}
+                    </td>
+                </tr>
                 {% endfor %}
             </tbody>
         </table>

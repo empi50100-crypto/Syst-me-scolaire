@@ -1,76 +1,78 @@
 {% extends 'base.html' %}
-
-{% block title %}Statistiques Discipline - SyGeS-AM{% endblock %}
+{% load permissions_tags %}
+{% block title %}Statistiques Discipline{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-12">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Accueil</a></li>
-                <li class="breadcrumb-item"><a href="{% url 'scolarite:discipline_list' %}">Discipline</a></li>
-                <li class="breadcrumb-item active">Statistiques</li>
-            </ol>
-        </nav>
+{% include 'includes/page_header.html' with title="Statistiques de Discipline" icon="bi-bar-chart" show_button=False %}
+
+<!-- Statistiques en cartes -->
+<div class="row mb-4 g-3">
+    <div class="col-md-3">
+        <div class="card stat-card stat-card-danger h-100">
+            <div class="card-body">
+                <div class="stat-icon"><i class="bi bi-exclamation-triangle"></i></div>
+                <div class="stat-content">
+                    <h6>Sanctions</h6>
+                    <h3>{{ total_sanctions }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card stat-card-success h-100">
+            <div class="card-body">
+                <div class="stat-icon"><i class="bi bi-award"></i></div>
+                <div class="stat-content">
+                    <h6>Récompenses</h6>
+                    <h3>{{ total_recompenses }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card stat-card-warning h-100">
+            <div class="card-body">
+                <div class="stat-icon"><i class="bi bi-clock"></i></div>
+                <div class="stat-content">
+                    <h6>En attente</h6>
+                    <h3>{{ total_en_attente }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card stat-card-primary h-100">
+            <div class="card-body">
+                <div class="stat-icon"><i class="bi bi-calendar-year"></i></div>
+                <div class="stat-content">
+                    <h6>Année</h6>
+                    <h4>{{ annee_scolaire.libelle|default:"-" }}</h4>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
-<h1 class="mb-4"><i class="bi bi-bar-chart"></i> Statistiques de Discipline</h1>
-
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card bg-danger text-white">
-            <div class="card-body">
-                <h5 class="card-title">Sanctions</h5>
-                <h2>{{ total_sanctions }}</h2>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card bg-success text-white">
-            <div class="card-body">
-                <h5 class="card-title">Récompenses</h5>
-                <h2>{{ total_recompenses }}</h2>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card bg-warning text-dark">
-            <div class="card-body">
-                <h5 class="card-title">En attente</h5>
-                <h2>{{ total_en_attente }}</h2>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card bg-primary text-white">
-            <div class="card-body">
-                <h5 class="card-title">Année</h5>
-                <h6>{{ annee_scolaire.libelle|default:"-" }}</h6>
-            </div>
-        </div>
-    </div>
-</div>
-
+<!-- Sanctions par période -->
 <div class="row mb-4">
     <div class="col-md-6">
-        <div class="card">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">Sanctions par Période</h5>
+        <div class="table-container">
+            <div class="d-flex justify-content-between align-items-center px-4 py-3 bg-light border-bottom">
+                <h5 class="mb-0"><i class="bi bi-calendar-event me-2"></i>Sanctions par Période</h5>
             </div>
-            <div class="card-body">
-                <table class="table table-striped">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="periodeTable">
                     <thead>
                         <tr>
-                            <th>Période</th>
-                            <th>Nombre de sanctions</th>
+                            <th><i class="bi bi-calendar me-1"></i>Période</th>
+                            <th><i class="bi bi-exclamation-triangle me-1"></i>Nombre</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for p in periode_stats %}
                         <tr>
                             <td>Trimestre {{ p.periode }}</td>
-                            <td><span class="badge bg-danger">{{ p.count }}</span></td>
+                            <td><span class="badge badge-danger">{{ p.count }}</span></td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -78,25 +80,24 @@
             </div>
         </div>
     </div>
-    
     <div class="col-md-6">
-        <div class="card">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">Par Service</h5>
+        <div class="table-container">
+            <div class="d-flex justify-content-between align-items-center px-4 py-3 bg-light border-bottom">
+                <h5 class="mb-0"><i class="bi bi-graph-up me-2"></i>Top 5 - Sanctions fréquentes</h5>
             </div>
-            <div class="card-body">
-                <table class="table table-striped">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="topSanctionsTable">
                     <thead>
                         <tr>
-                            <th>Service</th>
-                            <th>Nombre</th>
+                            <th><i class="bi bi-tag me-1"></i>Type</th>
+                            <th><i class="bi bi-hash me-1"></i>Nombre</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for s in service_stats %}
+                        {% for s in top_sanctions %}
                         <tr>
-                            <td>{{ s.service_traitant }}</td>
-                            <td><span class="badge bg-info">{{ s.count }}</span></td>
+                            <td>{{ s.sanction__libelle }}</td>
+                            <td><span class="badge badge-danger">{{ s.count }}</span></td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -106,33 +107,28 @@
     </div>
 </div>
 
+<!-- Top élèves -->
 <div class="row mb-4">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">Top 10 Élèves avec le plus de sanctions</h5>
+    <div class="col-md-6">
+        <div class="table-container">
+            <div class="d-flex justify-content-between align-items-center px-4 py-3 bg-light border-bottom">
+                <h5 class="mb-0"><i class="bi bi-person-x me-2"></i>Top 5 - Élèves avec le plus de sanctions</h5>
             </div>
-            <div class="card-body">
-                <table class="table table-hover">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="topElevesSanctionsTable">
                     <thead>
                         <tr>
-                            <th>Élève</th>
-                            <th>Nombre de sanctions</th>
-                            <th>Total points déduits</th>
-                            <th>Actions</th>
+                            <th><i class="bi bi-person me-1"></i>Élève</th>
+                            <th><i class="bi bi-collection me-1"></i>Classe</th>
+                            <th><i class="bi bi-exclamation-triangle me-1"></i>Sanctions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for e in top_eleves %}
+                        {% for e in top_eleves_sanctions %}
                         <tr>
-                            <td>{{ e.eleve__prenom }} {{ e.eleve__nom }}</td>
-                            <td>{{ e.nb_sanctions }}</td>
-                            <td><span class="text-danger">{{ e.total_points }}</span></td>
-                            <td>
-                                <a href="{% url 'scolarite:discipline_history' e.eleve__id %}" class="btn btn-sm btn-info">
-                                    <i class="bi bi-history"></i> Historique
-                                </a>
-                            </td>
+                            <td>{{ e.eleve__nom }} {{ e.eleve__prenom }}</td>
+                            <td>{{ e.eleve__classe__nom }}</td>
+                            <td><span class="badge badge-danger">{{ e.count }}</span></td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -140,27 +136,26 @@
             </div>
         </div>
     </div>
-</div>
-
-<div class="row mb-4">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">Sanctions par Classe</h5>
+    <div class="col-md-6">
+        <div class="table-container">
+            <div class="d-flex justify-content-between align-items-center px-4 py-3 bg-light border-bottom">
+                <h5 class="mb-0"><i class="bi bi-person-check me-2"></i>Top 5 - Élèves avec le plus de récompenses</h5>
             </div>
-            <div class="card-body">
-                <table class="table table-striped">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="topElevesRecompensesTable">
                     <thead>
                         <tr>
-                            <th>Classe</th>
-                            <th>Nombre de sanctions</th>
+                            <th><i class="bi bi-person me-1"></i>Élève</th>
+                            <th><i class="bi bi-collection me-1"></i>Classe</th>
+                            <th><i class="bi bi-award me-1"></i>Récompenses</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for c in class_stats %}
+                        {% for e in top_eleves_recompenses %}
                         <tr>
-                            <td>{{ c.inscription__classe__nom }}</td>
-                            <td><span class="badge bg-warning">{{ c.count }}</span></td>
+                            <td>{{ e.eleve__nom }} {{ e.eleve__prenom }}</td>
+                            <td>{{ e.eleve__classe__nom }}</td>
+                            <td><span class="badge badge-success">{{ e.count }}</span></td>
                         </tr>
                         {% endfor %}
                     </tbody>

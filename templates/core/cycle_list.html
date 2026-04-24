@@ -1,46 +1,61 @@
-{% extends "base.html" %}
-{% block title %}Cycles - SyGeS-AM{% endblock %}
+{% extends 'base.html' %}
+{% load permissions_tags %}
+{% block title %}Cycles pédagogiques{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <h2>Cycles pédagogiques</h2>
-    
-    <a href="/core/cycles/ajouter/" class="btn btn-primary mb-3">Ajouter un cycle</a>
-    
-    <div class="card">
-        <div class="card-body">
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>Année scolaire</th>
-                        <th>Type</th>
-                        <th>Numéro</th>
-                        <th>Date de début</th>
-                        <th>Date de fin</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for cycle in cycles %}
-                    <tr>
-                        <td>{{ cycle.annee_scolaire.libelle }}</td>
-                        <td>{{ cycle.get_type_cycle_display }}</td>
-                        <td>{{ cycle.numero }}</td>
-                        <td>{{ cycle.date_debut }}</td>
-                        <td>{{ cycle.date_fin }}</td>
-                        <td>
-                            <a href="/core/cycles/modifier/{{ cycle.pk }}/" class="btn btn-sm btn-warning" title="Modifier"><i class="bi bi-pencil"></i></a>
-                            <a href="/core/cycles/supprimer/{{ cycle.pk }}/" class="btn btn-sm btn-danger" title="Supprimer" onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce cycle?');"><i class="bi bi-trash"></i></a>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="5" class="text-center">Aucun cycle trouvé</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+{% url 'core:cycle_create' as create_url %}
+{% include 'includes/page_header.html' with title="Cycles Pédagogiques" icon="bi-arrow-repeat" show_button=True button_url=create_url button_text="Nouveau cycle" button_icon="bi-plus-circle" %}
+
+<!-- Tableau -->
+<div class="table-container">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0" id="cycleTable">
+            <thead>
+                <tr>
+                    <th><i class="bi bi-calendar-year me-1"></i>Année scolaire</th>
+                    <th><i class="bi bi-layers me-1"></i>Type</th>
+                    <th><i class="bi bi-hash me-1"></i>Numéro</th>
+                    <th><i class="bi bi-calendar-event me-1"></i>Date début</th>
+                    <th><i class="bi bi-calendar-check me-1"></i>Date fin</th>
+                    <th style="width: 120px;" class="text-center"><i class="bi bi-gear me-1"></i>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cycle in cycles %}
+                <tr>
+                    <td><strong>{{ cycle.annee_scolaire.libelle }}</strong></td>
+                    <td>
+                        <span class="badge badge-primary">{{ cycle.get_type_cycle_display }}</span>
+                    </td>
+                    <td><span class="badge badge-secondary">{{ cycle.numero }}</span></td>
+                    <td>{{ cycle.date_debut|date:"d/m/Y" }}</td>
+                    <td>{{ cycle.date_fin|date:"d/m/Y" }}</td>
+                    <td class="text-center">
+                        {% can_change request.user 'cycle_list' as can_edit %}
+                        {% can_delete request.user 'cycle_list' as can_delete %}
+                        <div class="action-btns">
+                            {% if can_edit %}
+                            <a href="{% url 'core:cycle_edit' cycle.pk %}" class="btn btn-edit" title="Modifier">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            {% endif %}
+                            {% if can_delete %}
+                            <a href="{% url 'core:cycle_delete' cycle.pk %}" class="btn btn-delete btn-confirm-delete" title="Supprimer" data-confirm-message="Supprimer ce cycle pédagogique ?">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="p-0">
+                        {% include 'includes/empty_state.html' with icon="bi-arrow-repeat" title="Aucun cycle" message="Commencez par créer un nouveau cycle pédagogique." button_url=create_url button_text="Nouveau cycle" %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
 {% endblock %}

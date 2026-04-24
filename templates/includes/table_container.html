@@ -1,0 +1,26 @@
+{% comment %}
+Composant: Conteneur de Tableau Unifié
+Usage: 
+{% include 'includes/table_container.html' with table_id="table-id" %}
+    <thead>
+        <tr>
+            <th><i class="bi bi-person"></i> Nom</th>
+            <!-- autres en-têtes -->
+        </tr>
+    </thead>
+    <tbody>
+        <!-- données -->
+    </tbody>
+{% endinclude %}
+
+Ou utiliser directement avec un bloc:
+{% include 'includes/table_container.html' with headers=headers rows=rows %}
+{% endcomment %}
+
+<div class="table-container">
+    <div class="table-responsive">
+        <table class="table table-striped" {% if table_id %}id="{{ table_id }}"{% endif %}>
+            {{ inner_content }}
+        </table>
+    </div>
+</div>

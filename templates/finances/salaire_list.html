@@ -1,51 +1,46 @@
 {% extends 'base.html' %}
+{% load permissions_tags %}
 {% block title %}Salaires{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>Gestion des Salaires</h1>
-    <a href="{% url 'finances:salaire_create' %}" class="btn btn-primary">
-        <i class="bi bi-plus-circle"></i> Nouveau salaire
-    </a>
-</div>
+{% url 'finances:salaire_create' as create_url %}
+{% include 'includes/page_header.html' with title="Gestion des Salaires" icon="bi-cash-coin" show_button=True button_url=create_url button_text="Nouveau salaire" button_icon="bi-plus-circle" %}
 
-<div class="card">
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-striped table-hover">
-                <thead class="table-dark">
-                    <tr>
-                        <th>Personnel</th>
-                        <th>Période</th>
-                        <th>Brut</th>
-                        <th>Retenues</th>
-                        <th>Net</th>
-                        <th>Statut</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for s in salaires %}
-                    <tr>
-                        <td>{{ s.personnel.nom_complet }}</td>
-                        <td>{{ s.get_mois_display }} {{ s.annee }}</td>
-                        <td>{{ s.salaire_brut|floatformat:0 }} FCAFA</td>
-                        <td>{{ s.retenues|floatformat:0 }} FCAFA</td>
-                        <td>{{ s.salaire_net|floatformat:0 }} FCAFA</td>
-                        <td>
-                            <span class="badge bg-success">Payé</span>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="6" class="text-center text-muted py-4">
-                            <i class="bi bi-inbox fs-1"></i><br>
-                            Aucun salaire enregistré
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+<!-- Tableau -->
+<div class="table-container">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0" id="salaireTable">
+            <thead>
+                <tr>
+                    <th><i class="bi bi-person me-1"></i>Personnel</th>
+                    <th><i class="bi bi-calendar-month me-1"></i>Période</th>
+                    <th><i class="bi bi-cash me-1"></i>Brut</th>
+                    <th><i class="bi bi-arrow-down-circle me-1"></i>Retenues</th>
+                    <th><i class="bi bi-cash-stack me-1"></i>Net</th>
+                    <th><i class="bi bi-circle me-1"></i>Statut</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in salaires %}
+                <tr>
+                    <td><strong>{{ s.personnel.nom_complet }}</strong></td>
+                    <td>{{ s.get_mois_display }} {{ s.annee }}</td>
+                    <td>{{ s.salaire_brut|floatformat:0 }} FCFA</td>
+                    <td>{{ s.retenues|floatformat:0 }} FCFA</td>
+                    <td><strong>{{ s.salaire_net|floatformat:0 }} FCFA</strong></td>
+                    <td>
+                        <span class="badge badge-success"><i class="bi bi-check-circle me-1"></i>Payé</span>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="p-0">
+                        {% include 'includes/empty_state.html' with icon="bi-cash-coin" title="Aucun salaire enregistré" message="Les salaires apparaîtront ici une fois calculés et payés." button_url=create_url button_text="Nouveau salaire" %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
 {% endblock %}

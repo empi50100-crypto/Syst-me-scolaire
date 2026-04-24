@@ -1,17 +1,19 @@
 {% extends 'base.html' %}
+{% load permissions_tags %}
 {% block title %}{% if salaire %}Modifier{% else %}Nouveau{% endif %} Salaire{% endblock %}
 
 {% block content %}
+<!-- Header personnalisé -->
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1><i class="bi bi-cash-stack text-primary"></i> {% if salaire %}Modifier{% else %}Enregistrer{% endif %} un salaire</h1>
-    <a href="{% url 'ressources_humaines:liste_salaires' %}" class="btn btn-outline-secondary">
-        <i class="bi bi-arrow-left"></i> Retour à la liste
+    <h1 style="color: #1e293b; font-weight: 700;"><i class="bi bi-cash-stack me-2" style="color: #4f46e5;"></i>{% if salaire %}Modifier{% else %}Enregistrer{% endif %} un salaire</h1>
+    <a href="{% url 'ressources_humaines:liste_salaires' %}" class="btn" style="background: #f1f5f9; border-color: #cbd5e1; color: #475569;">
+        <i class="bi bi-arrow-left me-1"></i> Retour à la liste
     </a>
 </div>
 
-<div class="card shadow-sm">
-    <div class="card-header dash-header">
-        <i class="bi bi-wallet2"></i> Informations de paie
+<div class="card shadow-sm" style="border: 1px solid #e2e8f0; border-radius: 12px;">
+    <div class="card-header text-white py-3" style="background: linear-gradient(135deg, #4f46e5, #7c3aed); border-radius: 12px 12px 0 0;">
+        <i class="bi bi-wallet2 me-2"></i> Informations de paie
     </div>
     <div class="card-body">
         {% if form.errors %}

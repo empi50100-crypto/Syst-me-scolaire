@@ -1,92 +1,84 @@
 {% extends 'base.html' %}
-
-{% block title %}Clôture Année Scolaire - SyGeS-AM{% endblock %}
+{% load permissions_tags %}
+{% block title %}Clôture par Année{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-12">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Accueil</a></li>
-                <li class="breadcrumb-item active">Clôture Année Scolaire</li>
-            </ol>
-        </nav>
+<!-- Header personnalisé -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 style="color: #1e293b; font-weight: 700;"><i class="bi bi-lock me-2" style="color: #4f46e5;"></i>Clôture Année Scolaire</h1>
+        <h3 class="text-muted">{{ annee.libelle }}</h3>
+    </div>
+    <div>
+        <a href="{% url 'scolarite:cloture_annee_list' %}" class="btn" style="background: #f1f5f9; border-color: #cbd5e1; color: #475569;">
+            <i class="bi bi-arrow-left me-1"></i> Retour
+        </a>
     </div>
 </div>
 
-<h1 class="mb-4"><i class="bi bi-calendar-check"></i> Clôture Année Scolaire</h1>
+{% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+{% endif %}
 
-<div class="alert alert-info">
-    <i class="bi bi-info-circle"></i>
-    <strong>Comment ça marche :</strong>
-    <ul class="mb-0">
-        <li>Le professeur principal clôture l'année scolaire pour ses classes après avoir clôturé toutes les périodes.</li>
-        <li>La clôture calcule automatiquement les moyennes générales de chaque élève.</li>
-        <li>Les élèves avec une moyenne ≥ 10/20 sont marqués comme "Promu".</li>
-        <li>Les élèves avec une moyenne < 10/20 sont marqués comme "Redouble".</li>
-    </ul>
-</div>
-
-<div class="card">
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead class="table-dark">
-                    <tr>
-                        <th>Classe</th>
-                        <th>Professeur Principal</th>
-                        <th>Statut Clôture</th>
-                        <th>Date Clôture</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for data in classe_data %}
-                    <tr>
-                        <td><strong>{{ data.classe }}</strong></td>
-                        <td>{{ data.classe.professeur_principal.user.get_full_name|default:"-" }}</td>
-                        <td>
-                            {% if data.cloture %}
-                            <span class="badge bg-success">
-                                <i class="bi bi-check-circle"></i> Clôturée
-                            </span>
-                            {% else %}
-                            <span class="badge bg-warning text-dark">En attente</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if data.cloture %}
-                                {{ data.cloture.date_cloture|date:"d/m/Y à H:i" }}
-                            {% else %}
-                                -
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if data.cloture %}
-                                <span class="text-muted">Clôturée</span>
-                                <form method="post" action="{% url 'scolarite:annee_cloture_delete' data.classe.id %}" class="d-inline">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Annuler la clôture de l\'année scolaire? Les moyennes seront effacées.')">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </form>
-                            {% else %}
-                                <a href="{% url 'scolarite:annee_cloture_edit' data.classe.id %}" class="btn btn-sm btn-primary">
-                                    <i class="bi bi-calendar-check"></i> Clôturer l'année
-                                </a>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="5" class="text-center text-muted py-4">
-                            Aucune classe trouvée pour cette année scolaire.
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+<!-- Tableau -->
+<div class="table-container">
+    <div class="d-flex justify-content-between align-items-center px-4 py-3 bg-light border-bottom">
+        <h5 class="mb-0"><i class="bi bi-list-ul me-2"></i>Liste des classes</h5>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0" id="classeTable">
+            <thead>
+                <tr>
+                    <th><i class="bi bi-collection me-1"></i>Classe</th>
+                    <th><i class="bi bi-person-workspace me-1"></i>Professeur Principal</th>
+                    <th><i class="bi bi-people me-1"></i>Nb Élèves</th>
+                    <th><i class="bi bi-check-circle me-1"></i>Status</th>
+                    <th style="width: 120px;" class="text-center"><i class="bi bi-gear me-1"></i>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for classe in classes %}
+                <tr>
+                    <td><strong>{{ classe.nom }}</strong></td>
+                    <td>{{ classe.professeur_principal.user.get_full_name|default:"Non assigné" }}</td>
+                    <td>{{ classe.inscriptions.count }}</td>
+                    <td>
+                        {% with classe_cloturee=classe.clotures|first %}
+                        {% if classe_cloturee and classe_cloturee.est_validee %}
+                            <span class="badge badge-success"><i class="bi bi-lock me-1"></i>Clôturée le {{ classe_cloturee.date_cloture|date:"d/m/Y" }}</span>
+                        {% else %}
+                            <span class="badge badge-warning"><i class="bi bi-clock me-1"></i>En cours</span>
+                        {% endif %}
+                        {% endwith %}
+                    </td>
+                    <td class="text-center">
+                        {% with classe_cloturee=classe.clotures|first %}
+                        {% if not classe_cloturee or not classe_cloturee.est_validee %}
+                            <a href="{% url 'scolarite:cloture_classe' annee.pk classe.pk %}" class="btn" style="background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; padding: 4px 12px; font-size: 0.875rem;">
+                                <i class="bi bi-lock me-1"></i> Clôturer
+                            </a>
+                        {% else %}
+                            <a href="{% url 'scolarite:deverrouiller_classe' annee.pk classe.pk %}" class="btn btn-danger btn-sm" onclick="return confirm('Déverrouiller cette classe ?');">
+                                <i class="bi bi-unlock me-1"></i> Déverrouiller
+                            </a>
+                        {% endif %}
+                        {% endwith %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="p-0">
+                        {% include 'includes/empty_state.html' with icon="bi-collection" title="Aucune classe trouvée" message="Il n'y a pas de classes pour cette année scolaire." %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
 {% endblock %}
